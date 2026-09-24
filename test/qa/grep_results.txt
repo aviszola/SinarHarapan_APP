@@ -1,0 +1,680 @@
+================================================================================
+HASIL GREP MENTAH LENGKAP AUDIT KODE SUMBER LIB/ (BAGIAN H - L)
+================================================================================
+
+>>> [GREP] BackdropFilter
+Pattern: BackdropFilter | Target: lib ('.dart',)
+HASIL: 0 hit (Bersih / Tidak Ditemukan)
+
+>>> [GREP] Semua Gradient
+Pattern: Gradient | Target: lib ('.dart',)
+HASIL: 1 hit ditemukan:
+  lib/features/reporting/presentation/executive_trend_chart.dart:607: gradient: LinearGradient(
+
+>>> [GREP] BoxShadow
+Pattern: BoxShadow | Target: lib ('.dart',)
+HASIL: 7 hit ditemukan:
+  lib/app/theme.dart:88: static const List<BoxShadow> none = [];
+  lib/app/theme.dart:91: static const List<BoxShadow> card = [
+  lib/app/theme.dart:92: BoxShadow(
+  lib/app/theme.dart:100: static const List<BoxShadow> modal = [
+  lib/app/theme.dart:101: BoxShadow(
+  lib/features/checkout/presentation/whatsapp_receipt_dialog.dart:637: BoxShadow(
+  lib/features/checkout/presentation/whatsapp_receipt_dialog.dart:828: BoxShadow(
+
+>>> [GREP] Color(0x...)
+Pattern: Color\(0x | Target: lib ('.dart',)
+HASIL: 144 hit ditemukan:
+  lib/app/theme.dart:13: static const Color navy900 = Color(0xFF001B4E);
+  lib/app/theme.dart:14: static const Color navy700 = Color(0xFF0A2A6E);
+  lib/app/theme.dart:15: static const Color navy500 = Color(0xFF1E4499);
+  lib/app/theme.dart:16: static const Color navy100 = Color(0xFFE6EBF7);
+  lib/app/theme.dart:17: static const Color navy50  = Color(0xFFF0F3FB);
+  lib/app/theme.dart:20: static const Color orange600 = Color(0xFFFF6600);
+  lib/app/theme.dart:21: static const Color orange500 = Color(0xFFFF7A1A);
+  lib/app/theme.dart:22: static const Color orange100 = Color(0xFFFFEBDB);
+  lib/app/theme.dart:23: static const Color orange50  = Color(0xFFFFF5EE);
+  lib/app/theme.dart:26: static const Color bg        = Color(0xFFF7F8FA);
+  lib/app/theme.dart:27: static const Color surface   = Color(0xFFFFFFFF);
+  lib/app/theme.dart:28: static const Color border    = Color(0xFFE2E5EB);
+  lib/app/theme.dart:29: static const Color borderFocus = Color(0xFFCCD3E0);
+  lib/app/theme.dart:30: static const Color textPrimary    = Color(0xFF1E2430);
+  lib/app/theme.dart:31: static const Color textSecondary  = Color(0xFF6B7280);
+  lib/app/theme.dart:32: static const Color textDisabled   = Color(0xFFB0B5BE);
+  lib/app/theme.dart:35: static const Color statusAvailable   = Color(0xFF22C55E);
+  lib/app/theme.dart:36: static const Color statusOccupied    = Color(0xFFEF4444);
+  lib/app/theme.dart:37: static const Color statusDirty       = Color(0xFFF59E0B);
+  lib/app/theme.dart:38: static const Color statusMaintenance = Color(0xFF9CA3AF);
+  lib/app/theme.dart:40: static const Color statusSuccessBg     = Color(0xFFDCFCE7);
+  lib/app/theme.dart:41: static const Color statusErrorBg       = Color(0xFFFEE2E2);
+  lib/app/theme.dart:42: static const Color statusWarningBg     = Color(0xFFFEF3C7);
+  lib/app/theme.dart:43: static const Color statusMaintenanceBg = Color(0xFFF3F4F6);
+  lib/app/theme.dart:46: static const Color availableBg    = Color(0xFFDCFCE7);
+  lib/app/theme.dart:47: static const Color availableText  = Color(0xFF16A34A);
+  lib/app/theme.dart:48: static const Color occupiedBg     = Color(0xFFFEE2E2);
+  lib/app/theme.dart:49: static const Color occupiedText   = Color(0xFFDC2626);
+  lib/app/theme.dart:50: static const Color dirtyBg        = Color(0xFFFEF3C7);
+  lib/app/theme.dart:51: static const Color dirtyText      = Color(0xFFD97706);
+  lib/app/theme.dart:52: static const Color maintenanceBg  = Color(0xFFF3F4F6);
+  lib/app/theme.dart:53: static const Color maintenanceText = Color(0xFF6B7280);
+  lib/app/theme.dart:93: color: Color(0x0D101828), // rgba(16,24,40,0.05)
+  lib/app/theme.dart:102: color: Color(0x14101828), // rgba(16,24,40,0.08)
+  lib/features/auth/presentation/login_screen.dart:292: color: const Color(0xFFDC2626).withAlpha(30),
+  lib/features/auth/presentation/login_screen.dart:294: border: Border.all(color: const Color(0xFFDC2626).withAlpha(80)),
+  lib/features/auth/presentation/login_screen.dart:299: color: Color(0xFFFCA5A5),
+  lib/features/checkout/presentation/check_out_dialog.dart:238: border: Border.all(color: const Color(0xFFD97706)),
+  lib/features/checkout/presentation/check_out_dialog.dart:242: const Icon(Icons.warning_amber_rounded, color: Color(0xFFD97706), size: 20),
+  lib/features/checkout/presentation/check_out_dialog.dart:248: color: const Color(0xFFD97706),
+  lib/features/checkout/presentation/check_out_dialog.dart:484: color: const Color(0xFF25D366).withValues(alpha: 0.08),
+  lib/features/checkout/presentation/check_out_dialog.dart:487: color: const Color(0xFF16A34A).withValues(alpha: 0.3),
+  lib/features/checkout/presentation/check_out_dialog.dart:494: activeColor: const Color(0xFF16A34A),
+  lib/features/checkout/presentation/invoice_preview_dialog.dart:91: color: const Color(0xFFDCFCE7),
+  lib/features/checkout/presentation/invoice_preview_dialog.dart:93: border: Border.all(color: const Color(0xFF16A34A).withValues(alpha: 0.4)),
+  lib/features/checkout/presentation/invoice_preview_dialog.dart:104: const Icon(Icons.mark_chat_read_rounded, color: Color(0xFF16A34A), size: 18),
+  lib/features/checkout/presentation/invoice_preview_dialog.dart:111: style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12, color: Color(0xFF16A34A)),
+  lib/features/checkout/presentation/invoice_preview_dialog.dart:115: style: const TextStyle(fontSize: 11, color: Color(0xFF15803D)),
+  lib/features/checkout/presentation/invoice_preview_dialog.dart:123: backgroundColor: const Color(0xFF16A34A),
+  lib/features/checkout/presentation/invoice_preview_dialog.dart:399: border: Border.all(color: const Color(0xFF16A34A)),
+  lib/features/checkout/presentation/invoice_preview_dialog.dart:404: const Icon(Icons.check_circle, size: 16, color: Color(0xFF16A34A)),
+  lib/features/checkout/presentation/invoice_preview_dialog.dart:411: color: const Color(0xFF16A34A),
+  lib/features/checkout/presentation/invoice_preview_dialog.dart:456: backgroundColor: const Color(0xFF25D366),
+  lib/features/checkout/presentation/whatsapp_receipt_dialog.dart:182: backgroundColor: const Color(0xFF16A34A),
+  lib/features/checkout/presentation/whatsapp_receipt_dialog.dart:227: backgroundColor: Color(0xFF16A34A),
+  lib/features/checkout/presentation/whatsapp_receipt_dialog.dart:275: backgroundColor: const Color(0xFF16A34A),
+  lib/features/checkout/presentation/whatsapp_receipt_dialog.dart:342: color: const Color(0xFF25D366).withValues(alpha: 0.15),
+  lib/features/checkout/presentation/whatsapp_receipt_dialog.dart:347: color: Color(0xFF16A34A),
+  lib/features/checkout/presentation/whatsapp_receipt_dialog.dart:388: color: Color(0xFF16A34A),
+  lib/features/checkout/presentation/whatsapp_receipt_dialog.dart:608: color: const Color(0xFFF1F5F9),
+  lib/features/checkout/presentation/whatsapp_receipt_dialog.dart:627: color: const Color(0xFFEFEAE2),
+  lib/features/checkout/presentation/whatsapp_receipt_dialog.dart:638: color: Color(0x14000000),
+  lib/features/checkout/presentation/whatsapp_receipt_dialog.dart:651: color: Color(0xFF111B21),
+  lib/features/checkout/presentation/whatsapp_receipt_dialog.dart:667: color: const Color(0xFFDCFCE7),
+  lib/features/checkout/presentation/whatsapp_receipt_dialog.dart:670: color: const Color(0xFF16A34A).withValues(alpha: 0.3),
+  lib/features/checkout/presentation/whatsapp_receipt_dialog.dart:678: color: Color(0xFF16A34A),
+  lib/features/checkout/presentation/whatsapp_receipt_dialog.dart:687: color: Color(0xFF16A34A),
+  lib/features/checkout/presentation/whatsapp_receipt_dialog.dart:754: backgroundColor: const Color(0xFF25D366),
+  lib/features/checkout/presentation/whatsapp_receipt_dialog.dart:826: border: Border.all(color: const Color(0xFFCBD5E1), width: 1.2),
+  lib/features/checkout/presentation/whatsapp_receipt_dialog.dart:829: color: Color(0x1F000000),
+  lib/features/checkout/presentation/whatsapp_receipt_dialog.dart:877: style: TextStyle(fontSize: 10, color: Color(0xFF64748B)),
+  lib/features/checkout/presentation/whatsapp_receipt_dialog.dart:881: style: TextStyle(fontSize: 10, color: Color(0xFF64748B)),
+  lib/features/checkout/presentation/whatsapp_receipt_dialog.dart:890: color: Color(0xFF0F172A),
+  lib/features/checkout/presentation/whatsapp_receipt_dialog.dart:925: color: Color(0xFF475569),
+  lib/features/checkout/presentation/whatsapp_receipt_dialog.dart:950: const Divider(thickness: 1.2, color: Color(0xFF0F172A)),
+  lib/features/checkout/presentation/whatsapp_receipt_dialog.dart:967: color: Color(0xFF0F172A),
+  lib/features/checkout/presentation/whatsapp_receipt_dialog.dart:975: color: Color(0xFF0F172A),
+  lib/features/checkout/presentation/whatsapp_receipt_dialog.dart:999: color: const Color(0xFF16A34A),
+  lib/features/checkout/presentation/whatsapp_receipt_dialog.dart:1010: color: Color(0xFF16A34A),
+  lib/features/checkout/presentation/whatsapp_receipt_dialog.dart:1019: color: Color(0xFF16A34A),
+  lib/features/checkout/presentation/whatsapp_receipt_dialog.dart:1046: border: Border.all(color: const Color(0xFFE2E8F0)),
+  lib/features/checkout/presentation/whatsapp_receipt_dialog.dart:1066: color: Color(0xFF64748B),
+  lib/features/checkout/presentation/whatsapp_receipt_dialog.dart:1080: color: Color(0xFF64748B),
+  lib/features/checkout/presentation/whatsapp_receipt_dialog.dart:1097: style: const TextStyle(fontSize: 10.5, color: Color(0xFF475569)),
+  lib/features/checkout/presentation/whatsapp_receipt_dialog.dart:1108: color: const Color(0xFF0F172A),
+  lib/features/checkout/presentation/whatsapp_receipt_dialog.dart:1132: decoration: BoxDecoration(color: Color(0xFF94A3B8)),
+  lib/features/reporting/presentation/executive_trend_chart.dart:128: color: const Color(0xFF16A34A).withValues(alpha: 0.1),
+  lib/features/reporting/presentation/executive_trend_chart.dart:134: Icon(Icons.trending_up, size: 14, color: Color(0xFF16A34A)),
+  lib/features/reporting/presentation/executive_trend_chart.dart:141: color: Color(0xFF16A34A),
+  lib/features/reporting/presentation/executive_trend_chart.dart:319: color: const Color(0xFF16A34A).withValues(alpha: 0.12),
+  lib/features/reporting/presentation/executive_trend_chart.dart:327: color: Color(0xFF16A34A),
+  lib/features/reporting/presentation/manager_dashboard_screen.dart:84: backgroundColor: const Color(0xFF16A34A),
+  lib/features/reporting/presentation/manager_dashboard_screen.dart:223: icon: const Icon(Icons.table_view_outlined, color: Color(0xFF16A34A)),
+  lib/features/reporting/presentation/manager_dashboard_screen.dart:1001: color: hasGuest ? AppColors.statusOccupied : const Color(0xFF16A34A),
+  lib/features/reservation/presentation/active_guests_modal.dart:60: backgroundColor: const Color(0xFF16A34A),
+  lib/features/reservation/presentation/active_guests_modal.dart:147: waColor = const Color(0xFF16A34A);
+  lib/features/reservation/presentation/active_guests_modal.dart:211: icon: const Icon(Icons.chat_bubble_outline, color: Color(0xFF16A34A), size: 20),
+  lib/features/reservation/presentation/active_guests_modal.dart:385: icon: const Icon(Icons.chat_bubble_outline, color: Color(0xFF16A34A)),
+  lib/features/reservation/presentation/check_in_modal.dart:476: color: const Color(0xFF16A34A),
+  lib/features/reservation/presentation/check_in_modal.dart:748: activeColor: const Color(0xFFDC2626),
+  lib/features/reservation/presentation/check_in_modal.dart:749: activeBg: const Color(0xFFFEE2E2),
+  lib/features/reservation/presentation/check_in_modal.dart:762: activeColor: const Color(0xFF047857),
+  lib/features/reservation/presentation/check_in_modal.dart:763: activeBg: const Color(0xFFD1FAE5),
+  lib/features/reservation/presentation/check_in_modal.dart:769: activeColor: const Color(0xFF1D4ED8),
+  lib/features/reservation/presentation/check_in_modal.dart:770: activeBg: const Color(0xFFDBEAFE),
+  lib/features/reservation/presentation/check_in_modal.dart:783: color: _isManualPrice ? const Color(0xFFFFFBEB) : AppColors.navy50,
+  lib/features/reservation/presentation/check_in_modal.dart:786: color: _isManualPrice ? const Color(0xFFF59E0B) : AppColors.border,
+  lib/features/reservation/presentation/check_in_modal.dart:815: color: const Color(0xFFFDE68A),
+  lib/features/reservation/presentation/check_in_modal.dart:823: color: Color(0xFFB45309),
+  lib/features/reservation/presentation/check_in_modal.dart:866: color: _isManualPrice ? const Color(0xFFB45309) : AppColors.navy900,
+  lib/features/reservation/presentation/check_in_modal.dart:877: color: _isManualPrice ? const Color(0xFFB45309) : AppColors.navy900,
+  lib/features/reservation/presentation/check_in_modal.dart:890: color: _isManualPrice ? const Color(0xFFF59E0B) : AppColors.border,
+  lib/features/reservation/presentation/check_in_modal.dart:927: color: _isManualPrice ? const Color(0xFFB45309) : AppColors.navy900,
+  lib/features/reservation/presentation/check_in_modal.dart:938: color: _isManualPrice ? const Color(0xFFB45309) : AppColors.navy900,
+  lib/features/reservation/presentation/check_in_modal.dart:951: color: _isManualPrice ? const Color(0xFFF59E0B) : AppColors.border,
+  lib/features/reservation/presentation/check_in_modal.dart:990: color: _isManualPrice ? const Color(0xFF92400E) : AppColors.textSecondary,
+  lib/features/room_management/presentation/room_card.dart:179: color: _hovered ? const Color(0xFFDC2626) : const Color(0xFFFEE2E2),
+  lib/features/room_management/presentation/room_card.dart:188: color: _hovered ? Colors.white : const Color(0xFFDC2626),
+  lib/features/room_management/presentation/room_card.dart:196: color: _hovered ? Colors.white : const Color(0xFFDC2626),
+  lib/features/room_management/presentation/room_card.dart:208: color: _hovered ? const Color(0xFFD97706) : const Color(0xFFFEF3C7),
+  lib/features/room_management/presentation/room_card.dart:217: color: _hovered ? Colors.white : const Color(0xFFD97706),
+  lib/features/room_management/presentation/room_card.dart:225: color: _hovered ? Colors.white : const Color(0xFFD97706),
+  lib/features/room_management/presentation/room_card.dart:259: color: isRD ? const Color(0xFFDC2626) : AppColors.navy500,
+  lib/features/room_management/presentation/room_card.dart:279: color: const Color(0xFFFEE2E2),
+  lib/features/room_management/presentation/room_card.dart:285: color: Color(0xFFDC2626),
+  lib/features/room_management/presentation/room_card.dart:300: size: 14, color: Color(0xFFD97706)),
+  lib/features/room_management/presentation/room_card.dart:306: color: const Color(0xFFD97706),
+  lib/features/room_management/presentation/room_grid_screen.dart:79: iconColor: const Color(0xFFD97706),
+  lib/features/room_management/presentation/room_grid_screen.dart:276: : const Color(0xFF16A34A),
+  lib/features/shared_widgets/app_button.dart:59: const Color(0xFFDC2626),
+  lib/features/shared_widgets/app_header.dart:64: border: Border(bottom: BorderSide(color: Color(0xFF0A2A6E), width: 1)),
+  lib/features/shared_widgets/app_header.dart:214: color: const Color(0xFFDC2626).withAlpha(50),
+  lib/features/shared_widgets/app_header.dart:220: color: Color(0xFFFCA5A5),
+  lib/features/shared_widgets/app_header.dart:502: border: Border(right: BorderSide(color: Color(0xFF0A2A6E), width: 1)),
+  lib/features/shared_widgets/app_header.dart:557: const Divider(color: Color(0xFF0A2A6E), height: 1),
+  lib/features/shared_widgets/app_header.dart:592: const Divider(color: Color(0xFF0A2A6E), height: 1),
+  lib/features/shared_widgets/status_badge.dart:23: bg:   Color(0xFFDCFCE7),
+  lib/features/shared_widgets/status_badge.dart:24: fg:   Color(0xFF16A34A),
+  lib/features/shared_widgets/status_badge.dart:28: bg:   Color(0xFFFEE2E2),
+  lib/features/shared_widgets/status_badge.dart:29: fg:   Color(0xFFDC2626),
+  lib/features/shared_widgets/status_badge.dart:33: bg:   Color(0xFFFEF3C7),
+  lib/features/shared_widgets/status_badge.dart:34: fg:   Color(0xFFD97706),
+  lib/features/shared_widgets/status_badge.dart:38: bg:   Color(0xFFF3F4F6),
+  lib/features/shared_widgets/status_badge.dart:39: fg:   Color(0xFF6B7280),
+
+>>> [GREP] Colors.* Non-Token
+Pattern: Colors\.(?!white|transparent|black\b) | Target: lib ('.dart',)
+HASIL: 399 hit ditemukan:
+  lib/app/theme.dart:10: AppColors._();
+  lib/app/theme.dart:116: color: AppColors.textPrimary,
+  lib/app/theme.dart:124: color: AppColors.textPrimary,
+  lib/app/theme.dart:132: color: AppColors.textPrimary,
+  lib/app/theme.dart:140: color: AppColors.textPrimary,
+  lib/app/theme.dart:147: color: AppColors.textPrimary,
+  lib/app/theme.dart:154: color: AppColors.textPrimary,
+  lib/app/theme.dart:161: color: AppColors.textPrimary,
+  lib/app/theme.dart:168: color: AppColors.textSecondary,
+  lib/app/theme.dart:176: color: AppColors.textSecondary,
+  lib/app/theme.dart:188: scaffoldBackgroundColor: AppColors.bg,
+  lib/app/theme.dart:191: primary: AppColors.navy700,
+  lib/app/theme.dart:193: secondary: AppColors.orange600,
+  lib/app/theme.dart:195: error: AppColors.statusOccupied,
+  lib/app/theme.dart:197: surface: AppColors.surface,
+  lib/app/theme.dart:198: onSurface: AppColors.textPrimary,
+  lib/app/theme.dart:212: color: AppColors.border,
+  lib/app/theme.dart:217: color: AppColors.surface,
+  lib/app/theme.dart:220: side: BorderSide(color: AppColors.border, width: 1),
+  lib/app/theme.dart:227: fillColor: AppColors.surface,
+  lib/app/theme.dart:231: borderSide: const BorderSide(color: AppColors.border, width: 1),
+  lib/app/theme.dart:235: borderSide: const BorderSide(color: AppColors.border, width: 1),
+  lib/app/theme.dart:239: borderSide: const BorderSide(color: AppColors.navy700, width: 2),
+  lib/app/theme.dart:243: borderSide: const BorderSide(color: AppColors.statusOccupied, width: 1.5),
+  lib/app/theme.dart:247: borderSide: const BorderSide(color: AppColors.statusOccupied, width: 2),
+  lib/app/theme.dart:249: hintStyle: AppTypography.body.copyWith(color: AppColors.textDisabled),
+  lib/app/theme.dart:250: labelStyle: AppTypography.bodySm.copyWith(color: AppColors.textSecondary),
+  lib/app/theme.dart:253: backgroundColor: AppColors.surface,
+  lib/app/theme.dart:266: color: AppColors.navy900,
+  lib/features/auth/presentation/login_screen.dart:85: backgroundColor: AppColors.navy900,
+  lib/features/auth/presentation/login_screen.dart:100: color: AppColors.surface,
+  lib/features/auth/presentation/login_screen.dart:128: color: AppColors.textPrimary,
+  lib/features/auth/presentation/login_screen.dart:136: color: AppColors.textSecondary,
+  lib/features/auth/presentation/login_screen.dart:224: color: AppColors.textDisabled,
+  lib/features/auth/presentation/login_screen.dart:249: color: AppColors.navy900,
+  lib/features/auth/presentation/login_screen.dart:259: color: AppColors.orange600,
+  lib/features/auth/presentation/login_screen.dart:318: color: AppColors.navy700,
+  lib/features/auth/presentation/login_screen.dart:336: color: AppColors.navy100.withAlpha(180),
+  lib/features/auth/presentation/login_screen.dart:363: color: AppColors.navy700,
+  lib/features/auth/presentation/login_screen.dart:366: child: Icon(f.$1, size: 18, color: AppColors.navy100),
+  lib/features/auth/presentation/login_screen.dart:372: color: AppColors.navy100.withAlpha(200),
+  lib/features/auth/presentation/login_screen.dart:391: color: AppColors.navy900,
+  lib/features/auth/presentation/login_screen.dart:411: style: AppTypography.h3.copyWith(color: AppColors.textPrimary),
+  lib/features/auth/presentation/login_screen.dart:434: color: AppColors.statusErrorBg,
+  lib/features/auth/presentation/login_screen.dart:436: border: Border.all(color: AppColors.statusOccupied.withAlpha(60)),
+  lib/features/auth/presentation/login_screen.dart:441: size: 16, color: AppColors.statusOccupied),
+  lib/features/auth/presentation/login_screen.dart:447: color: AppColors.statusOccupied,
+  lib/features/auth/presentation/login_screen.dart:473: color: AppColors.textDisabled,
+  lib/features/checkout/presentation/check_out_dialog.dart:124: backgroundColor: AppColors.surface,
+  lib/features/checkout/presentation/check_out_dialog.dart:142: color: AppColors.statusOccupied.withAlpha(25),
+  lib/features/checkout/presentation/check_out_dialog.dart:148: color: AppColors.statusOccupied,
+  lib/features/checkout/presentation/check_out_dialog.dart:157: style: (isMobile ? AppTypography.h3 : AppTypography.h2).copyWith(color: AppColors.navy900),
+  lib/features/checkout/presentation/check_out_dialog.dart:165: icon: const Icon(Icons.close, color: AppColors.textSecondary),
+  lib/features/checkout/presentation/check_out_dialog.dart:182: color: AppColors.bg,
+  lib/features/checkout/presentation/check_out_dialog.dart:184: border: Border.all(color: AppColors.border),
+  lib/features/checkout/presentation/check_out_dialog.dart:200: ? Colors.red.shade100
+  lib/features/checkout/presentation/check_out_dialog.dart:201: : AppColors.navy100,
+  lib/features/checkout/presentation/check_out_dialog.dart:208: ? Colors.red.shade800
+  lib/features/checkout/presentation/check_out_dialog.dart:209: : AppColors.navy700,
+  lib/features/checkout/presentation/check_out_dialog.dart:236: color: AppColors.statusWarningBg,
+  lib/features/checkout/presentation/check_out_dialog.dart:422: color: AppColors.navy100,
+  lib/features/checkout/presentation/check_out_dialog.dart:424: border: Border.all(color: AppColors.navy500.withAlpha(50)),
+  lib/features/checkout/presentation/check_out_dialog.dart:447: color: AppColors.orange600,
+  lib/features/checkout/presentation/check_out_dialog.dart:462: color: AppColors.navy900,
+  lib/features/checkout/presentation/check_out_dialog.dart:469: color: AppColors.navy900,
+  lib/features/checkout/presentation/check_out_dialog.dart:502: color: AppColors.navy900,
+  lib/features/checkout/presentation/check_out_dialog.dart:550: color: AppColors.navy50,
+  lib/features/checkout/presentation/check_out_dialog.dart:552: border: Border.all(color: AppColors.border),
+  lib/features/checkout/presentation/check_out_dialog.dart:559: color: AppColors.navy900,
+  lib/features/checkout/presentation/invoice_preview_dialog.dart:54: backgroundColor: AppColors.surface,
+  lib/features/checkout/presentation/invoice_preview_dialog.dart:70: color: AppColors.navy900,
+  lib/features/checkout/presentation/invoice_preview_dialog.dart:77: icon: const Icon(Icons.close, color: AppColors.textSecondary),
+  lib/features/checkout/presentation/invoice_preview_dialog.dart:158: border: Border.all(color: AppColors.navy900, width: 1.5),
+  lib/features/checkout/presentation/invoice_preview_dialog.dart:176: color: AppColors.navy900,
+  lib/features/checkout/presentation/invoice_preview_dialog.dart:192: color: Colors.red.shade700,
+  lib/features/checkout/presentation/invoice_preview_dialog.dart:209: const Divider(thickness: 1.5, color: Colors.black54),
+  lib/features/checkout/presentation/invoice_preview_dialog.dart:268: const Divider(thickness: 1, color: AppColors.border),
+  lib/features/checkout/presentation/invoice_preview_dialog.dart:281: const Divider(thickness: 1, color: AppColors.border),
+  lib/features/checkout/presentation/invoice_preview_dialog.dart:367: const Divider(thickness: 1.5, color: Colors.black54),
+  lib/features/checkout/presentation/invoice_preview_dialog.dart:379: color: AppColors.navy900,
+  lib/features/checkout/presentation/invoice_preview_dialog.dart:386: color: AppColors.navy900,
+  lib/features/checkout/presentation/invoice_preview_dialog.dart:397: color: AppColors.statusSuccessBg,
+  lib/features/checkout/presentation/invoice_preview_dialog.dart:504: backgroundColor: AppColors.navy700,
+  lib/features/checkout/presentation/whatsapp_receipt_dialog.dart:325: backgroundColor: AppColors.surface,
+  lib/features/checkout/presentation/whatsapp_receipt_dialog.dart:368: color: AppColors.navy900,
+  lib/features/checkout/presentation/whatsapp_receipt_dialog.dart:406: color: AppColors.textSecondary,
+  lib/features/checkout/presentation/whatsapp_receipt_dialog.dart:426: fillColor: AppColors.bg,
+  lib/features/checkout/presentation/whatsapp_receipt_dialog.dart:434: borderSide: BorderSide(color: AppColors.border),
+  lib/features/checkout/presentation/whatsapp_receipt_dialog.dart:438: borderSide: BorderSide(color: AppColors.border),
+  lib/features/checkout/presentation/whatsapp_receipt_dialog.dart:470: fillColor: AppColors.bg,
+  lib/features/checkout/presentation/whatsapp_receipt_dialog.dart:478: borderSide: BorderSide(color: AppColors.border),
+  lib/features/checkout/presentation/whatsapp_receipt_dialog.dart:482: borderSide: BorderSide(color: AppColors.border),
+  lib/features/checkout/presentation/whatsapp_receipt_dialog.dart:510: color: AppColors.bg,
+  lib/features/checkout/presentation/whatsapp_receipt_dialog.dart:512: border: Border.all(color: AppColors.border),
+  lib/features/checkout/presentation/whatsapp_receipt_dialog.dart:525: ? AppColors.navy900
+  lib/features/checkout/presentation/whatsapp_receipt_dialog.dart:538: : AppColors.textSecondary,
+  lib/features/checkout/presentation/whatsapp_receipt_dialog.dart:548: : AppColors.textPrimary,
+  lib/features/checkout/presentation/whatsapp_receipt_dialog.dart:564: ? AppColors.navy900
+  lib/features/checkout/presentation/whatsapp_receipt_dialog.dart:577: : AppColors.textSecondary,
+  lib/features/checkout/presentation/whatsapp_receipt_dialog.dart:587: : AppColors.textPrimary,
+  lib/features/checkout/presentation/whatsapp_receipt_dialog.dart:610: border: Border.all(color: AppColors.border),
+  lib/features/checkout/presentation/whatsapp_receipt_dialog.dart:629: border: Border.all(color: AppColors.border),
+  lib/features/checkout/presentation/whatsapp_receipt_dialog.dart:704: color: AppColors.navy50,
+  lib/features/checkout/presentation/whatsapp_receipt_dialog.dart:706: border: Border.all(color: AppColors.navy100),
+  lib/features/checkout/presentation/whatsapp_receipt_dialog.dart:713: color: AppColors.navy700,
+  lib/features/checkout/presentation/whatsapp_receipt_dialog.dart:720: color: AppColors.navy900,
+  lib/features/checkout/presentation/whatsapp_receipt_dialog.dart:851: color: Colors.red.shade700,
+  lib/features/checkout/presentation/whatsapp_receipt_dialog.dart:869: color: AppColors.navy900,
+  lib/features/reporting/presentation/executive_trend_chart.dart:67: color: AppColors.surface,
+  lib/features/reporting/presentation/executive_trend_chart.dart:69: border: Border.all(color: AppColors.border),
+  lib/features/reporting/presentation/executive_trend_chart.dart:113: color: AppColors.orange500.withValues(alpha: 0.12),
+  lib/features/reporting/presentation/executive_trend_chart.dart:115: border: Border.all(color: AppColors.orange500.withValues(alpha: 0.3)),
+  lib/features/reporting/presentation/executive_trend_chart.dart:120: color: AppColors.orange600,
+  lib/features/reporting/presentation/executive_trend_chart.dart:154: color: AppColors.navy900,
+  lib/features/reporting/presentation/executive_trend_chart.dart:160: style: AppTypography.bodySm.copyWith(color: AppColors.textSecondary),
+  lib/features/reporting/presentation/executive_trend_chart.dart:225: color: isSelected ? AppColors.navy900 : AppColors.surface,
+  lib/features/reporting/presentation/executive_trend_chart.dart:228: color: isSelected ? AppColors.navy900 : AppColors.border,
+  lib/features/reporting/presentation/executive_trend_chart.dart:237: color: isSelected ? Colors.white : AppColors.textSecondary,
+  lib/features/reporting/presentation/executive_trend_chart.dart:245: color: isSelected ? Colors.white : AppColors.textPrimary,
+  lib/features/reporting/presentation/executive_trend_chart.dart:289: color: AppColors.orange500,
+  lib/features/reporting/presentation/executive_trend_chart.dart:300: style: AppTypography.caption.copyWith(color: AppColors.textSecondary),
+  lib/features/reporting/presentation/executive_trend_chart.dart:313: color: AppColors.navy900,
+  lib/features/reporting/presentation/executive_trend_chart.dart:346: color: AppColors.navy700.withValues(alpha: 0.4),
+  lib/features/reporting/presentation/executive_trend_chart.dart:357: style: AppTypography.caption.copyWith(color: AppColors.textSecondary),
+  lib/features/reporting/presentation/executive_trend_chart.dart:365: color: AppColors.textSecondary,
+  lib/features/reporting/presentation/executive_trend_chart.dart:380: color: _showPastPeriod ? AppColors.navy900 : AppColors.textSecondary,
+  lib/features/reporting/presentation/executive_trend_chart.dart:382: selectedColor: AppColors.orange500.withValues(alpha: 0.15),
+  lib/features/reporting/presentation/executive_trend_chart.dart:383: checkmarkColor: AppColors.orange600,
+  lib/features/reporting/presentation/executive_trend_chart.dart:390: color: AppColors.bg,
+  lib/features/reporting/presentation/executive_trend_chart.dart:392: border: Border.all(color: AppColors.border.withValues(alpha: 0.6)),
+  lib/features/reporting/presentation/executive_trend_chart.dart:411: color: AppColors.border,
+  lib/features/reporting/presentation/executive_trend_chart.dart:462: color: AppColors.border.withValues(alpha: 0.6),
+  lib/features/reporting/presentation/executive_trend_chart.dart:467: color: AppColors.border.withValues(alpha: 0.3),
+  lib/features/reporting/presentation/executive_trend_chart.dart:492: color: AppColors.textSecondary,
+  lib/features/reporting/presentation/executive_trend_chart.dart:528: color: AppColors.textSecondary,
+  lib/features/reporting/presentation/executive_trend_chart.dart:541: bottom: BorderSide(color: AppColors.border),
+  lib/features/reporting/presentation/executive_trend_chart.dart:542: left: BorderSide(color: AppColors.border),
+  lib/features/reporting/presentation/executive_trend_chart.dart:554: getTooltipColor: (touchedSpot) => AppColors.navy900.withValues(alpha: 0.95),
+  lib/features/reporting/presentation/executive_trend_chart.dart:576: color: isCurrent ? AppColors.orange500 : Colors.white70,
+  lib/features/reporting/presentation/executive_trend_chart.dart:591: color: AppColors.orange500,
+  lib/features/reporting/presentation/executive_trend_chart.dart:601: strokeColor: AppColors.orange500,
+  lib/features/reporting/presentation/executive_trend_chart.dart:611: AppColors.orange500.withValues(alpha: 0.28),
+  lib/features/reporting/presentation/executive_trend_chart.dart:612: AppColors.orange500.withValues(alpha: 0.02),
+  lib/features/reporting/presentation/executive_trend_chart.dart:624: color: AppColors.navy700.withValues(alpha: 0.45),
+  lib/features/reporting/presentation/executive_trend_chart.dart:633: color: AppColors.navy700.withValues(alpha: 0.6),
+  lib/features/reporting/presentation/executive_trend_chart.dart:659: color: AppColors.orange500,
+  lib/features/reporting/presentation/executive_trend_chart.dart:668: color: AppColors.navy900,
+  lib/features/reporting/presentation/executive_trend_chart.dart:683: color: AppColors.navy700.withValues(alpha: 0.45),
+  lib/features/reporting/presentation/executive_trend_chart.dart:692: color: AppColors.textSecondary,
+  lib/features/reporting/presentation/executive_trend_chart.dart:702: color: AppColors.bg,
+  lib/features/reporting/presentation/executive_trend_chart.dart:704: border: Border.all(color: AppColors.border),
+  lib/features/reporting/presentation/executive_trend_chart.dart:709: const Icon(Icons.star_rounded, size: 14, color: AppColors.orange500),
+  lib/features/reporting/presentation/executive_trend_chart.dart:715: color: AppColors.navy900,
+  lib/features/reporting/presentation/manager_dashboard_screen.dart:103: backgroundColor: AppColors.navy700,
+  lib/features/reporting/presentation/manager_dashboard_screen.dart:154: backgroundColor: AppColors.bg,
+  lib/features/reporting/presentation/manager_dashboard_screen.dart:169: color: AppColors.surface,
+  lib/features/reporting/presentation/manager_dashboard_screen.dart:170: border: Border(bottom: BorderSide(color: AppColors.border)),
+  lib/features/reporting/presentation/manager_dashboard_screen.dart:180: icon: const Icon(Icons.menu, color: AppColors.navy900),
+  lib/features/reporting/presentation/manager_dashboard_screen.dart:191: color: AppColors.navy900,
+  lib/features/reporting/presentation/manager_dashboard_screen.dart:205: icon: const Icon(Icons.storefront_outlined, color: AppColors.navy700),
+  lib/features/reporting/presentation/manager_dashboard_screen.dart:228: icon: const Icon(Icons.picture_as_pdf_outlined, color: AppColors.orange600),
+  lib/features/reporting/presentation/manager_dashboard_screen.dart:253: icon: const Icon(Icons.add_circle, color: AppColors.orange600),
+  lib/features/reporting/presentation/manager_dashboard_screen.dart:430: color: AppColors.surface,
+  lib/features/reporting/presentation/manager_dashboard_screen.dart:432: border: Border.all(color: AppColors.border),
+  lib/features/reporting/presentation/manager_dashboard_screen.dart:444: style: AppTypography.bodySm.copyWith(color: AppColors.textSecondary),
+  lib/features/reporting/presentation/manager_dashboard_screen.dart:458: color: Colors.red.shade700,
+  lib/features/reporting/presentation/manager_dashboard_screen.dart:473: color: AppColors.navy700,
+  lib/features/reporting/presentation/manager_dashboard_screen.dart:500: Container(width: 12, height: 12, color: Colors.red.shade700),
+  lib/features/reporting/presentation/manager_dashboard_screen.dart:517: Container(width: 12, height: 12, color: AppColors.navy700),
+  lib/features/reporting/presentation/manager_dashboard_screen.dart:540: color: AppColors.surface,
+  lib/features/reporting/presentation/manager_dashboard_screen.dart:542: border: Border.all(color: AppColors.border),
+  lib/features/reporting/presentation/manager_dashboard_screen.dart:551: style: AppTypography.bodySm.copyWith(color: AppColors.textSecondary),
+  lib/features/reporting/presentation/manager_dashboard_screen.dart:596: Text(label, style: AppTypography.caption.copyWith(color: AppColors.navy700, fontWeight: FontWeight.bold)),
+  lib/features/reporting/presentation/manager_dashboard_screen.dart:602: backgroundColor: AppColors.bg,
+  lib/features/reporting/presentation/manager_dashboard_screen.dart:603: color: AppColors.navy700,
+  lib/features/reporting/presentation/manager_dashboard_screen.dart:615: color: AppColors.surface,
+  lib/features/reporting/presentation/manager_dashboard_screen.dart:617: border: Border.all(color: AppColors.border),
+  lib/features/reporting/presentation/manager_dashboard_screen.dart:681: color: AppColors.navy100,
+  lib/features/reporting/presentation/manager_dashboard_screen.dart:688: color: AppColors.navy900,
+  lib/features/reporting/presentation/manager_dashboard_screen.dart:715: color: AppColors.navy900,
+  lib/features/reporting/presentation/manager_dashboard_screen.dart:743: icon: const Icon(Icons.edit_outlined, color: AppColors.navy700),
+  lib/features/reporting/presentation/manager_dashboard_screen.dart:764: backgroundColor: room.isMaintenance ? AppColors.statusAvailable : AppColors.statusMaintenance,
+  lib/features/reporting/presentation/manager_dashboard_screen.dart:775: backgroundColor: AppColors.statusOccupied,
+  lib/features/reporting/presentation/manager_dashboard_screen.dart:786: icon: const Icon(Icons.delete_outline, color: AppColors.statusOccupied),
+  lib/features/reporting/presentation/manager_dashboard_screen.dart:802: backgroundColor: AppColors.statusOccupied,
+  lib/features/reporting/presentation/manager_dashboard_screen.dart:811: backgroundColor: AppColors.statusOccupied,
+  lib/features/reporting/presentation/manager_dashboard_screen.dart:820: backgroundColor: AppColors.statusOccupied,
+  lib/features/reporting/presentation/manager_dashboard_screen.dart:857: color: AppColors.surface,
+  lib/features/reporting/presentation/manager_dashboard_screen.dart:859: border: Border.all(color: AppColors.border),
+  lib/features/reporting/presentation/manager_dashboard_screen.dart:916: color: AppColors.navy100,
+  lib/features/reporting/presentation/manager_dashboard_screen.dart:976: color: source == 'REDDOORZ' ? Colors.red.shade50 : AppColors.navy100,
+  lib/features/reporting/presentation/manager_dashboard_screen.dart:982: color: source == 'REDDOORZ' ? Colors.red.shade700 : AppColors.navy700,
+  lib/features/reporting/presentation/manager_dashboard_screen.dart:1001: color: hasGuest ? AppColors.statusOccupied : const Color(0xFF16A34A),
+  lib/features/reporting/presentation/manager_dashboard_screen.dart:1027: color: AppColors.surface,
+  lib/features/reporting/presentation/manager_dashboard_screen.dart:1029: border: Border.all(color: AppColors.border),
+  lib/features/reporting/presentation/manager_dashboard_screen.dart:1073: color: AppColors.navy100,
+  lib/features/reporting/presentation/manager_dashboard_screen.dart:1079: color: AppColors.navy700,
+  lib/features/reporting/presentation/manager_dashboard_screen.dart:1099: style: AppTypography.caption.copyWith(color: AppColors.textSecondary),
+  lib/features/reservation/presentation/active_guests_modal.dart:84: backgroundColor: AppColors.surface,
+  lib/features/reservation/presentation/active_guests_modal.dart:98: const Icon(Icons.mark_chat_read_outlined, color: AppColors.navy700, size: 24),
+  lib/features/reservation/presentation/active_guests_modal.dart:104: color: AppColors.navy900,
+  lib/features/reservation/presentation/active_guests_modal.dart:114: icon: const Icon(Icons.close, color: AppColors.textSecondary),
+  lib/features/reservation/presentation/active_guests_modal.dart:132: style: AppTypography.body.copyWith(color: AppColors.textSecondary),
+  lib/features/reservation/presentation/active_guests_modal.dart:150: waColor = AppColors.navy700;
+  lib/features/reservation/presentation/active_guests_modal.dart:153: waColor = AppColors.statusOccupied;
+  lib/features/reservation/presentation/active_guests_modal.dart:156: waColor = AppColors.textSecondary;
+  lib/features/reservation/presentation/active_guests_modal.dart:167: color: AppColors.bg,
+  lib/features/reservation/presentation/active_guests_modal.dart:169: border: Border.all(color: AppColors.border),
+  lib/features/reservation/presentation/active_guests_modal.dart:180: color: AppColors.navy700,
+  lib/features/reservation/presentation/active_guests_modal.dart:287: color: AppColors.bg,
+  lib/features/reservation/presentation/active_guests_modal.dart:289: border: Border.all(color: AppColors.border),
+  lib/features/reservation/presentation/active_guests_modal.dart:297: color: AppColors.navy700,
+  lib/features/reservation/presentation/check_in_modal.dart:178: backgroundColor: AppColors.statusAvailable,
+  lib/features/reservation/presentation/check_in_modal.dart:218: backgroundColor: AppColors.surface,
+  lib/features/reservation/presentation/check_in_modal.dart:238: color: AppColors.navy100,
+  lib/features/reservation/presentation/check_in_modal.dart:244: color: AppColors.navy900,
+  lib/features/reservation/presentation/check_in_modal.dart:253: style: (isMobile ? AppTypography.h3 : AppTypography.h2).copyWith(color: AppColors.navy900),
+  lib/features/reservation/presentation/check_in_modal.dart:261: icon: const Icon(Icons.close, color: AppColors.textSecondary),
+  lib/features/reservation/presentation/check_in_modal.dart:278: color: AppColors.statusErrorBg,
+  lib/features/reservation/presentation/check_in_modal.dart:284: color: AppColors.statusOccupied,
+  lib/features/reservation/presentation/check_in_modal.dart:315: ? AppColors.navy100
+  lib/features/reservation/presentation/check_in_modal.dart:316: : AppColors.surface,
+  lib/features/reservation/presentation/check_in_modal.dart:319: ? AppColors.navy700
+  lib/features/reservation/presentation/check_in_modal.dart:320: : AppColors.border,
+  lib/features/reservation/presentation/check_in_modal.dart:330: ? AppColors.navy700
+  lib/features/reservation/presentation/check_in_modal.dart:331: : AppColors.textSecondary,
+  lib/features/reservation/presentation/check_in_modal.dart:342: ? AppColors.navy900
+  lib/features/reservation/presentation/check_in_modal.dart:343: : AppColors.textPrimary,
+  lib/features/reservation/presentation/check_in_modal.dart:371: ? Colors.red.shade50
+  lib/features/reservation/presentation/check_in_modal.dart:372: : AppColors.surface,
+  lib/features/reservation/presentation/check_in_modal.dart:375: ? Colors.red.shade700
+  lib/features/reservation/presentation/check_in_modal.dart:376: : AppColors.border,
+  lib/features/reservation/presentation/check_in_modal.dart:386: ? Colors.red.shade700
+  lib/features/reservation/presentation/check_in_modal.dart:387: : AppColors.textSecondary,
+  lib/features/reservation/presentation/check_in_modal.dart:398: ? Colors.red.shade900
+  lib/features/reservation/presentation/check_in_modal.dart:399: : AppColors.textPrimary,
+  lib/features/reservation/presentation/check_in_modal.dart:436: color: AppColors.bg,
+  lib/features/reservation/presentation/check_in_modal.dart:438: border: Border.all(color: AppColors.border),
+  lib/features/reservation/presentation/check_in_modal.dart:450: color: AppColors.navy700,
+  lib/features/reservation/presentation/check_in_modal.dart:458: color: AppColors.navy900,
+  lib/features/reservation/presentation/check_in_modal.dart:470: color: AppColors.statusSuccessBg,
+  lib/features/reservation/presentation/check_in_modal.dart:655: color: AppColors.navy50,
+  lib/features/reservation/presentation/check_in_modal.dart:657: border: Border.all(color: AppColors.border),
+  lib/features/reservation/presentation/check_in_modal.dart:662: const Icon(Icons.event_available_rounded, size: 13, color: AppColors.navy700),
+  lib/features/reservation/presentation/check_in_modal.dart:669: color: AppColors.navy900,
+  lib/features/reservation/presentation/check_in_modal.dart:686: color: AppColors.surface,
+  lib/features/reservation/presentation/check_in_modal.dart:688: border: Border.all(color: AppColors.border),
+  lib/features/reservation/presentation/check_in_modal.dart:707: color: AppColors.navy900,
+  lib/features/reservation/presentation/check_in_modal.dart:755: activeColor: AppColors.navy900,
+  lib/features/reservation/presentation/check_in_modal.dart:756: activeBg: AppColors.navy100,
+  lib/features/reservation/presentation/check_in_modal.dart:783: color: _isManualPrice ? const Color(0xFFFFFBEB) : AppColors.navy50,
+  lib/features/reservation/presentation/check_in_modal.dart:786: color: _isManualPrice ? const Color(0xFFF59E0B) : AppColors.border,
+  lib/features/reservation/presentation/check_in_modal.dart:805: color: AppColors.navy900,
+  lib/features/reservation/presentation/check_in_modal.dart:831: color: AppColors.navy100,
+  lib/features/reservation/presentation/check_in_modal.dart:839: color: AppColors.navy700,
+  lib/features/reservation/presentation/check_in_modal.dart:866: color: _isManualPrice ? const Color(0xFFB45309) : AppColors.navy900,
+  lib/features/reservation/presentation/check_in_modal.dart:877: color: _isManualPrice ? const Color(0xFFB45309) : AppColors.navy900,
+  lib/features/reservation/presentation/check_in_modal.dart:885: borderSide: BorderSide(color: AppColors.border),
+  lib/features/reservation/presentation/check_in_modal.dart:890: color: _isManualPrice ? const Color(0xFFF59E0B) : AppColors.border,
+  lib/features/reservation/presentation/check_in_modal.dart:895: borderSide: const BorderSide(color: AppColors.navy900, width: 1.5),
+  lib/features/reservation/presentation/check_in_modal.dart:905: style: AppTypography.caption.copyWith(color: AppColors.textSecondary),
+  lib/features/reservation/presentation/check_in_modal.dart:911: color: AppColors.navy700,
+  lib/features/reservation/presentation/check_in_modal.dart:927: color: _isManualPrice ? const Color(0xFFB45309) : AppColors.navy900,
+  lib/features/reservation/presentation/check_in_modal.dart:938: color: _isManualPrice ? const Color(0xFFB45309) : AppColors.navy900,
+  lib/features/reservation/presentation/check_in_modal.dart:946: borderSide: BorderSide(color: AppColors.border),
+  lib/features/reservation/presentation/check_in_modal.dart:951: color: _isManualPrice ? const Color(0xFFF59E0B) : AppColors.border,
+  lib/features/reservation/presentation/check_in_modal.dart:956: borderSide: const BorderSide(color: AppColors.navy900, width: 1.5),
+  lib/features/reservation/presentation/check_in_modal.dart:969: style: AppTypography.caption.copyWith(color: AppColors.textSecondary),
+  lib/features/reservation/presentation/check_in_modal.dart:977: style: AppTypography.caption.copyWith(color: AppColors.textSecondary),
+  lib/features/reservation/presentation/check_in_modal.dart:990: color: _isManualPrice ? const Color(0xFF92400E) : AppColors.textSecondary,
+  lib/features/reservation/presentation/check_in_modal.dart:1041: color: isSelected ? AppColors.navy900 : AppColors.surface,
+  lib/features/reservation/presentation/check_in_modal.dart:1044: color: isSelected ? AppColors.navy900 : AppColors.border,
+  lib/features/reservation/presentation/check_in_modal.dart:1053: color: isSelected ? Colors.white : AppColors.textPrimary,
+  lib/features/reservation/presentation/check_in_modal.dart:1075: color: isSelected ? activeBg : AppColors.surface,
+  lib/features/reservation/presentation/check_in_modal.dart:1078: color: isSelected ? activeColor : AppColors.border,
+  lib/features/reservation/presentation/check_in_modal.dart:1088: color: isSelected ? activeColor : AppColors.textSecondary,
+  lib/features/reservation/presentation/check_in_modal.dart:1096: color: isSelected ? activeColor : AppColors.textPrimary,
+  lib/features/room_management/presentation/room_card.dart:36: return AppColors.statusAvailable;
+  lib/features/room_management/presentation/room_card.dart:38: return AppColors.statusOccupied;
+  lib/features/room_management/presentation/room_card.dart:40: return AppColors.statusDirty;
+  lib/features/room_management/presentation/room_card.dart:42: return AppColors.statusMaintenance;
+  lib/features/room_management/presentation/room_card.dart:60: color: AppColors.surface,
+  lib/features/room_management/presentation/room_card.dart:63: color: _hovered ? AppColors.navy500 : AppColors.border,
+  lib/features/room_management/presentation/room_card.dart:99: color: AppColors.navy900,
+  lib/features/room_management/presentation/room_card.dart:109: color: AppColors.textSecondary,
+  lib/features/room_management/presentation/room_card.dart:150: color: _hovered ? AppColors.orange600 : AppColors.navy100,
+  lib/features/room_management/presentation/room_card.dart:159: color: _hovered ? Colors.white : AppColors.navy700,
+  lib/features/room_management/presentation/room_card.dart:167: color: _hovered ? Colors.white : AppColors.navy700,
+  lib/features/room_management/presentation/room_card.dart:236: color: AppColors.border.withAlpha(80),
+  lib/features/room_management/presentation/room_card.dart:244: color: AppColors.textDisabled,
+  lib/features/room_management/presentation/room_card.dart:259: color: isRD ? const Color(0xFFDC2626) : AppColors.navy500,
+  lib/features/room_management/presentation/room_card.dart:268: color: AppColors.textPrimary,
+  lib/features/room_management/presentation/room_card.dart:322: size: 14, color: AppColors.textDisabled),
+  lib/features/room_management/presentation/room_card.dart:328: color: AppColors.textDisabled,
+  lib/features/room_management/presentation/room_card.dart:343: color: AppColors.navy700,
+  lib/features/room_management/presentation/room_crud_dialog.dart:76: backgroundColor: AppColors.statusOccupied,
+  lib/features/room_management/presentation/room_crud_dialog.dart:97: backgroundColor: AppColors.statusAvailable,
+  lib/features/room_management/presentation/room_crud_dialog.dart:115: backgroundColor: AppColors.statusAvailable,
+  lib/features/room_management/presentation/room_crud_dialog.dart:125: backgroundColor: AppColors.statusOccupied,
+  lib/features/room_management/presentation/room_crud_dialog.dart:144: backgroundColor: AppColors.surface,
+  lib/features/room_management/presentation/room_crud_dialog.dart:166: color: AppColors.navy900,
+  lib/features/room_management/presentation/room_crud_dialog.dart:174: icon: const Icon(Icons.close, color: AppColors.textSecondary),
+  lib/features/room_management/presentation/room_crud_dialog.dart:285: selectedColor: AppColors.navy100,
+  lib/features/room_management/presentation/room_crud_dialog.dart:286: checkmarkColor: AppColors.navy700,
+  lib/features/room_management/presentation/room_crud_dialog.dart:288: color: isChecked ? AppColors.navy700 : AppColors.textPrimary,
+  lib/features/room_management/presentation/room_filter_bar.dart:20: color: AppColors.surface,
+  lib/features/room_management/presentation/room_filter_bar.dart:21: border: Border(bottom: BorderSide(color: AppColors.border)),
+  lib/features/room_management/presentation/room_filter_bar.dart:37: hintStyle: const TextStyle(fontSize: 13, color: AppColors.textSecondary),
+  lib/features/room_management/presentation/room_filter_bar.dart:38: prefixIcon: const Icon(Icons.search, size: 18, color: AppColors.textSecondary),
+  lib/features/room_management/presentation/room_filter_bar.dart:42: icon: const Icon(Icons.clear, size: 16, color: AppColors.textSecondary),
+  lib/features/room_management/presentation/room_filter_bar.dart:48: fillColor: AppColors.bg,
+  lib/features/room_management/presentation/room_filter_bar.dart:51: borderSide: const BorderSide(color: AppColors.border),
+  lib/features/room_management/presentation/room_filter_bar.dart:55: borderSide: const BorderSide(color: AppColors.border),
+  lib/features/room_management/presentation/room_filter_bar.dart:59: borderSide: const BorderSide(color: AppColors.navy700, width: 1.5),
+  lib/features/room_management/presentation/room_filter_bar.dart:68: child: VerticalDivider(color: AppColors.border, width: 20),
+  lib/features/room_management/presentation/room_filter_bar.dart:114: child: VerticalDivider(color: AppColors.border, width: 24),
+  lib/features/room_management/presentation/room_filter_bar.dart:154: child: VerticalDivider(color: AppColors.border, width: 24),
+  lib/features/room_management/presentation/room_filter_bar.dart:174: dotColor: AppColors.statusAvailable,
+  lib/features/room_management/presentation/room_filter_bar.dart:181: dotColor: AppColors.statusOccupied,
+  lib/features/room_management/presentation/room_filter_bar.dart:188: dotColor: AppColors.statusDirty,
+  lib/features/room_management/presentation/room_filter_bar.dart:195: dotColor: AppColors.statusMaintenance,
+  lib/features/room_management/presentation/room_filter_bar.dart:220: color: isSelected ? AppColors.navy700 : Colors.transparent,
+  lib/features/room_management/presentation/room_filter_bar.dart:223: color: isSelected ? AppColors.navy700 : AppColors.border,
+  lib/features/room_management/presentation/room_filter_bar.dart:244: color: isSelected ? Colors.white : AppColors.textSecondary,
+  lib/features/room_management/presentation/room_grid_screen.dart:92: AppColors.statusAvailable,
+  lib/features/room_management/presentation/room_grid_screen.dart:105: iconColor: AppColors.textDisabled,
+  lib/features/room_management/presentation/room_grid_screen.dart:147: backgroundColor: AppColors.bg,
+  lib/features/room_management/presentation/room_grid_screen.dart:207: color: AppColors.surface,
+  lib/features/room_management/presentation/room_grid_screen.dart:208: border: Border(bottom: BorderSide(color: AppColors.border)),
+  lib/features/room_management/presentation/room_grid_screen.dart:220: color: AppColors.navy900,
+  lib/features/room_management/presentation/room_grid_screen.dart:228: color: AppColors.navy100.withAlpha(160),
+  lib/features/room_management/presentation/room_grid_screen.dart:245: color: AppColors.navy100.withAlpha(120),
+  lib/features/room_management/presentation/room_grid_screen.dart:256: _StatusDot(color: AppColors.statusAvailable, label: 'Available', count: available),
+  lib/features/room_management/presentation/room_grid_screen.dart:258: _StatusDot(color: AppColors.statusOccupied,  label: 'Occupied',  count: occupied),
+  lib/features/room_management/presentation/room_grid_screen.dart:260: _StatusDot(color: AppColors.statusDirty,     label: 'Dirty',     count: dirty),
+  lib/features/room_management/presentation/room_grid_screen.dart:262: _StatusDot(color: AppColors.statusMaintenance, label: 'Maintenance', count: maintenance),
+  lib/features/room_management/presentation/room_grid_screen.dart:275: ? AppColors.orange600
+  lib/features/room_management/presentation/room_grid_screen.dart:284: color: AppColors.textDisabled,
+  lib/features/room_management/presentation/room_grid_screen.dart:322: color: AppColors.textSecondary,
+  lib/features/room_management/presentation/room_grid_screen.dart:393: color: AppColors.navy50,
+  lib/features/room_management/presentation/room_grid_screen.dart:399: color: AppColors.textDisabled,
+  lib/features/room_management/presentation/room_grid_screen.dart:405: style: AppTypography.h3.copyWith(color: AppColors.textSecondary),
+  lib/features/room_management/presentation/room_grid_screen.dart:466: color: AppColors.textSecondary,
+  lib/features/room_management/presentation/room_grid_screen.dart:480: color: AppColors.textSecondary,
+  lib/features/room_management/presentation/room_grid_screen.dart:489: ? AppColors.statusOccupied
+  lib/features/room_management/presentation/room_grid_screen.dart:490: : AppColors.orange600,
+  lib/features/shared_widgets/app_button.dart:32: AppColors.orange600,
+  lib/features/shared_widgets/app_button.dart:35: AppColors.orange500,
+  lib/features/shared_widgets/app_button.dart:38: AppColors.navy700,
+  lib/features/shared_widgets/app_button.dart:41: AppColors.navy500,
+  lib/features/shared_widgets/app_button.dart:45: AppColors.navy700,
+  lib/features/shared_widgets/app_button.dart:46: const BorderSide(color: AppColors.navy700, width: 1.5),
+  lib/features/shared_widgets/app_button.dart:47: AppColors.navy100,
+  lib/features/shared_widgets/app_button.dart:51: AppColors.navy700,
+  lib/features/shared_widgets/app_button.dart:53: AppColors.navy100,
+  lib/features/shared_widgets/app_button.dart:56: AppColors.statusOccupied,
+  lib/features/shared_widgets/app_button.dart:71: : AppColors.textDisabled.withAlpha(40)),
+  lib/features/shared_widgets/app_button.dart:76: : const BorderSide(color: AppColors.border, width: 1),
+  lib/features/shared_widgets/app_button.dart:101: color: isEnabled ? fg : AppColors.textDisabled),
+  lib/features/shared_widgets/app_button.dart:108: color: isEnabled ? fg : AppColors.textDisabled,
+  lib/features/shared_widgets/app_header.dart:63: color: AppColors.navy900,
+  lib/features/shared_widgets/app_header.dart:96: color: AppColors.navy100.withAlpha(160),
+  lib/features/shared_widgets/app_header.dart:125: backgroundColor: AppColors.navy700,
+  lib/features/shared_widgets/app_header.dart:130: icon: const Icon(Icons.admin_panel_settings_outlined, size: 16, color: AppColors.orange500),
+  lib/features/shared_widgets/app_header.dart:180: color: AppColors.orange600,
+  lib/features/shared_widgets/app_header.dart:231: color: AppColors.navy100.withAlpha(140),
+  lib/features/shared_widgets/app_header.dart:294: ? (_hovered ? AppColors.orange600 : AppColors.orange600.withAlpha(30))
+  lib/features/shared_widgets/app_header.dart:295: : (_hovered ? AppColors.navy700 : AppColors.navy700.withAlpha(180)),
+  lib/features/shared_widgets/app_header.dart:299: ? AppColors.orange600.withAlpha(_hovered ? 255 : 100)
+  lib/features/shared_widgets/app_header.dart:309: color: hasGuests ? AppColors.orange600 : Colors.white70,
+  lib/features/shared_widgets/app_header.dart:316: color: hasGuests ? AppColors.orange600 : Colors.white70,
+  lib/features/shared_widgets/app_header.dart:327: color: AppColors.orange600,
+  lib/features/shared_widgets/app_header.dart:388: color: AppColors.navy500,
+  lib/features/shared_widgets/app_header.dart:424: color: AppColors.orange500,
+  lib/features/shared_widgets/app_header.dart:449: ? AppColors.statusOccupied.withAlpha(30)
+  lib/features/shared_widgets/app_header.dart:456: color: _hovered ? AppColors.statusOccupied : Colors.white54,
+  lib/features/shared_widgets/app_header.dart:501: color: AppColors.navy900,
+  lib/features/shared_widgets/app_header.dart:517: color: AppColors.orange600,
+  lib/features/shared_widgets/app_header.dart:547: color: AppColors.navy100.withAlpha(140),
+  lib/features/shared_widgets/app_header.dart:572: color: AppColors.navy100.withAlpha(80),
+  lib/features/shared_widgets/app_header.dart:603: color: AppColors.navy500,
+  lib/features/shared_widgets/app_header.dart:636: color: AppColors.orange500,
+  lib/features/shared_widgets/app_header.dart:703: ? AppColors.navy700.withAlpha(180)
+  lib/features/shared_widgets/app_header.dart:704: : (_hovered ? AppColors.navy700.withAlpha(80) : Colors.transparent),
+  lib/features/shared_widgets/app_header.dart:718: color: AppColors.orange600,
+  lib/features/shared_widgets/app_text_field.dart:82: color: _focused ? AppColors.navy700 : AppColors.textPrimary,
+  lib/features/shared_widgets/app_text_field.dart:93: color: AppColors.navy100,
+  lib/features/shared_widgets/app_text_field.dart:100: size: 11, color: AppColors.navy700),
+  lib/features/shared_widgets/app_text_field.dart:105: color: AppColors.navy700,
+  lib/features/shared_widgets/app_text_field.dart:131: color: widget.readOnly ? AppColors.textSecondary : AppColors.textPrimary,
+  lib/features/shared_widgets/app_text_field.dart:136: fillColor: widget.readOnly ? AppColors.bg : AppColors.surface,
+  lib/features/shared_widgets/app_text_field.dart:141: color: _focused ? AppColors.navy700 : AppColors.textSecondary,
+  lib/features/shared_widgets/app_text_field.dart:151: color: AppColors.textSecondary,
+  lib/features/shared_widgets/metric_card.dart:25: color: AppColors.surface,
+  lib/features/shared_widgets/metric_card.dart:27: border: Border.all(color: AppColors.border, width: 1),
+  lib/features/shared_widgets/metric_card.dart:39: color: AppColors.textSecondary,
+  lib/features/shared_widgets/metric_card.dart:50: color: AppColors.navy900,
+  lib/features/shared_widgets/metric_card.dart:60: color: isTrendPositive ? AppColors.orange600 : AppColors.statusOccupied,
+  lib/features/shared_widgets/metric_card.dart:66: color: isTrendPositive ? AppColors.orange600 : AppColors.statusOccupied,
+
+>>> [GREP] Font di pubspec.yaml
+Pattern: fonts: | Target: root ('.yaml',)
+HASIL: 4 hit ditemukan:
+  pubspec.yaml:39: google_fonts: ^8.2.1
+  pubspec.yaml:84: # fonts:
+  pubspec.yaml:86: #     fonts:
+  pubspec.yaml:91: #     fonts:
+
+>>> [GREP] Font di ThemeData
+Pattern: fontFamily | Target: lib ('.dart',)
+HASIL: 3 hit ditemukan:
+  lib/features/checkout/presentation/whatsapp_receipt_dialog.dart:648: fontFamily: 'monospace',
+  lib/features/checkout/presentation/whatsapp_receipt_dialog.dart:1063: fontFamily: 'monospace',
+  lib/features/shared_widgets/app_header.dart:85: fontFamily: 'monospace',
+
+>>> [GREP] Shift Time di Top Bar
+Pattern: shift | Target: lib ('.dart',)
+HASIL: 0 hit (Bersih / Tidak Ditemukan)
+
+>>> [GREP] Sidebar width 240 / 72
+Pattern: \b(240|72)\b | Target: lib/features/reporting ('.dart',)
+HASIL: 1 hit ditemukan:
+  lib/features/reporting/presentation/executive_trend_chart.dart:51: 42, 48, 50, 60, 55, 62, 70, 65, 75, 68, 80, 82, 72, 85, 82
+
+>>> [GREP] Kartu Kamar 140x100 (mainAxisExtent / size)
+Pattern: mainAxisExtent|140 | Target: lib/features/room_management ('.dart',)
+HASIL: 2 hit ditemukan:
+  lib/features/room_management/presentation/room_grid_screen.dart:344: if (constraints.maxWidth >= 1400) {
+  lib/features/room_management/presentation/room_grid_screen.dart:366: mainAxisExtent: 126,
+
+>>> [GREP] Touch Target 44x44 (Icon button sizes)
+Pattern: IconButton|iconSize|size:\s*(?:1[0-9]|2[0-9]|3[0-9])\b | Target: lib/features/shared_widgets ('.dart',)
+HASIL: 14 hit ditemukan:
+  lib/features/shared_widgets/app_button.dart:100: Icon(icon, size: 19,
+  lib/features/shared_widgets/app_header.dart:117: IconButton(
+  lib/features/shared_widgets/app_header.dart:119: icon: const Icon(Icons.admin_panel_settings_outlined, color: Colors.white, size: 20),
+  lib/features/shared_widgets/app_header.dart:130: icon: const Icon(Icons.admin_panel_settings_outlined, size: 16, color: AppColors.orange500),
+  lib/features/shared_widgets/app_header.dart:308: size: 16,
+  lib/features/shared_widgets/app_header.dart:455: size: 19,
+  lib/features/shared_widgets/app_header.dart:643: IconButton(
+  lib/features/shared_widgets/app_header.dart:645: size: 19, color: Colors.white38),
+  lib/features/shared_widgets/app_header.dart:730: size: 21,
+  lib/features/shared_widgets/app_text_field.dart:100: size: 11, color: AppColors.navy700),
+  lib/features/shared_widgets/app_text_field.dart:140: size: 20,
+  lib/features/shared_widgets/app_text_field.dart:145: ? IconButton(
+  lib/features/shared_widgets/app_text_field.dart:150: size: 20,
+  lib/features/shared_widgets/metric_card.dart:59: size: 16,
+
+>>> [GREP] Urutan Tab Form Check-In (FocusNode)
+Pattern: FocusNode|FocusScope|focusTraversalGroup | Target: lib/features/reservation ('.dart',)
+HASIL: 0 hit (Bersih / Tidak Ditemukan)
+
+>>> [GREP] String Error Berbahasa Inggris
+Pattern: Exception:|Failed to|Invalid|Error | Target: lib/features/auth ('.dart',)
+HASIL: 8 hit ditemukan:
+  lib/features/auth/presentation/auth_controller.dart:50: errorMessage: e.toString().replaceAll('Exception: ', ''),
+  lib/features/auth/presentation/auth_controller.dart:65: errorMessage: e.toString().replaceAll('Exception: ', ''),
+  lib/features/auth/presentation/login_screen.dart:142: // Error Banner
+  lib/features/auth/presentation/login_screen.dart:144: _ErrorBanner(message: authState.errorMessage!),
+  lib/features/auth/presentation/login_screen.dart:424: // ── Error Banner ───────────────────────────────────────────────────
+  lib/features/auth/presentation/login_screen.dart:425: class _ErrorBanner extends StatelessWidget {
+  lib/features/auth/presentation/login_screen.dart:427: const _ErrorBanner({required this.message});
+  lib/features/auth/presentation/login_screen.dart:434: color: AppColors.statusErrorBg,
+
+>>> [GREP] DateFormat & NumberFormat id_ID
+Pattern: DateFormat|NumberFormat | Target: lib ('.dart',)
+HASIL: 27 hit ditemukan:
+  lib/main.dart:13: await initializeDateFormatting('id', null);
+  lib/features/checkout/presentation/check_out_dialog.dart:112: final currencyFormatter = NumberFormat.currency(
+  lib/features/checkout/presentation/check_out_dialog.dart:222: 'Check-in: ${DateFormat('dd MMM yyyy, HH:mm').format(widget.room.checkInTime!)} WIB',
+  lib/features/checkout/presentation/invoice_preview_dialog.dart:38: final currencyFormatter = NumberFormat.currency(
+  lib/features/checkout/presentation/invoice_preview_dialog.dart:248: DateFormat('dd/MM/yyyy HH:mm').format(now),
+  lib/features/checkout/presentation/invoice_preview_dialog.dart:297: 'Check-in: ${room.checkInTime != null ? DateFormat('dd/MM HH:mm').format(room.checkInTime!) : "-"}',
+  lib/features/checkout/presentation/whatsapp_receipt_dialog.dart:75: NumberFormat currencyFormatter,
+  lib/features/checkout/presentation/whatsapp_receipt_dialog.dart:80: final checkInDateStr = DateFormat(
+  lib/features/checkout/presentation/whatsapp_receipt_dialog.dart:84: final checkOutDateStr = DateFormat('dd MMM yyyy, HH:mm', 'id').format(now);
+  lib/features/checkout/presentation/whatsapp_receipt_dialog.dart:305: final currencyFormatter = NumberFormat.currency(
+  lib/features/checkout/presentation/whatsapp_receipt_dialog.dart:809: NumberFormat currencyFormatter,
+  lib/features/checkout/presentation/whatsapp_receipt_dialog.dart:814: final checkInDateStr = DateFormat(
+  lib/features/checkout/presentation/whatsapp_receipt_dialog.dart:818: final checkOutDateStr = DateFormat('dd/MM/yyyy HH:mm', 'id').format(now);
+  lib/features/reporting/presentation/executive_trend_chart.dart:18: final NumberFormat currencyFormatter;
+  lib/features/reporting/presentation/manager_dashboard_screen.dart:121: final currencyFormatter = NumberFormat.currency(
+  lib/features/reporting/presentation/manager_dashboard_screen.dart:309: NumberFormat currencyFormatter,
+  lib/features/reporting/presentation/manager_dashboard_screen.dart:331: NumberFormat currencyFormatter,
+  lib/features/reporting/presentation/manager_dashboard_screen.dart:612: Widget _buildInventoryTab(NumberFormat currencyFormatter, List<RoomModel> rooms) {
+  lib/features/reporting/presentation/manager_dashboard_screen.dart:854: Widget _buildReportsTab(NumberFormat currencyFormatter, List<RoomModel> rooms) {
+  lib/features/reporting/presentation/manager_dashboard_screen.dart:1098: DateFormat('dd MMM yyyy, HH:mm:ss').format(log.timestamp),
+  lib/features/reservation/presentation/active_guests_modal.dart:222: 'Batas C/O: ${room.expectedCheckOutTime != null ? DateFormat('dd MMM, HH:mm').format(room.expectedCheckOutTime!) : "12:00 WIB"}',
+  lib/features/reservation/presentation/active_guests_modal.dart:346: ? DateFormat('dd MMM, HH:mm').format(room.expectedCheckOutTime!)
+  lib/features/reservation/presentation/check_in_modal.dart:206: final currencyFormatter = NumberFormat.currency(
+  lib/features/reservation/presentation/check_in_modal.dart:665: 'Out: ${DateFormat('EEE, d MMM', 'id').format(DateTime.now().add(Duration(days: _totalNights)))} pk 12:00 WIB',
+  lib/features/room_management/presentation/room_card.dart:27: static final _currFmt = NumberFormat.currency(
+  lib/features/shared_widgets/app_header.dart:56: final timeStr   = DateFormat('HH:mm:ss').format(_now);
+  lib/features/shared_widgets/app_header.dart:57: final dateStr   = DateFormat('EEE, d MMM yyyy', 'id').format(_now);
+
+>>> [GREP] Penanganan Ekspor > 3 Bulan
+Pattern: 3 bulan|90 hari|startDate|endDate | Target: lib/features/reporting ('.dart',)
+HASIL: 0 hit (Bersih / Tidak Ditemukan)
+
+>>> [GREP] Double Submit Tiap Aksi Async (isLoading pada AppButton submit)
+Pattern: Simpan & Check-In|Proses Check-out|Kirim Ulang | Target: lib ('.dart',)
+HASIL: 3 hit ditemukan:
+  lib/features/reservation/presentation/active_guests_modal.dart:258: label: isResending ? 'Mengirim...' : 'Kirim Ulang WA',
+  lib/features/reservation/presentation/active_guests_modal.dart:394: label: isResending ? 'Mengirim...' : 'Kirim Ulang WA',
+  lib/features/reservation/presentation/check_in_modal.dart:1017: label: 'Simpan & Check-In Tamu',
