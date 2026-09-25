@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../../app/theme.dart';
@@ -24,6 +25,10 @@ class _CheckOutDialogState extends ConsumerState<CheckOutDialog> {
   final _minibarFeeController = TextEditingController(text: '0');
   final _damageFeeController = TextEditingController(text: '0');
   final _notesController = TextEditingController();
+
+  bool _isCustomLateFee = false;
+  bool _isCustomMinibarFee = false;
+  bool _isCustomDamageFee = false;
 
   double _roomSubtotal = 0;
   bool _isLate = false;
@@ -53,6 +58,9 @@ class _CheckOutDialogState extends ConsumerState<CheckOutDialog> {
       if (_lateHours == 0) _lateHours = 1; // Round up to 1 hr
       // Standard late fee Rp 50.000 / hour
       _lateFeeController.text = (_lateHours * 50000).toString();
+      if (_lateHours > 3) {
+        _isCustomLateFee = true;
+      }
     }
   }
 
@@ -263,146 +271,23 @@ class _CheckOutDialogState extends ConsumerState<CheckOutDialog> {
                       const SizedBox(height: AppSpacing.sm),
 
                       if (isMobile) ...[
-                        AppTextField(
-                          label: 'Denda Late Check-Out (Rp)',
-                          controller: _lateFeeController,
-                          keyboardType: TextInputType.number,
-                          prefixIcon: Icons.access_time_rounded,
-                          onChanged: (_) => setState(() {}),
-                        ),
-                        const SizedBox(height: 4),
-                        Wrap(
-                          spacing: 6,
-                          runSpacing: 4,
-                          children: [
-                            _buildQuickAddChip('+1 Jam (50rb)', () {
-                              final cur = double.tryParse(_lateFeeController.text) ?? 0;
-                              setState(() => _lateFeeController.text = (cur + 50000).toInt().toString());
-                            }),
-                            _buildQuickAddChip('+2 Jam (100rb)', () {
-                              final cur = double.tryParse(_lateFeeController.text) ?? 0;
-                              setState(() => _lateFeeController.text = (cur + 100000).toInt().toString());
-                            }),
-                            _buildQuickAddChip('Bebas Denda', () {
-                              setState(() => _lateFeeController.text = '0');
-                            }),
-                          ],
-                        ),
-                        const SizedBox(height: AppSpacing.sm),
-                        AppTextField(
-                          label: 'Minibar / Laundry (Rp)',
-                          controller: _minibarFeeController,
-                          keyboardType: TextInputType.number,
-                          prefixIcon: Icons.local_bar_outlined,
-                          onChanged: (_) => setState(() {}),
-                        ),
-                        const SizedBox(height: 4),
-                        Wrap(
-                          spacing: 6,
-                          runSpacing: 4,
-                          children: [
-                            _buildQuickAddChip('+Air Min. (5rb)', () {
-                              final cur = double.tryParse(_minibarFeeController.text) ?? 0;
-                              setState(() => _minibarFeeController.text = (cur + 5000).toInt().toString());
-                            }),
-                            _buildQuickAddChip('+Snack (15rb)', () {
-                              final cur = double.tryParse(_minibarFeeController.text) ?? 0;
-                              setState(() => _minibarFeeController.text = (cur + 15000).toInt().toString());
-                            }),
-                            _buildQuickAddChip('+Laundry (25rb)', () {
-                              final cur = double.tryParse(_minibarFeeController.text) ?? 0;
-                              setState(() => _minibarFeeController.text = (cur + 25000).toInt().toString());
-                            }),
-                            _buildQuickAddChip('Reset', () {
-                              setState(() => _minibarFeeController.text = '0');
-                            }),
-                          ],
-                        ),
-                      ] else
+                        _buildLateFeeSection(),
+                        const SizedBox(height: AppSpacing.md),
+                        _buildMinibarFeeSection(),
+                        const SizedBox(height: AppSpacing.md),
+                        _buildDamageFeeSection(),
+                      ] else ...[
                         Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  AppTextField(
-                                    label: 'Denda Late Check-Out (Rp)',
-                                    controller: _lateFeeController,
-                                    keyboardType: TextInputType.number,
-                                    prefixIcon: Icons.access_time_rounded,
-                                    onChanged: (_) => setState(() {}),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Wrap(
-                                    spacing: 6,
-                                    runSpacing: 4,
-                                    children: [
-                                      _buildQuickAddChip('+1 Jam (50rb)', () {
-                                        final cur = double.tryParse(_lateFeeController.text) ?? 0;
-                                        setState(() => _lateFeeController.text = (cur + 50000).toInt().toString());
-                                      }),
-                                      _buildQuickAddChip('+2 Jam (100rb)', () {
-                                        final cur = double.tryParse(_lateFeeController.text) ?? 0;
-                                        setState(() => _lateFeeController.text = (cur + 100000).toInt().toString());
-                                      }),
-                                      _buildQuickAddChip('Bebas Denda', () {
-                                        setState(() => _lateFeeController.text = '0');
-                                      }),
-                                    ],
-                                  ),
-                                ],
-                              ),
-                            ),
+                            Expanded(child: _buildLateFeeSection()),
                             const SizedBox(width: AppSpacing.md),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  AppTextField(
-                                    label: 'Minibar / Laundry (Rp)',
-                                    controller: _minibarFeeController,
-                                    keyboardType: TextInputType.number,
-                                    prefixIcon: Icons.local_bar_outlined,
-                                    onChanged: (_) => setState(() {}),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Wrap(
-                                    spacing: 6,
-                                    runSpacing: 4,
-                                    children: [
-                                      _buildQuickAddChip('+Air Min. (5rb)', () {
-                                        final cur = double.tryParse(_minibarFeeController.text) ?? 0;
-                                        setState(() => _minibarFeeController.text = (cur + 5000).toInt().toString());
-                                      }),
-                                      _buildQuickAddChip('+Snack (15rb)', () {
-                                        final cur = double.tryParse(_minibarFeeController.text) ?? 0;
-                                        setState(() => _minibarFeeController.text = (cur + 15000).toInt().toString());
-                                      }),
-                                      _buildQuickAddChip('+Laundry (25rb)', () {
-                                        final cur = double.tryParse(_minibarFeeController.text) ?? 0;
-                                        setState(() => _minibarFeeController.text = (cur + 25000).toInt().toString());
-                                      }),
-                                      _buildQuickAddChip('Reset', () {
-                                        setState(() => _minibarFeeController.text = '0');
-                                      }),
-                                    ],
-                                  ),
-                                ],
-                              ),
-                            ),
+                            Expanded(child: _buildMinibarFeeSection()),
                           ],
                         ),
-
-                      const SizedBox(height: AppSpacing.md),
-
-                      AppTextField(
-                        label: 'Ganti Rugi Kerusakan Properti (Rp)',
-                        controller: _damageFeeController,
-                        keyboardType: TextInputType.number,
-                        prefixIcon: Icons.handyman_outlined,
-                        onChanged: (_) => setState(() {}),
-                      ),
+                        const SizedBox(height: AppSpacing.md),
+                        _buildDamageFeeSection(),
+                      ],
 
                       const SizedBox(height: AppSpacing.md),
 
@@ -540,25 +425,404 @@ class _CheckOutDialogState extends ConsumerState<CheckOutDialog> {
     );
   }
 
-  Widget _buildQuickAddChip(String label, VoidCallback onTap) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(6),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3.5),
-        decoration: BoxDecoration(
-          color: AppColors.navy50,
-          borderRadius: BorderRadius.circular(6),
-          border: Border.all(color: AppColors.border),
-        ),
-        child: Text(
-          label,
-          style: const TextStyle(
-            fontSize: 11.5,
+  Widget _buildLateFeeSection() {
+    final fee = int.tryParse(_lateFeeController.text) ?? 0;
+    final int selectedValue = _isCustomLateFee
+        ? -1
+        : (fee == 0 || fee == 50000 || fee == 100000 || fee == 150000 ? fee : -1);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Denda Late Check-Out (Rp)',
+          style: AppTypography.bodySm.copyWith(
             fontWeight: FontWeight.w600,
-            color: AppColors.navy900,
+            color: AppColors.textPrimary,
           ),
         ),
+        const SizedBox(height: AppSpacing.xs),
+        Container(
+          height: 48,
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(
+              color: _isCustomLateFee ? AppColors.navy700 : AppColors.border,
+              width: _isCustomLateFee ? 1.5 : 1,
+            ),
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          child: DropdownButtonHideUnderline(
+            child: DropdownButton<int>(
+              value: selectedValue,
+              isExpanded: true,
+              icon: const Icon(Icons.keyboard_arrow_down_rounded, color: AppColors.navy700, size: 20),
+              dropdownColor: AppColors.surface,
+              borderRadius: BorderRadius.circular(8),
+              items: [
+                DropdownMenuItem<int>(
+                  value: 0,
+                  child: Row(
+                    children: [
+                      const Icon(Icons.check_circle_outline, size: 18, color: AppColors.statusAvailable),
+                      const SizedBox(width: 8),
+                      Text('Bebas Denda (Rp 0)', style: AppTypography.bodySm.copyWith(color: AppColors.navy900)),
+                    ],
+                  ),
+                ),
+                DropdownMenuItem<int>(
+                  value: 50000,
+                  child: Row(
+                    children: [
+                      const Icon(Icons.access_time_rounded, size: 18, color: AppColors.navy700),
+                      const SizedBox(width: 8),
+                      Text('+1 Jam — Rp 50.000', style: AppTypography.bodySm.copyWith(color: AppColors.navy900)),
+                    ],
+                  ),
+                ),
+                DropdownMenuItem<int>(
+                  value: 100000,
+                  child: Row(
+                    children: [
+                      const Icon(Icons.access_time_rounded, size: 18, color: AppColors.navy700),
+                      const SizedBox(width: 8),
+                      Text('+2 Jam — Rp 100.000', style: AppTypography.bodySm.copyWith(color: AppColors.navy900)),
+                    ],
+                  ),
+                ),
+                DropdownMenuItem<int>(
+                  value: 150000,
+                  child: Row(
+                    children: [
+                      const Icon(Icons.access_time_rounded, size: 18, color: AppColors.navy700),
+                      const SizedBox(width: 8),
+                      Text('+3 Jam — Rp 150.000', style: AppTypography.bodySm.copyWith(color: AppColors.navy900)),
+                    ],
+                  ),
+                ),
+                DropdownMenuItem<int>(
+                  value: -1,
+                  child: Row(
+                    children: [
+                      const Icon(Icons.edit_note_rounded, size: 18, color: AppColors.orange600),
+                      const SizedBox(width: 8),
+                      Text(
+                        _isCustomLateFee ? 'Isi Sendiri (Rp $fee)' : 'Isi Sendiri (Manual)...',
+                        style: AppTypography.bodySm.copyWith(
+                          fontWeight: selectedValue == -1 ? FontWeight.w700 : FontWeight.w600,
+                          color: _isCustomLateFee ? AppColors.navy900 : AppColors.orange600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+              onChanged: (val) {
+                if (val == null) return;
+                if (val == -1) {
+                  setState(() => _isCustomLateFee = true);
+                } else {
+                  setState(() {
+                    _isCustomLateFee = false;
+                    _lateFeeController.text = val.toString();
+                  });
+                }
+              },
+            ),
+          ),
+        ),
+        if (_isCustomLateFee) ...[
+          const SizedBox(height: 8),
+          _buildCustomFeeField(_lateFeeController, 'Ketik nominal denda late checkout...'),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildMinibarFeeSection() {
+    final fee = int.tryParse(_minibarFeeController.text) ?? 0;
+    final int selectedValue = _isCustomMinibarFee
+        ? -1
+        : (fee == 0 || fee == 5000 || fee == 10000 || fee == 15000 || fee == 25000 || fee == 40000 ? fee : -1);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Minibar / Laundry (Rp)',
+          style: AppTypography.bodySm.copyWith(
+            fontWeight: FontWeight.w600,
+            color: AppColors.textPrimary,
+          ),
+        ),
+        const SizedBox(height: AppSpacing.xs),
+        Container(
+          height: 48,
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(
+              color: _isCustomMinibarFee ? AppColors.navy700 : AppColors.border,
+              width: _isCustomMinibarFee ? 1.5 : 1,
+            ),
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          child: DropdownButtonHideUnderline(
+            child: DropdownButton<int>(
+              value: selectedValue,
+              isExpanded: true,
+              icon: const Icon(Icons.keyboard_arrow_down_rounded, color: AppColors.navy700, size: 20),
+              dropdownColor: AppColors.surface,
+              borderRadius: BorderRadius.circular(8),
+              items: [
+                DropdownMenuItem<int>(
+                  value: 0,
+                  child: Row(
+                    children: [
+                      const Icon(Icons.check_circle_outline, size: 18, color: AppColors.statusAvailable),
+                      const SizedBox(width: 8),
+                      Text('Tidak Ada (Rp 0)', style: AppTypography.bodySm.copyWith(color: AppColors.navy900)),
+                    ],
+                  ),
+                ),
+                DropdownMenuItem<int>(
+                  value: 5000,
+                  child: Row(
+                    children: [
+                      const Icon(Icons.local_drink_outlined, size: 18, color: AppColors.navy700),
+                      const SizedBox(width: 8),
+                      Text('Air Mineral — Rp 5.000', style: AppTypography.bodySm.copyWith(color: AppColors.navy900)),
+                    ],
+                  ),
+                ),
+                DropdownMenuItem<int>(
+                  value: 10000,
+                  child: Row(
+                    children: [
+                      const Icon(Icons.local_drink_outlined, size: 18, color: AppColors.navy700),
+                      const SizedBox(width: 8),
+                      Text('2x Air Mineral — Rp 10.000', style: AppTypography.bodySm.copyWith(color: AppColors.navy900)),
+                    ],
+                  ),
+                ),
+                DropdownMenuItem<int>(
+                  value: 15000,
+                  child: Row(
+                    children: [
+                      const Icon(Icons.fastfood_outlined, size: 18, color: AppColors.navy700),
+                      const SizedBox(width: 8),
+                      Text('Snack / Camilan — Rp 15.000', style: AppTypography.bodySm.copyWith(color: AppColors.navy900)),
+                    ],
+                  ),
+                ),
+                DropdownMenuItem<int>(
+                  value: 25000,
+                  child: Row(
+                    children: [
+                      const Icon(Icons.local_laundry_service_outlined, size: 18, color: AppColors.navy700),
+                      const SizedBox(width: 8),
+                      Text('Laundry Standar — Rp 25.000', style: AppTypography.bodySm.copyWith(color: AppColors.navy900)),
+                    ],
+                  ),
+                ),
+                DropdownMenuItem<int>(
+                  value: 40000,
+                  child: Row(
+                    children: [
+                      const Icon(Icons.local_bar_outlined, size: 18, color: AppColors.navy700),
+                      const SizedBox(width: 8),
+                      Text('Minibar + Laundry — Rp 40.000', style: AppTypography.bodySm.copyWith(color: AppColors.navy900)),
+                    ],
+                  ),
+                ),
+                DropdownMenuItem<int>(
+                  value: -1,
+                  child: Row(
+                    children: [
+                      const Icon(Icons.edit_note_rounded, size: 18, color: AppColors.orange600),
+                      const SizedBox(width: 8),
+                      Text(
+                        _isCustomMinibarFee ? 'Isi Sendiri (Rp $fee)' : 'Isi Sendiri (Manual)...',
+                        style: AppTypography.bodySm.copyWith(
+                          fontWeight: selectedValue == -1 ? FontWeight.w700 : FontWeight.w600,
+                          color: _isCustomMinibarFee ? AppColors.navy900 : AppColors.orange600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+              onChanged: (val) {
+                if (val == null) return;
+                if (val == -1) {
+                  setState(() => _isCustomMinibarFee = true);
+                } else {
+                  setState(() {
+                    _isCustomMinibarFee = false;
+                    _minibarFeeController.text = val.toString();
+                  });
+                }
+              },
+            ),
+          ),
+        ),
+        if (_isCustomMinibarFee) ...[
+          const SizedBox(height: 8),
+          _buildCustomFeeField(_minibarFeeController, 'Ketik nominal minibar / laundry...'),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildDamageFeeSection() {
+    final fee = int.tryParse(_damageFeeController.text) ?? 0;
+    final int selectedValue = _isCustomDamageFee
+        ? -1
+        : (fee == 0 || fee == 50000 || fee == 100000 || fee == 200000 ? fee : -1);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Ganti Rugi Kerusakan Properti (Rp)',
+          style: AppTypography.bodySm.copyWith(
+            fontWeight: FontWeight.w600,
+            color: AppColors.textPrimary,
+          ),
+        ),
+        const SizedBox(height: AppSpacing.xs),
+        Container(
+          height: 48,
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(
+              color: _isCustomDamageFee ? AppColors.navy700 : AppColors.border,
+              width: _isCustomDamageFee ? 1.5 : 1,
+            ),
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          child: DropdownButtonHideUnderline(
+            child: DropdownButton<int>(
+              value: selectedValue,
+              isExpanded: true,
+              icon: const Icon(Icons.keyboard_arrow_down_rounded, color: AppColors.navy700, size: 20),
+              dropdownColor: AppColors.surface,
+              borderRadius: BorderRadius.circular(8),
+              items: [
+                DropdownMenuItem<int>(
+                  value: 0,
+                  child: Row(
+                    children: [
+                      const Icon(Icons.check_circle_outline, size: 18, color: AppColors.statusAvailable),
+                      const SizedBox(width: 8),
+                      Text('Tidak Ada Kerusakan (Rp 0)', style: AppTypography.bodySm.copyWith(color: AppColors.navy900)),
+                    ],
+                  ),
+                ),
+                DropdownMenuItem<int>(
+                  value: 50000,
+                  child: Row(
+                    children: [
+                      const Icon(Icons.vpn_key_outlined, size: 18, color: AppColors.navy700),
+                      const SizedBox(width: 8),
+                      Text('Hilang Kunci / Kartu — Rp 50.000', style: AppTypography.bodySm.copyWith(color: AppColors.navy900)),
+                    ],
+                  ),
+                ),
+                DropdownMenuItem<int>(
+                  value: 100000,
+                  child: Row(
+                    children: [
+                      const Icon(Icons.cleaning_services_outlined, size: 18, color: AppColors.navy700),
+                      const SizedBox(width: 8),
+                      Text('Noda Sprei / Handuk Rusak — Rp 100.000', style: AppTypography.bodySm.copyWith(color: AppColors.navy900)),
+                    ],
+                  ),
+                ),
+                DropdownMenuItem<int>(
+                  value: 200000,
+                  child: Row(
+                    children: [
+                      const Icon(Icons.handyman_outlined, size: 18, color: AppColors.navy700),
+                      const SizedBox(width: 8),
+                      Text('Peralatan Kamar Rusak — Rp 200.000', style: AppTypography.bodySm.copyWith(color: AppColors.navy900)),
+                    ],
+                  ),
+                ),
+                DropdownMenuItem<int>(
+                  value: -1,
+                  child: Row(
+                    children: [
+                      const Icon(Icons.edit_note_rounded, size: 18, color: AppColors.orange600),
+                      const SizedBox(width: 8),
+                      Text(
+                        _isCustomDamageFee ? 'Isi Sendiri (Rp $fee)' : 'Isi Sendiri (Manual)...',
+                        style: AppTypography.bodySm.copyWith(
+                          fontWeight: selectedValue == -1 ? FontWeight.w700 : FontWeight.w600,
+                          color: _isCustomDamageFee ? AppColors.navy900 : AppColors.orange600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+              onChanged: (val) {
+                if (val == null) return;
+                if (val == -1) {
+                  setState(() => _isCustomDamageFee = true);
+                } else {
+                  setState(() {
+                    _isCustomDamageFee = false;
+                    _damageFeeController.text = val.toString();
+                  });
+                }
+              },
+            ),
+          ),
+        ),
+        if (_isCustomDamageFee) ...[
+          const SizedBox(height: 8),
+          _buildCustomFeeField(_damageFeeController, 'Ketik nominal ganti rugi kerusakan...'),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildCustomFeeField(TextEditingController controller, String hint) {
+    return Container(
+      height: 44,
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: AppColors.navy700, width: 1.5),
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 10),
+      child: Row(
+        children: [
+          const Text('Rp', style: TextStyle(fontWeight: FontWeight.w700, color: AppColors.navy700, fontSize: 13)),
+          const SizedBox(width: 8),
+          Expanded(
+            child: TextField(
+              controller: controller,
+              autofocus: true,
+              keyboardType: TextInputType.number,
+              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              decoration: InputDecoration(
+                hintText: hint,
+                border: InputBorder.none,
+                isDense: true,
+                contentPadding: EdgeInsets.zero,
+              ),
+              style: AppTypography.bodySm.copyWith(
+                fontWeight: FontWeight.w700,
+                color: AppColors.navy900,
+              ),
+              onChanged: (_) => setState(() {}),
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -7,6 +7,17 @@ import 'app/theme.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Filter out known Windows Flutter engine bug on Alt-Tab / focus change
+  FlutterError.onError = (FlutterErrorDetails details) {
+    final exceptionStr = details.exceptionAsString();
+    if (exceptionStr.contains('keysPressed') ||
+        exceptionStr.contains('RawKeyDownEvent')) {
+      return;
+    }
+    FlutterError.presentError(details);
+  };
+
   // Allow google_fonts to fetch fonts from network (required on desktop)
   GoogleFonts.config.allowRuntimeFetching = true;
   // Initialize locale data for Bahasa Indonesia date formatting

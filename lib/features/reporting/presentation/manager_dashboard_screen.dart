@@ -13,6 +13,7 @@ import '../../shared_widgets/app_header.dart';
 import '../../shared_widgets/metric_card.dart';
 import '../../shared_widgets/status_badge.dart';
 import '../domain/audit_log_model.dart';
+import '../domain/report_export_service.dart';
 import 'executive_trend_chart.dart';
 
 class ManagerDashboardScreen extends ConsumerStatefulWidget {
@@ -78,40 +79,254 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
     context.go('/login');
   }
 
-  void _handleExportExcel() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        backgroundColor: const Color(0xFF16A34A),
-        content: const Row(
-          children: [
-            Icon(Icons.table_chart_outlined, color: Colors.white),
-            SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                'Laporan Excel (.xlsx) berhasil dibuat dengan 2 sheet: Summary KPI & Raw Data Detail Transaksi!',
+  bool _isExportingExcel = false;
+  bool _isExportingPdf = false;
+
+  Future<void> _handleExportExcel() async {
+    if (_isExportingExcel) return;
+    setState(() => _isExportingExcel = true);
+
+    try {
+      final rooms = ref.read(roomListProvider).value ?? [];
+      final savedPath = await ReportExportService.exportToExcel(
+        rooms: rooms,
+        periodName: 'September 2026',
+      );
+
+      if (!mounted) return;
+
+      if (savedPath == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Pengunduhan Excel dibatalkan.'),
+            duration: Duration(seconds: 2),
+          ),
+        );
+        return;
+      }
+
+      final fileName = savedPath.split(RegExp(r'[\\/]')).last;
+
+      _showDownloadSuccessDialog(
+        title: 'Unduhan Excel Berhasil!',
+        fileName: fileName,
+        filePath: savedPath,
+        isExcel: true,
+      );
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: const Color(0xFF16A34A),
+          duration: const Duration(seconds: 4),
+          content: Row(
+            children: [
+              const Icon(Icons.check_circle_outline, color: Colors.white),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  'Laporan Excel tersimpan: $fileName',
+                  style: const TextStyle(color: Colors.white, fontSize: 13),
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
+          action: SnackBarAction(
+            label: 'BUKA',
+            textColor: Colors.white,
+            onPressed: () => ReportExportService.openFile(savedPath),
+          ),
         ),
-      ),
-    );
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: Colors.red.shade700,
+          content: Text('Gagal mengekspor Excel: $e'),
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _isExportingExcel = false);
+    }
   }
 
-  void _handleExportPdf() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        backgroundColor: AppColors.navy700,
-        content: const Row(
+  Future<void> _handleExportPdf() async {
+    if (_isExportingPdf) return;
+    setState(() => _isExportingPdf = true);
+
+    try {
+      final rooms = ref.read(roomListProvider).value ?? [];
+      final authState = ref.read(authStateProvider);
+      final managerName = authState.user?.fullName ?? 'Hendra Wijaya';
+
+      final savedPath = await ReportExportService.exportToPdf(
+        rooms: rooms,
+        periodName: 'September 2026',
+        managerName: managerName,
+      );
+
+      if (!mounted) return;
+
+      if (savedPath == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Pengunduhan PDF dibatalkan.'),
+            duration: Duration(seconds: 2),
+          ),
+        );
+        return;
+      }
+
+      final fileName = savedPath.split(RegExp(r'[\\/]')).last;
+
+      _showDownloadSuccessDialog(
+        title: 'Unduhan PDF Resmi Berhasil!',
+        fileName: fileName,
+        filePath: savedPath,
+        isExcel: false,
+      );
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: AppColors.navy700,
+          duration: const Duration(seconds: 4),
+          content: Row(
+            children: [
+              const Icon(Icons.picture_as_pdf_outlined, color: Colors.white),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  'Laporan PDF resmi tersimpan: $fileName',
+                  style: const TextStyle(color: Colors.white, fontSize: 13),
+                ),
+              ),
+            ],
+          ),
+          action: SnackBarAction(
+            label: 'BUKA',
+            textColor: AppColors.orange500,
+            onPressed: () => ReportExportService.openFile(savedPath),
+          ),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: Colors.red.shade700,
+          content: Text('Gagal mengekspor PDF: $e'),
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _isExportingPdf = false);
+    }
+  }
+
+  void _showDownloadSuccessDialog({
+    required String title,
+    required String fileName,
+    required String filePath,
+    required bool isExcel,
+  }) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Row(
           children: [
-            Icon(Icons.picture_as_pdf_outlined, color: Colors.white),
-            SizedBox(width: 8),
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: isExcel ? const Color(0xFFDCFCE7) : const Color(0xFFFEE2E2),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                isExcel ? Icons.table_chart : Icons.picture_as_pdf,
+                color: isExcel ? const Color(0xFF16A34A) : AppColors.orange600,
+                size: 24,
+              ),
+            ),
+            const SizedBox(width: 12),
             Expanded(
               child: Text(
-                'Laporan resmi A4 Hotel Sinar Harapan x RedDoorz (.pdf) siap diunduh dengan kolom pengesahan Manajer.',
+                title,
+                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.navy700),
               ),
             ),
           ],
         ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Berkas laporan telah berhasil diunduh dan tersimpan ke perangkat Anda:',
+              style: TextStyle(fontSize: 13, color: AppColors.navy500),
+            ),
+            const SizedBox(height: 12),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppColors.navy50,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: AppColors.border),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(
+                        isExcel ? Icons.file_present_outlined : Icons.description_outlined,
+                        size: 16,
+                        color: AppColors.navy700,
+                      ),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          fileName,
+                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    filePath,
+                    style: const TextStyle(fontSize: 11, color: AppColors.navy500),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Tutup'),
+          ),
+          OutlinedButton.icon(
+            icon: const Icon(Icons.folder_open, size: 18),
+            label: const Text('Buka Folder'),
+            onPressed: () {
+              ReportExportService.openFolder(filePath);
+              Navigator.of(ctx).pop();
+            },
+          ),
+          ElevatedButton.icon(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: isExcel ? const Color(0xFF16A34A) : AppColors.orange600,
+              foregroundColor: Colors.white,
+            ),
+            icon: const Icon(Icons.open_in_new, size: 18),
+            label: Text(isExcel ? 'Buka Excel Sekarang' : 'Buka PDF Sekarang'),
+            onPressed: () {
+              ReportExportService.openFile(filePath);
+              Navigator.of(ctx).pop();
+            },
+          ),
+        ],
       ),
     );
   }
@@ -233,6 +448,7 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
                             label: 'Ekspor Excel',
                             variant: AppButtonVariant.secondary,
                             icon: Icons.table_view_outlined,
+                            isLoading: _isExportingExcel,
                             onPressed: _handleExportExcel,
                           ),
                           const SizedBox(width: AppSpacing.xs),
@@ -240,6 +456,7 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
                             label: 'Ekspor PDF',
                             variant: AppButtonVariant.outline,
                             icon: Icons.picture_as_pdf_outlined,
+                            isLoading: _isExportingPdf,
                             onPressed: _handleExportPdf,
                           ),
                         ],
@@ -887,12 +1104,14 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
                       label: 'Unduh Excel (.xlsx)',
                       variant: AppButtonVariant.secondary,
                       icon: Icons.file_download_outlined,
+                      isLoading: _isExportingExcel,
                       onPressed: _handleExportExcel,
                     ),
                     AppButton(
                       label: 'Unduh PDF Resmi',
                       variant: AppButtonVariant.primary,
                       icon: Icons.picture_as_pdf_outlined,
+                      isLoading: _isExportingPdf,
                       onPressed: _handleExportPdf,
                     ),
                   ],
