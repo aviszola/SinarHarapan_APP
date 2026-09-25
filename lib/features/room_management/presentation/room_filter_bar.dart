@@ -4,6 +4,8 @@ import '../../../app/theme.dart';
 import '../../shared_widgets/status_badge.dart';
 import 'room_controller.dart';
 
+/// Clean, compact room filter bar following modern SaaS design (Linear / Stripe style).
+/// Replaces sprawling pill chips with sleek, ergonomic dropdown filters.
 class RoomFilterBar extends ConsumerWidget {
   const RoomFilterBar({super.key});
 
@@ -14,8 +16,13 @@ class RoomFilterBar extends ConsumerWidget {
     final stats = ref.watch(roomStatsProvider);
     final totalRooms = stats.values.fold<int>(0, (a, b) => a + b);
 
+    final hasActiveFilter = filter.searchQuery.isNotEmpty ||
+        filter.roomType != 'ALL' ||
+        filter.floor != 0 ||
+        filter.status != null;
+
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm + 2),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: 8),
       decoration: const BoxDecoration(
         color: AppColors.surface,
         border: Border(bottom: BorderSide(color: AppColors.border)),
@@ -26,36 +33,36 @@ class RoomFilterBar extends ConsumerWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            // Search Input Field
+            // 1. Search Box
             SizedBox(
-              width: 240,
-              height: 38,
+              width: 220,
+              height: 36,
               child: TextField(
-                style: const TextStyle(fontSize: 13.5),
+                style: const TextStyle(fontSize: 13),
                 decoration: InputDecoration(
-                  hintText: 'Cari nomor kamar / tamu...',
-                  hintStyle: const TextStyle(fontSize: 13, color: AppColors.textSecondary),
-                  prefixIcon: const Icon(Icons.search, size: 18, color: AppColors.textSecondary),
+                  hintText: 'Cari kamar / tamu...',
+                  hintStyle: const TextStyle(fontSize: 12.5, color: AppColors.textSecondary),
+                  prefixIcon: const Icon(Icons.search_rounded, size: 16, color: AppColors.textSecondary),
                   suffixIcon: filter.searchQuery.isNotEmpty
                       ? IconButton(
                           padding: EdgeInsets.zero,
-                          icon: const Icon(Icons.clear, size: 16, color: AppColors.textSecondary),
+                          icon: const Icon(Icons.clear, size: 15, color: AppColors.textSecondary),
                           onPressed: () => notifier.state = filter.copyWith(searchQuery: ''),
                         )
                       : null,
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                   filled: true,
                   fillColor: AppColors.bg,
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(6),
                     borderSide: const BorderSide(color: AppColors.border),
                   ),
                   enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(6),
                     borderSide: const BorderSide(color: AppColors.border),
                   ),
                   focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(6),
                     borderSide: const BorderSide(color: AppColors.navy700, width: 1.5),
                   ),
                 ),
@@ -64,190 +71,281 @@ class RoomFilterBar extends ConsumerWidget {
             ),
 
             const SizedBox(
-              height: 24,
+              height: 20,
               child: VerticalDivider(color: AppColors.border, width: 20),
             ),
 
-            // Room Type Pills
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  'Tipe: ',
-                  style: AppTypography.caption.copyWith(fontWeight: FontWeight.w600),
+            // 2. Room Type Dropdown
+            _buildFilterDropdown<String>(
+              value: filter.roomType,
+              icon: Icon(
+                Icons.king_bed_outlined,
+                size: 15,
+                color: filter.roomType != 'ALL' ? AppColors.navy700 : AppColors.textSecondary,
+              ),
+              label: filter.roomType == 'ALL' ? 'Semua Tipe' : filter.roomType,
+              isActive: filter.roomType != 'ALL',
+              items: const [
+                DropdownMenuItem(
+                  value: 'ALL',
+                  child: Text('Semua Tipe', style: TextStyle(fontSize: 12.5)),
                 ),
-                const SizedBox(width: 6),
-                _buildFilterPill(
-                  label: 'Semua',
-                  isSelected: filter.roomType == 'ALL',
-                  onTap: () => notifier.state = filter.copyWith(roomType: 'ALL'),
+                DropdownMenuItem(
+                  value: 'Standard',
+                  child: Text('Standard', style: TextStyle(fontSize: 12.5)),
                 ),
-                const SizedBox(width: 6),
-                _buildFilterPill(
-                  label: 'Standard',
-                  isSelected: filter.roomType == 'Standard',
-                  onTap: () => notifier.state = filter.copyWith(roomType: 'Standard'),
+                DropdownMenuItem(
+                  value: 'Superior',
+                  child: Text('Superior', style: TextStyle(fontSize: 12.5)),
                 ),
-                const SizedBox(width: 6),
-                _buildFilterPill(
-                  label: 'Superior',
-                  isSelected: filter.roomType == 'Superior',
-                  onTap: () => notifier.state = filter.copyWith(roomType: 'Superior'),
+                DropdownMenuItem(
+                  value: 'Deluxe',
+                  child: Text('Deluxe', style: TextStyle(fontSize: 12.5)),
                 ),
-                const SizedBox(width: 6),
-                _buildFilterPill(
-                  label: 'Deluxe',
-                  isSelected: filter.roomType == 'Deluxe',
-                  onTap: () => notifier.state = filter.copyWith(roomType: 'Deluxe'),
-                ),
-                const SizedBox(width: 6),
-                _buildFilterPill(
-                  label: 'Family',
-                  isSelected: filter.roomType == 'Family',
-                  onTap: () => notifier.state = filter.copyWith(roomType: 'Family'),
+                DropdownMenuItem(
+                  value: 'Family',
+                  child: Text('Family', style: TextStyle(fontSize: 12.5)),
                 ),
               ],
+              onChanged: (val) {
+                if (val != null) {
+                  notifier.state = filter.copyWith(roomType: val);
+                }
+              },
             ),
 
-            const SizedBox(
-              height: 24,
-              child: VerticalDivider(color: AppColors.border, width: 24),
-            ),
+            const SizedBox(width: 8),
 
-            // Floor Pills
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  'Lantai: ',
-                  style: AppTypography.caption.copyWith(fontWeight: FontWeight.w600),
+            // 3. Floor Dropdown
+            _buildFilterDropdown<int>(
+              value: filter.floor,
+              icon: Icon(
+                Icons.layers_outlined,
+                size: 15,
+                color: filter.floor != 0 ? AppColors.navy700 : AppColors.textSecondary,
+              ),
+              label: filter.floor == 0 ? 'Semua Lantai' : 'Lantai ${filter.floor}',
+              isActive: filter.floor != 0,
+              items: const [
+                DropdownMenuItem(
+                  value: 0,
+                  child: Text('Semua Lantai', style: TextStyle(fontSize: 12.5)),
                 ),
-                const SizedBox(width: 6),
-                _buildFilterPill(
-                  label: 'Semua',
-                  isSelected: filter.floor == 0,
-                  onTap: () => notifier.state = filter.copyWith(floor: 0),
+                DropdownMenuItem(
+                  value: 1,
+                  child: Text('Lantai 1', style: TextStyle(fontSize: 12.5)),
                 ),
-                const SizedBox(width: 6),
-                _buildFilterPill(
-                  label: 'Lt 1',
-                  isSelected: filter.floor == 1,
-                  onTap: () => notifier.state = filter.copyWith(floor: 1),
+                DropdownMenuItem(
+                  value: 2,
+                  child: Text('Lantai 2', style: TextStyle(fontSize: 12.5)),
                 ),
-                const SizedBox(width: 6),
-                _buildFilterPill(
-                  label: 'Lt 2',
-                  isSelected: filter.floor == 2,
-                  onTap: () => notifier.state = filter.copyWith(floor: 2),
-                ),
-                const SizedBox(width: 6),
-                _buildFilterPill(
-                  label: 'Lt 3',
-                  isSelected: filter.floor == 3,
-                  onTap: () => notifier.state = filter.copyWith(floor: 3),
+                DropdownMenuItem(
+                  value: 3,
+                  child: Text('Lantai 3', style: TextStyle(fontSize: 12.5)),
                 ),
               ],
+              onChanged: (val) {
+                if (val != null) {
+                  notifier.state = filter.copyWith(floor: val);
+                }
+              },
             ),
 
-            const SizedBox(
-              height: 24,
-              child: VerticalDivider(color: AppColors.border, width: 24),
-            ),
+            const SizedBox(width: 8),
 
-            // Status Pills with Live Counts
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  'Status: ',
-                  style: AppTypography.caption.copyWith(fontWeight: FontWeight.w600),
+            // 4. Status Dropdown
+            _buildFilterDropdown<RoomStatusType?>(
+              value: filter.status,
+              icon: _getStatusDotOrIcon(filter.status),
+              label: _getStatusLabel(filter.status, stats, totalRooms),
+              isActive: filter.status != null,
+              items: [
+                DropdownMenuItem(
+                  value: null,
+                  child: Text('Semua Status ($totalRooms)', style: const TextStyle(fontSize: 12.5)),
                 ),
-                const SizedBox(width: 6),
-                _buildFilterPill(
-                  label: 'Semua ($totalRooms)',
-                  isSelected: filter.status == null,
-                  onTap: () => notifier.state = filter.copyWith(clearStatus: true),
+                DropdownMenuItem(
+                  value: RoomStatusType.available,
+                  child: Row(
+                    children: [
+                      _buildDot(AppColors.statusAvailable),
+                      const SizedBox(width: 8),
+                      Text('Available (${stats[RoomStatusType.available] ?? 0})',
+                          style: const TextStyle(fontSize: 12.5)),
+                    ],
+                  ),
                 ),
-                const SizedBox(width: 6),
-                _buildFilterPill(
-                  label: 'Available (${stats[RoomStatusType.available] ?? 0})',
-                  dotColor: AppColors.statusAvailable,
-                  isSelected: filter.status == RoomStatusType.available,
-                  onTap: () => notifier.state = filter.copyWith(status: RoomStatusType.available),
+                DropdownMenuItem(
+                  value: RoomStatusType.occupied,
+                  child: Row(
+                    children: [
+                      _buildDot(AppColors.statusOccupied),
+                      const SizedBox(width: 8),
+                      Text('Occupied (${stats[RoomStatusType.occupied] ?? 0})',
+                          style: const TextStyle(fontSize: 12.5)),
+                    ],
+                  ),
                 ),
-                const SizedBox(width: 6),
-                _buildFilterPill(
-                  label: 'Occupied (${stats[RoomStatusType.occupied] ?? 0})',
-                  dotColor: AppColors.statusOccupied,
-                  isSelected: filter.status == RoomStatusType.occupied,
-                  onTap: () => notifier.state = filter.copyWith(status: RoomStatusType.occupied),
+                DropdownMenuItem(
+                  value: RoomStatusType.dirty,
+                  child: Row(
+                    children: [
+                      _buildDot(AppColors.statusDirty),
+                      const SizedBox(width: 8),
+                      Text('Dirty (${stats[RoomStatusType.dirty] ?? 0})',
+                          style: const TextStyle(fontSize: 12.5)),
+                    ],
+                  ),
                 ),
-                const SizedBox(width: 6),
-                _buildFilterPill(
-                  label: 'Dirty (${stats[RoomStatusType.dirty] ?? 0})',
-                  dotColor: AppColors.statusDirty,
-                  isSelected: filter.status == RoomStatusType.dirty,
-                  onTap: () => notifier.state = filter.copyWith(status: RoomStatusType.dirty),
-                ),
-                const SizedBox(width: 6),
-                _buildFilterPill(
-                  label: 'Maint. (${stats[RoomStatusType.maintenance] ?? 0})',
-                  dotColor: AppColors.statusMaintenance,
-                  isSelected: filter.status == RoomStatusType.maintenance,
-                  onTap: () => notifier.state = filter.copyWith(status: RoomStatusType.maintenance),
+                DropdownMenuItem(
+                  value: RoomStatusType.maintenance,
+                  child: Row(
+                    children: [
+                      _buildDot(AppColors.statusMaintenance),
+                      const SizedBox(width: 8),
+                      Text('Maintenance (${stats[RoomStatusType.maintenance] ?? 0})',
+                          style: const TextStyle(fontSize: 12.5)),
+                    ],
+                  ),
                 ),
               ],
+              onChanged: (val) {
+                if (val == null) {
+                  notifier.state = filter.copyWith(clearStatus: true);
+                } else {
+                  notifier.state = filter.copyWith(status: val);
+                }
+              },
             ),
+
+            // 5. Reset Filter Button (Shown only when active filters exist)
+            if (hasActiveFilter) ...[
+              const SizedBox(width: 10),
+              InkWell(
+                onTap: () => notifier.state = const RoomFilterState(),
+                borderRadius: BorderRadius.circular(6),
+                child: Container(
+                  height: 36,
+                  padding: const EdgeInsets.symmetric(horizontal: 10),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFEE2E2),
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(
+                      color: const Color(0xFFFCA5A5),
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: const [
+                      Icon(Icons.close_rounded, size: 14, color: AppColors.statusOccupied),
+                      SizedBox(width: 4),
+                      Text(
+                        'Reset Filter',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.statusOccupied,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
           ],
         ),
       ),
     );
   }
 
-  Widget _buildFilterPill({
+  Widget _buildFilterDropdown<T>({
+    required T value,
+    required Widget icon,
     required String label,
-    required bool isSelected,
-    required VoidCallback onTap,
-    Color? dotColor,
+    required bool isActive,
+    required List<DropdownMenuItem<T>> items,
+    required ValueChanged<T?> onChanged,
   }) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: AppRadius.roundedFull,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 150),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
-        decoration: BoxDecoration(
-          color: isSelected ? AppColors.navy700 : Colors.transparent,
-          borderRadius: AppRadius.roundedFull,
-          border: Border.all(
-            color: isSelected ? AppColors.navy700 : AppColors.border,
-            width: 1,
+    return Container(
+      height: 36,
+      decoration: BoxDecoration(
+        color: isActive ? AppColors.navy50 : AppColors.surface,
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(
+          color: isActive ? AppColors.navy700 : AppColors.border,
+          width: isActive ? 1.5 : 1,
+        ),
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 10),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<T>(
+          value: value,
+          isDense: true,
+          icon: Icon(
+            Icons.keyboard_arrow_down_rounded,
+            size: 16,
+            color: isActive ? AppColors.navy700 : AppColors.textSecondary,
           ),
+          dropdownColor: AppColors.surface,
+          borderRadius: BorderRadius.circular(8),
+          selectedItemBuilder: (context) {
+            return items.map((_) {
+              return Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  icon,
+                  const SizedBox(width: 6),
+                  Text(
+                    label,
+                    style: TextStyle(
+                      fontSize: 12.5,
+                      fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
+                      color: isActive ? AppColors.navy900 : AppColors.textPrimary,
+                    ),
+                  ),
+                ],
+              );
+            }).toList();
+          },
+          items: items,
+          onChanged: onChanged,
         ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (dotColor != null) ...[
-              Container(
-                width: 7,
-                height: 7,
-                decoration: BoxDecoration(
-                  color: dotColor,
-                  shape: BoxShape.circle,
-                ),
-              ),
-              const SizedBox(width: 6),
-            ],
-            Text(
-              label,
-              style: AppTypography.body.copyWith(
-                color: isSelected ? Colors.white : AppColors.textSecondary,
-                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                fontSize: 13.5,
-              ),
-            ),
-          ],
-        ),
+      ),
+    );
+  }
+
+  Widget _getStatusDotOrIcon(RoomStatusType? status) {
+    if (status == null) {
+      return const Icon(Icons.tune_rounded, size: 14, color: AppColors.textSecondary);
+    }
+    final color = switch (status) {
+      RoomStatusType.available => AppColors.statusAvailable,
+      RoomStatusType.occupied => AppColors.statusOccupied,
+      RoomStatusType.dirty => AppColors.statusDirty,
+      RoomStatusType.maintenance => AppColors.statusMaintenance,
+    };
+    return _buildDot(color);
+  }
+
+  String _getStatusLabel(RoomStatusType? status, Map<RoomStatusType, int> stats, int total) {
+    if (status == null) {
+      return 'Semua Status ($total)';
+    }
+    return switch (status) {
+      RoomStatusType.available => 'Available (${stats[RoomStatusType.available] ?? 0})',
+      RoomStatusType.occupied => 'Occupied (${stats[RoomStatusType.occupied] ?? 0})',
+      RoomStatusType.dirty => 'Dirty (${stats[RoomStatusType.dirty] ?? 0})',
+      RoomStatusType.maintenance => 'Maint. (${stats[RoomStatusType.maintenance] ?? 0})',
+    };
+  }
+
+  Widget _buildDot(Color color) {
+    return Container(
+      width: 7,
+      height: 7,
+      decoration: BoxDecoration(
+        color: color,
+        shape: BoxShape.circle,
       ),
     );
   }

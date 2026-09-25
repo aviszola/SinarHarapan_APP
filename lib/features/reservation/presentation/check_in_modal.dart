@@ -30,6 +30,8 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
   late TextEditingController _priceController;
 
   int _totalNights = 1;
+  bool _isCustomNights = false;
+  late TextEditingController _customNightsController;
   bool _isManualPrice = false;
   String _paymentMethod = 'CASH'; // CASH, QRIS, TRANSFER, REDDOORZ_PREPAID
 
@@ -41,6 +43,7 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
   @override
   void initState() {
     super.initState();
+    _customNightsController = TextEditingController(text: _totalNights.toString());
     _priceController = TextEditingController(
       text: (widget.room.basePricePerNight * _totalNights).toInt().toString(),
     );
@@ -57,6 +60,7 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
     _addressController.dispose();
     _phoneController.dispose();
     _priceController.dispose();
+    _customNightsController.dispose();
     super.dispose();
   }
 
@@ -64,6 +68,9 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
     if (nights < 1) return;
     setState(() {
       _totalNights = nights;
+      if (_customNightsController.text != nights.toString()) {
+        _customNightsController.text = nights.toString();
+      }
       if (!_isManualPrice) {
         _priceController.text = (widget.room.basePricePerNight * _totalNights).toInt().toString();
       }
@@ -631,148 +638,84 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
 
                         const SizedBox(height: AppSpacing.lg),
 
-                        // Stay Duration & Payment - Modern Quick Flow
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // 1. Duration Section
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Flexible(
-                                  child: Text(
+                        // Stay Duration & Payment Method - Simplified Clean Dropdown Section
+                        if (isMobile) ...[
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
                                     'Durasi Menginap',
                                     style: AppTypography.bodySm.copyWith(
-                                      fontWeight: FontWeight.w700,
+                                      fontWeight: FontWeight.w600,
+                                      color: AppColors.textPrimary,
                                     ),
-                                    overflow: TextOverflow.ellipsis,
                                   ),
+                                  _buildCheckOutBadge(),
+                                ],
+                              ),
+                              const SizedBox(height: AppSpacing.xs),
+                              _buildDurationSection(),
+                              const SizedBox(height: AppSpacing.md),
+                              Text(
+                                'Metode Pembayaran',
+                                style: AppTypography.bodySm.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                  color: AppColors.textPrimary,
                                 ),
-                                const SizedBox(width: 8),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                                  decoration: BoxDecoration(
-                                    color: AppColors.navy50,
-                                    borderRadius: BorderRadius.circular(6),
-                                    border: Border.all(color: AppColors.border),
-                                  ),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      const Icon(Icons.event_available_rounded, size: 13, color: AppColors.navy700),
-                                      const SizedBox(width: 4),
-                                      Text(
-                                        'Out: ${DateFormat('EEE, d MMM', 'id').format(DateTime.now().add(Duration(days: _totalNights)))} pk 12:00 WIB',
-                                        style: const TextStyle(
-                                          fontSize: 11.5,
-                                          fontWeight: FontWeight.w700,
-                                          color: AppColors.navy900,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: AppSpacing.xs),
-                            Wrap(
-                              spacing: 8,
-                              runSpacing: 6,
-                              crossAxisAlignment: WrapCrossAlignment.center,
-                              children: [
-                                // Stepper
-                                Container(
-                                  decoration: BoxDecoration(
-                                    color: AppColors.surface,
-                                    borderRadius: BorderRadius.circular(8),
-                                    border: Border.all(color: AppColors.border),
-                                  ),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      IconButton(
-                                        icon: const Icon(Icons.remove, size: 16),
-                                        padding: const EdgeInsets.all(6),
-                                        constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-                                        onPressed: _totalNights > 1
-                                            ? () => _setNights(_totalNights - 1)
-                                            : null,
-                                      ),
-                                      Padding(
-                                        padding: const EdgeInsets.symmetric(horizontal: 8),
-                                        child: Text(
-                                          '$_totalNights Malam',
+                              ),
+                              const SizedBox(height: AppSpacing.xs),
+                              _buildPaymentDropdown(),
+                            ],
+                          ),
+                        ] else ...[
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Text(
+                                          'Durasi Menginap',
                                           style: AppTypography.bodySm.copyWith(
-                                            fontWeight: FontWeight.w800,
-                                            color: AppColors.navy900,
+                                            fontWeight: FontWeight.w600,
+                                            color: AppColors.textPrimary,
                                           ),
                                         ),
-                                      ),
-                                      IconButton(
-                                        icon: const Icon(Icons.add, size: 16),
-                                        padding: const EdgeInsets.all(6),
-                                        constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-                                        onPressed: () => _setNights(_totalNights + 1),
-                                      ),
-                                    ],
-                                  ),
+                                        _buildCheckOutBadge(),
+                                      ],
+                                    ),
+                                    const SizedBox(height: AppSpacing.xs),
+                                    _buildDurationSection(),
+                                  ],
                                 ),
-
-                                // Quick presets
-                                _buildNightChip(1, '1 Malam (Standar)'),
-                                _buildNightChip(2, '2 Malam'),
-                                _buildNightChip(3, '3 Malam'),
-                                _buildNightChip(7, '7 Malam (1 Minggu)'),
-                              ],
-                            ),
-
-                            const SizedBox(height: AppSpacing.md),
-
-                            // 2. Payment Method Modern Pills
-                            Text(
-                              'Metode Pembayaran',
-                              style: AppTypography.bodySm.copyWith(
-                                fontWeight: FontWeight.w700,
                               ),
-                            ),
-                            const SizedBox(height: AppSpacing.xs),
-                            Wrap(
-                              spacing: 8,
-                              runSpacing: 8,
-                              children: [
-                                if (_bookingSource == 'REDDOORZ')
-                                  _buildPaymentPill(
-                                    id: 'REDDOORZ_PREPAID',
-                                    label: 'Lunas RedDoorz App',
-                                    icon: Icons.hotel_class_rounded,
-                                    activeColor: const Color(0xFFDC2626),
-                                    activeBg: const Color(0xFFFEE2E2),
-                                  ),
-                                _buildPaymentPill(
-                                  id: 'CASH',
-                                  label: 'Tunai (Cash)',
-                                  icon: Icons.payments_outlined,
-                                  activeColor: AppColors.navy900,
-                                  activeBg: AppColors.navy100,
+                              const SizedBox(width: AppSpacing.md),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Metode Pembayaran',
+                                      style: AppTypography.bodySm.copyWith(
+                                        fontWeight: FontWeight.w600,
+                                        color: AppColors.textPrimary,
+                                      ),
+                                    ),
+                                    const SizedBox(height: AppSpacing.xs),
+                                    _buildPaymentDropdown(),
+                                  ],
                                 ),
-                                _buildPaymentPill(
-                                  id: 'QRIS',
-                                  label: 'QRIS Dinamis',
-                                  icon: Icons.qr_code_rounded,
-                                  activeColor: const Color(0xFF047857),
-                                  activeBg: const Color(0xFFD1FAE5),
-                                ),
-                                _buildPaymentPill(
-                                  id: 'TRANSFER',
-                                  label: 'Transfer Bank (BCA/Mandiri)',
-                                  icon: Icons.account_balance_outlined,
-                                  activeColor: const Color(0xFF1D4ED8),
-                                  activeBg: const Color(0xFFDBEAFE),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
+                              ),
+                            ],
+                          ),
+                        ],
 
                         const SizedBox(height: AppSpacing.lg),
 
@@ -1029,74 +972,300 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
     );
   }
 
-  Widget _buildNightChip(int nights, String label) {
-    final isSelected = _totalNights == nights;
-    return InkWell(
-      onTap: () => _setNights(nights),
-      borderRadius: BorderRadius.circular(8),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 150),
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6.5),
-        decoration: BoxDecoration(
-          color: isSelected ? AppColors.navy900 : AppColors.surface,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(
-            color: isSelected ? AppColors.navy900 : AppColors.border,
-            width: isSelected ? 1.5 : 1,
+  Widget _buildCheckOutBadge() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
+      decoration: BoxDecoration(
+        color: AppColors.navy50,
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.event_available_rounded, size: 12, color: AppColors.navy700),
+          const SizedBox(width: 4),
+          Text(
+            'Out: ${DateFormat('EEE, d MMM', 'id').format(DateTime.now().add(Duration(days: _totalNights)))} pk 12:00 WIB',
+            style: const TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+              color: AppColors.navy900,
+            ),
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDurationSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildDurationDropdown(),
+        if (_isCustomNights) ...[
+          const SizedBox(height: 8),
+          Container(
+            height: 44,
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: AppColors.navy700, width: 1.5),
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 10),
+            child: Row(
+              children: [
+                const Icon(Icons.edit_calendar_outlined, size: 16, color: AppColors.navy700),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: TextField(
+                    controller: _customNightsController,
+                    autofocus: true,
+                    keyboardType: TextInputType.number,
+                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                    decoration: const InputDecoration(
+                      hintText: 'Ketik jumlah hari...',
+                      border: InputBorder.none,
+                      isDense: true,
+                      contentPadding: EdgeInsets.zero,
+                    ),
+                    style: AppTypography.bodySm.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.navy900,
+                    ),
+                    onChanged: (val) {
+                      final n = int.tryParse(val);
+                      if (n != null && n > 0) {
+                        _setNights(n);
+                      }
+                    },
+                  ),
+                ),
+                Text(
+                  'Hari',
+                  style: AppTypography.caption.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.navy700,
+                  ),
+                ),
+                const SizedBox(width: 6),
+                IconButton(
+                  icon: const Icon(Icons.remove_circle_outline, size: 16, color: AppColors.navy700),
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
+                  onPressed: _totalNights > 1
+                      ? () {
+                          final newN = _totalNights - 1;
+                          _customNightsController.text = newN.toString();
+                          _setNights(newN);
+                        }
+                      : null,
+                ),
+                IconButton(
+                  icon: const Icon(Icons.add_circle_outline, size: 16, color: AppColors.navy700),
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
+                  onPressed: () {
+                    final newN = _totalNights + 1;
+                    _customNightsController.text = newN.toString();
+                    _setNights(newN);
+                  },
+                ),
+              ],
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildDurationDropdown() {
+    final int selectedValue = _isCustomNights
+        ? -1
+        : (_totalNights == 1 || _totalNights == 3 || _totalNights == 5
+            ? _totalNights
+            : -1);
+
+    return Container(
+      height: 48,
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: _isCustomNights ? AppColors.navy700 : AppColors.border,
+          width: _isCustomNights ? 1.5 : 1,
         ),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontSize: 12.5,
-            fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-            color: isSelected ? Colors.white : AppColors.textPrimary,
-          ),
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<int>(
+          value: selectedValue,
+          isExpanded: true,
+          icon: const Icon(Icons.keyboard_arrow_down_rounded, color: AppColors.navy700, size: 20),
+          dropdownColor: AppColors.surface,
+          borderRadius: BorderRadius.circular(8),
+          items: [
+            DropdownMenuItem<int>(
+              value: 1,
+              child: Row(
+                children: [
+                  const Icon(Icons.bed_outlined, size: 18, color: AppColors.navy700),
+                  const SizedBox(width: 8),
+                  Text(
+                    '1 Hari (1 Malam)',
+                    style: AppTypography.bodySm.copyWith(
+                      fontWeight: selectedValue == 1 ? FontWeight.w700 : FontWeight.w500,
+                      color: AppColors.navy900,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            DropdownMenuItem<int>(
+              value: 3,
+              child: Row(
+                children: [
+                  const Icon(Icons.bed_outlined, size: 18, color: AppColors.navy700),
+                  const SizedBox(width: 8),
+                  Text(
+                    '3 Hari (3 Malam)',
+                    style: AppTypography.bodySm.copyWith(
+                      fontWeight: selectedValue == 3 ? FontWeight.w700 : FontWeight.w500,
+                      color: AppColors.navy900,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            DropdownMenuItem<int>(
+              value: 5,
+              child: Row(
+                children: [
+                  const Icon(Icons.bed_outlined, size: 18, color: AppColors.navy700),
+                  const SizedBox(width: 8),
+                  Text(
+                    '5 Hari (5 Malam)',
+                    style: AppTypography.bodySm.copyWith(
+                      fontWeight: selectedValue == 5 ? FontWeight.w700 : FontWeight.w500,
+                      color: AppColors.navy900,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            DropdownMenuItem<int>(
+              value: -1,
+              child: Row(
+                children: [
+                  const Icon(Icons.edit_calendar_outlined, size: 18, color: AppColors.orange600),
+                  const SizedBox(width: 8),
+                  Text(
+                    _isCustomNights
+                        ? 'Isi Sendiri ($_totalNights Hari)'
+                        : 'Isi Sendiri (Manual)...',
+                    style: AppTypography.bodySm.copyWith(
+                      fontWeight: selectedValue == -1 ? FontWeight.w700 : FontWeight.w600,
+                      color: _isCustomNights ? AppColors.navy900 : AppColors.orange600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+          onChanged: (val) {
+            if (val == null) return;
+            if (val == -1) {
+              setState(() {
+                _isCustomNights = true;
+                _customNightsController.text = _totalNights.toString();
+              });
+            } else {
+              setState(() {
+                _isCustomNights = false;
+                _setNights(val);
+              });
+            }
+          },
         ),
       ),
     );
   }
 
-  Widget _buildPaymentPill({
-    required String id,
-    required String label,
-    required IconData icon,
-    required Color activeColor,
-    required Color activeBg,
-  }) {
-    final isSelected = _paymentMethod == id;
-    return InkWell(
-      onTap: () => setState(() => _paymentMethod = id),
-      borderRadius: BorderRadius.circular(8),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 150),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        decoration: BoxDecoration(
-          color: isSelected ? activeBg : AppColors.surface,
+  Widget _buildPaymentDropdown() {
+    final List<Map<String, dynamic>> options = [
+      if (_bookingSource == 'REDDOORZ')
+        {
+          'id': 'REDDOORZ_PREPAID',
+          'label': 'Lunas via RedDoorz App',
+          'icon': Icons.hotel_class_rounded,
+          'color': const Color(0xFFDC2626),
+        },
+      {
+        'id': 'CASH',
+        'label': 'Tunai (Cash)',
+        'icon': Icons.payments_outlined,
+        'color': AppColors.navy900,
+      },
+      {
+        'id': 'QRIS',
+        'label': 'QRIS Dinamis',
+        'icon': Icons.qr_code_rounded,
+        'color': const Color(0xFF047857),
+      },
+      {
+        'id': 'TRANSFER',
+        'label': 'Transfer Bank (BCA/Mandiri)',
+        'icon': Icons.account_balance_outlined,
+        'color': const Color(0xFF1D4ED8),
+      },
+    ];
+
+    final validIds = options.map((e) => e['id'] as String).toList();
+    final effectiveValue = validIds.contains(_paymentMethod) ? _paymentMethod : 'CASH';
+
+    return Container(
+      height: 48,
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: AppColors.border, width: 1),
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<String>(
+          value: effectiveValue,
+          isExpanded: true,
+          icon: const Icon(Icons.keyboard_arrow_down_rounded, color: AppColors.navy700, size: 20),
+          dropdownColor: AppColors.surface,
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(
-            color: isSelected ? activeColor : AppColors.border,
-            width: isSelected ? 1.5 : 1,
-          ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              icon,
-              size: 16,
-              color: isSelected ? activeColor : AppColors.textSecondary,
-            ),
-            const SizedBox(width: 6),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 12.5,
-                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
-                color: isSelected ? activeColor : AppColors.textPrimary,
+          items: options.map((opt) {
+            final isSelected = opt['id'] == effectiveValue;
+            final color = opt['color'] as Color;
+            return DropdownMenuItem<String>(
+              value: opt['id'] as String,
+              child: Row(
+                children: [
+                  Icon(opt['icon'] as IconData, size: 18, color: color),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      opt['label'] as String,
+                      style: AppTypography.bodySm.copyWith(
+                        fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                        color: AppColors.navy900,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
               ),
-            ),
-          ],
+            );
+          }).toList(),
+          onChanged: (val) {
+            if (val != null) {
+              setState(() => _paymentMethod = val);
+            }
+          },
         ),
       ),
     );

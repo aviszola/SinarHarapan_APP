@@ -3,24 +3,22 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../../app/theme.dart';
 
-enum ChartMetricType {
-  revenue,
-  occupancy,
-  guests,
-}
+enum ChartMetricType { revenue, occupancy, guests }
 
 enum ChartPeriod {
-  thisMonthVsLast,
-  thisWeekVsLast,
+  week('Mingguan', '7 Hari'),
+  month('Bulanan', '30 Hari'),
+  year('Tahunan', '12 Bulan');
+
+  final String label;
+  final String sublabel;
+  const ChartPeriod(this.label, this.sublabel);
 }
 
 class ExecutiveTrendChart extends StatefulWidget {
   final NumberFormat currencyFormatter;
 
-  const ExecutiveTrendChart({
-    super.key,
-    required this.currencyFormatter,
-  });
+  const ExecutiveTrendChart({super.key, required this.currencyFormatter});
 
   @override
   State<ExecutiveTrendChart> createState() => _ExecutiveTrendChartState();
@@ -28,35 +26,74 @@ class ExecutiveTrendChart extends StatefulWidget {
 
 class _ExecutiveTrendChartState extends State<ExecutiveTrendChart> {
   ChartMetricType _selectedMetric = ChartMetricType.revenue;
+  ChartPeriod _selectedPeriod = ChartPeriod.month;
   bool _showPastPeriod = true;
 
-  // Sampled days across a 30-day month
-  static const List<double> _days = [
+  // ── 1. MONTH DATA (30 Days sampled every 2 days) ─────────────────────────
+  static const List<double> _monthDays = [
     2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30
   ];
-
-  // Revenue in millions IDR
-  static const List<double> _currentRevenue = [
+  static const List<double> _monthCurrentRevenue = [
     1.2, 1.5, 1.8, 2.1, 1.9, 2.4, 3.1, 2.8, 3.2, 2.7, 3.5, 3.8, 3.2, 4.1, 3.9
   ];
-  static const List<double> _pastRevenue = [
+  static const List<double> _monthPastRevenue = [
     1.0, 1.2, 1.4, 1.8, 1.6, 1.9, 2.2, 2.0, 2.5, 2.1, 2.7, 2.9, 2.5, 3.0, 3.1
   ];
-
-  // Occupancy in percentage
-  static const List<double> _currentOccupancy = [
+  static const List<double> _monthCurrentOccupancy = [
     50, 57, 64, 71, 64, 78, 92, 85, 93, 78, 95, 100, 85, 100, 93
   ];
-  static const List<double> _pastOccupancy = [
+  static const List<double> _monthPastOccupancy = [
     42, 48, 50, 60, 55, 62, 70, 65, 75, 68, 80, 82, 72, 85, 82
   ];
-
-  // Guest check-ins count
-  static const List<double> _currentGuests = [
+  static const List<double> _monthCurrentGuests = [
     5, 6, 8, 9, 8, 10, 14, 12, 15, 11, 16, 17, 13, 18, 16
   ];
-  static const List<double> _pastGuests = [
+  static const List<double> _monthPastGuests = [
     4, 5, 6, 7, 6, 8, 10, 9, 11, 9, 12, 13, 10, 13, 14
+  ];
+
+  // ── 2. WEEK DATA (7 Days: Senin - Minggu) ─────────────────────────────────
+  static const List<double> _weekDays = [1, 2, 3, 4, 5, 6, 7];
+  static const List<double> _weekCurrentRevenue = [
+    1.8, 2.4, 2.8, 3.2, 3.8, 4.1, 3.9
+  ];
+  static const List<double> _weekPastRevenue = [
+    1.5, 2.0, 2.4, 2.7, 3.1, 3.5, 3.3
+  ];
+  static const List<double> _weekCurrentOccupancy = [
+    64, 78, 85, 92, 95, 100, 93
+  ];
+  static const List<double> _weekPastOccupancy = [
+    55, 68, 72, 78, 82, 88, 80
+  ];
+  static const List<double> _weekCurrentGuests = [
+    8, 10, 12, 14, 16, 18, 16
+  ];
+  static const List<double> _weekPastGuests = [
+    6, 8, 10, 12, 13, 15, 14
+  ];
+
+  // ── 3. YEAR DATA (12 Months: Jan - Des) ──────────────────────────────────
+  static const List<double> _yearMonths = [
+    1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12
+  ];
+  static const List<double> _yearCurrentRevenue = [
+    38.0, 42.0, 45.0, 52.0, 48.0, 55.0, 58.0, 50.0, 48.75, 53.0, 56.0, 62.0
+  ];
+  static const List<double> _yearPastRevenue = [
+    32.0, 36.0, 39.0, 45.0, 41.0, 48.0, 50.0, 44.0, 41.25, 46.0, 49.0, 54.0
+  ];
+  static const List<double> _yearCurrentOccupancy = [
+    68, 72, 75, 82, 78, 88, 91, 80, 79.2, 84, 87, 94
+  ];
+  static const List<double> _yearPastOccupancy = [
+    60, 64, 66, 72, 69, 77, 80, 71, 65.4, 74, 76, 83
+  ];
+  static const List<double> _yearCurrentGuests = [
+    140, 155, 168, 195, 180, 210, 225, 190, 182, 200, 215, 240
+  ];
+  static const List<double> _yearPastGuests = [
+    120, 135, 145, 170, 155, 180, 195, 165, 151, 175, 185, 205
   ];
 
   @override
@@ -72,20 +109,20 @@ class _ExecutiveTrendChartState extends State<ExecutiveTrendChart> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header: Title & Controls
+          // Header: Title & Timeframe + Metric Switchers
           _buildHeader(),
           const SizedBox(height: AppSpacing.lg),
 
           // High-level KPI comparisons
           _buildComparisonSummary(),
+          const SizedBox(height: AppSpacing.md),
+
+          // Executive Summary & Rekapitulasi Strip
+          _buildRekapitulasiStrip(),
           const SizedBox(height: AppSpacing.lg),
 
           // The Interactive Line Chart
-          SizedBox(
-            height: 320,
-            child: LineChart(_buildChartData()),
-          ),
-
+          SizedBox(height: 320, child: LineChart(_buildChartData())),
           const SizedBox(height: AppSpacing.md),
 
           // Footer Legend & Insights
@@ -98,7 +135,14 @@ class _ExecutiveTrendChartState extends State<ExecutiveTrendChart> {
   Widget _buildHeader() {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final isCompact = constraints.maxWidth < 680;
+        final isCompact = constraints.maxWidth < 840;
+
+        final badgeText = switch (_selectedPeriod) {
+          ChartPeriod.week => '+18.9% vs Minggu Lalu',
+          ChartPeriod.month => '+18.2% vs Bulan Lalu',
+          ChartPeriod.year => '+16.9% vs Tahun Lalu',
+        };
+
         final titleContent = Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -112,7 +156,9 @@ class _ExecutiveTrendChartState extends State<ExecutiveTrendChart> {
                   decoration: BoxDecoration(
                     color: AppColors.orange500.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(4),
-                    border: Border.all(color: AppColors.orange500.withValues(alpha: 0.3)),
+                    border: Border.all(
+                      color: AppColors.orange500.withValues(alpha: 0.3),
+                    ),
                   ),
                   child: Text(
                     'KOMPARATIF HISTORIS & REALTIME',
@@ -128,14 +174,14 @@ class _ExecutiveTrendChartState extends State<ExecutiveTrendChart> {
                     color: const Color(0xFF16A34A).withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(4),
                   ),
-                  child: const Row(
+                  child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.trending_up, size: 14, color: Color(0xFF16A34A)),
-                      SizedBox(width: 4),
+                      const Icon(Icons.trending_up, size: 14, color: Color(0xFF16A34A)),
+                      const SizedBox(width: 4),
                       Text(
-                        '+18.2% vs Bulan Lalu',
-                        style: TextStyle(
+                        badgeText,
+                        style: const TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.bold,
                           color: Color(0xFF16A34A),
@@ -163,23 +209,49 @@ class _ExecutiveTrendChartState extends State<ExecutiveTrendChart> {
         );
 
         final controls = Wrap(
-          spacing: 8,
+          spacing: 12,
           runSpacing: 8,
+          crossAxisAlignment: WrapCrossAlignment.center,
           children: [
-            _buildMetricChip(
-              icon: Icons.attach_money,
-              label: 'Pendapatan',
-              type: ChartMetricType.revenue,
+            // ── Timeframe Selector (Week / Month / Year) ───────────────
+            Container(
+              padding: const EdgeInsets.all(3),
+              decoration: BoxDecoration(
+                color: AppColors.navy50,
+                borderRadius: BorderRadius.circular(9),
+                border: Border.all(color: AppColors.border),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _buildPeriodPill(ChartPeriod.week, Icons.view_week_outlined),
+                  _buildPeriodPill(ChartPeriod.month, Icons.calendar_view_month_outlined),
+                  _buildPeriodPill(ChartPeriod.year, Icons.calendar_today_outlined),
+                ],
+              ),
             ),
-            _buildMetricChip(
-              icon: Icons.bed_outlined,
-              label: 'Okupansi %',
-              type: ChartMetricType.occupancy,
-            ),
-            _buildMetricChip(
-              icon: Icons.people_outline,
-              label: 'Volume Tamu',
-              type: ChartMetricType.guests,
+
+            // ── Metric Selector ───────────────────────────────────────
+            Wrap(
+              spacing: 6,
+              runSpacing: 6,
+              children: [
+                _buildMetricChip(
+                  icon: Icons.attach_money,
+                  label: 'Pendapatan',
+                  type: ChartMetricType.revenue,
+                ),
+                _buildMetricChip(
+                  icon: Icons.bed_outlined,
+                  label: 'Okupansi %',
+                  type: ChartMetricType.occupancy,
+                ),
+                _buildMetricChip(
+                  icon: Icons.people_outline,
+                  label: 'Volume Tamu',
+                  type: ChartMetricType.guests,
+                ),
+              ],
             ),
           ],
         );
@@ -207,6 +279,50 @@ class _ExecutiveTrendChartState extends State<ExecutiveTrendChart> {
     );
   }
 
+  Widget _buildPeriodPill(ChartPeriod period, IconData icon) {
+    final isSelected = _selectedPeriod == period;
+    return InkWell(
+      onTap: () => setState(() => _selectedPeriod = period),
+      borderRadius: BorderRadius.circular(6),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          color: isSelected ? AppColors.navy900 : Colors.transparent,
+          borderRadius: BorderRadius.circular(6),
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: AppColors.navy900.withValues(alpha: 0.15),
+                    blurRadius: 4,
+                    offset: const Offset(0, 1),
+                  )
+                ]
+              : null,
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              icon,
+              size: 13,
+              color: isSelected ? Colors.white : AppColors.navy700,
+            ),
+            const SizedBox(width: 4),
+            Text(
+              period.label,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
+                color: isSelected ? Colors.white : AppColors.navy700,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildMetricChip({
     required IconData icon,
     required String label,
@@ -219,8 +335,8 @@ class _ExecutiveTrendChartState extends State<ExecutiveTrendChart> {
         onTap: () => setState(() => _selectedMetric = type),
         borderRadius: BorderRadius.circular(8),
         child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          duration: const Duration(milliseconds: 180),
+          padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 7),
           decoration: BoxDecoration(
             color: isSelected ? AppColors.navy900 : AppColors.surface,
             borderRadius: BorderRadius.circular(8),
@@ -233,7 +349,7 @@ class _ExecutiveTrendChartState extends State<ExecutiveTrendChart> {
             children: [
               Icon(
                 icon,
-                size: 15,
+                size: 14,
                 color: isSelected ? Colors.white : AppColors.textSecondary,
               ),
               const SizedBox(width: 6),
@@ -253,25 +369,77 @@ class _ExecutiveTrendChartState extends State<ExecutiveTrendChart> {
   }
 
   Widget _buildComparisonSummary() {
+    String currentPeriodTitle;
+    String pastPeriodTitle;
     String currentSummary;
     String pastSummary;
     String delta;
 
-    switch (_selectedMetric) {
-      case ChartMetricType.revenue:
-        currentSummary = widget.currencyFormatter.format(48750000);
-        pastSummary = widget.currencyFormatter.format(41250000);
-        delta = '+Rp 7.500.000 (+18.2%)';
+    switch (_selectedPeriod) {
+      case ChartPeriod.week:
+        currentPeriodTitle = 'Periode Sekarang (Minggu Ini: 18 - 24 Sep 2026)';
+        pastPeriodTitle = 'Periode Masa Lalu (Minggu Lalu: 11 - 17 Sep 2026)';
+        switch (_selectedMetric) {
+          case ChartMetricType.revenue:
+            currentSummary = widget.currencyFormatter.format(22000000);
+            pastSummary = widget.currencyFormatter.format(18500000);
+            delta = '+Rp 3.500.000 (+18.9%)';
+            break;
+          case ChartMetricType.occupancy:
+            currentSummary = '86.7%';
+            pastSummary = '72.1%';
+            delta = '+14.6% pts';
+            break;
+          case ChartMetricType.guests:
+            currentSummary = '94 Tamu';
+            pastSummary = '78 Tamu';
+            delta = '+16 Check-In (+20.5%)';
+            break;
+        }
         break;
-      case ChartMetricType.occupancy:
-        currentSummary = '79.2%';
-        pastSummary = '65.4%';
-        delta = '+13.8% pts';
+
+      case ChartPeriod.month:
+        currentPeriodTitle = 'Periode Sekarang (September 2026)';
+        pastPeriodTitle = 'Periode Masa Lalu (Agustus 2026)';
+        switch (_selectedMetric) {
+          case ChartMetricType.revenue:
+            currentSummary = widget.currencyFormatter.format(48750000);
+            pastSummary = widget.currencyFormatter.format(41250000);
+            delta = '+Rp 7.500.000 (+18.2%)';
+            break;
+          case ChartMetricType.occupancy:
+            currentSummary = '79.2%';
+            pastSummary = '65.4%';
+            delta = '+13.8% pts';
+            break;
+          case ChartMetricType.guests:
+            currentSummary = '182 Tamu';
+            pastSummary = '151 Tamu';
+            delta = '+31 Check-In (+20.5%)';
+            break;
+        }
         break;
-      case ChartMetricType.guests:
-        currentSummary = '182 Tamu';
-        pastSummary = '151 Tamu';
-        delta = '+31 Check-In (+20.5%)';
+
+      case ChartPeriod.year:
+        currentPeriodTitle = 'Periode Sekarang (Tahun Berjalan 2026)';
+        pastPeriodTitle = 'Periode Masa Lalu (Tahun Lalu 2025)';
+        switch (_selectedMetric) {
+          case ChartMetricType.revenue:
+            currentSummary = widget.currencyFormatter.format(608750000);
+            pastSummary = widget.currencyFormatter.format(520250000);
+            delta = '+Rp 88.500.000 (+16.9%)';
+            break;
+          case ChartMetricType.occupancy:
+            currentSummary = '81.5%';
+            pastSummary = '71.2%';
+            delta = '+10.3% pts';
+            break;
+          case ChartMetricType.guests:
+            currentSummary = '2.302 Tamu';
+            pastSummary = '1.981 Tamu';
+            delta = '+321 Check-In (+16.2%)';
+            break;
+        }
         break;
     }
 
@@ -296,8 +464,10 @@ class _ExecutiveTrendChartState extends State<ExecutiveTrendChart> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Periode Sekarang (September 2026)',
-                    style: AppTypography.caption.copyWith(color: AppColors.textSecondary),
+                    currentPeriodTitle,
+                    style: AppTypography.caption.copyWith(
+                      color: AppColors.textSecondary,
+                    ),
                     overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 2),
@@ -353,8 +523,10 @@ class _ExecutiveTrendChartState extends State<ExecutiveTrendChart> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Periode Masa Lalu (Agustus 2026)',
-                    style: AppTypography.caption.copyWith(color: AppColors.textSecondary),
+                    pastPeriodTitle,
+                    style: AppTypography.caption.copyWith(
+                      color: AppColors.textSecondary,
+                    ),
                     overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 2),
@@ -421,35 +593,246 @@ class _ExecutiveTrendChartState extends State<ExecutiveTrendChart> {
     );
   }
 
+  /// Rekapitulasi Metrik Ringkas Khusus Periode Terpilih
+  Widget _buildRekapitulasiStrip() {
+    String avgTitle;
+    String avgValue;
+    String growthTitle;
+    String growthValue;
+    String statusTitle;
+    String statusValue;
+
+    switch (_selectedPeriod) {
+      case ChartPeriod.week:
+        avgTitle = 'Rata-Rata Harian (7 Hari)';
+        growthTitle = 'Laju Pertumbuhan (WoW)';
+        growthValue = '+18.9% Week-on-Week';
+        statusTitle = 'Pencapaian Mingguan';
+        statusValue = '112% dari Target';
+        switch (_selectedMetric) {
+          case ChartMetricType.revenue:
+            avgValue = 'Rp 3.142.857 / hari';
+            break;
+          case ChartMetricType.occupancy:
+            avgValue = '86.7% per hari';
+            break;
+          case ChartMetricType.guests:
+            avgValue = '13.4 tamu / hari';
+            break;
+        }
+        break;
+
+      case ChartPeriod.month:
+        avgTitle = 'Rata-Rata Harian (30 Hari)';
+        growthTitle = 'Laju Pertumbuhan (MoM)';
+        growthValue = '+18.2% Month-on-Month';
+        statusTitle = 'Pencapaian Bulanan';
+        statusValue = '108% dari Target';
+        switch (_selectedMetric) {
+          case ChartMetricType.revenue:
+            avgValue = 'Rp 1.625.000 / hari';
+            break;
+          case ChartMetricType.occupancy:
+            avgValue = '79.2% per hari';
+            break;
+          case ChartMetricType.guests:
+            avgValue = '6.1 tamu / hari';
+            break;
+        }
+        break;
+
+      case ChartPeriod.year:
+        avgTitle = 'Rata-Rata Bulanan (12 Bulan)';
+        growthTitle = 'Laju Pertumbuhan (YoY)';
+        growthValue = '+16.9% Year-on-Year';
+        statusTitle = 'Proyeksi Akhir Tahun';
+        statusValue = 'Rp 650 Jt (Target Tercapai)';
+        switch (_selectedMetric) {
+          case ChartMetricType.revenue:
+            avgValue = 'Rp 50.729.166 / bulan';
+            break;
+          case ChartMetricType.occupancy:
+            avgValue = '81.5% per bulan';
+            break;
+          case ChartMetricType.guests:
+            avgValue = '191.8 tamu / bulan';
+            break;
+        }
+        break;
+    }
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isMobile = constraints.maxWidth < 640;
+
+        Widget card(String label, String value, IconData icon, Color color) {
+          return Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: AppColors.border),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(7),
+                  decoration: BoxDecoration(
+                    color: color.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Icon(icon, size: 16, color: color),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        label,
+                        style: const TextStyle(
+                          fontSize: 10.5,
+                          fontWeight: FontWeight.w500,
+                          color: AppColors.textSecondary,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        value,
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.navy900,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          );
+        }
+
+        if (isMobile) {
+          return Column(
+            children: [
+              card(avgTitle, avgValue, Icons.speed_outlined, AppColors.navy700),
+              const SizedBox(height: 8),
+              card(growthTitle, growthValue, Icons.trending_up, const Color(0xFF16A34A)),
+              const SizedBox(height: 8),
+              card(statusTitle, statusValue, Icons.verified_outlined, AppColors.orange600),
+            ],
+          );
+        }
+
+        return Row(
+          children: [
+            Expanded(
+              child: card(avgTitle, avgValue, Icons.speed_outlined, AppColors.navy700),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: card(growthTitle, growthValue, Icons.trending_up, const Color(0xFF16A34A)),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: card(statusTitle, statusValue, Icons.verified_outlined, AppColors.orange600),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   LineChartData _buildChartData() {
     List<double> curData;
     List<double> pastData;
+    List<double> xPoints;
+    double minX;
+    double maxX;
     double maxY;
 
-    switch (_selectedMetric) {
-      case ChartMetricType.revenue:
-        curData = _currentRevenue;
-        pastData = _pastRevenue;
-        maxY = 5.0; // Million IDR
+    switch (_selectedPeriod) {
+      case ChartPeriod.week:
+        xPoints = _weekDays;
+        minX = 0.5;
+        maxX = 7.5;
+        switch (_selectedMetric) {
+          case ChartMetricType.revenue:
+            curData = _weekCurrentRevenue;
+            pastData = _weekPastRevenue;
+            maxY = 5.0; // Million IDR
+            break;
+          case ChartMetricType.occupancy:
+            curData = _weekCurrentOccupancy;
+            pastData = _weekPastOccupancy;
+            maxY = 110.0; // %
+            break;
+          case ChartMetricType.guests:
+            curData = _weekCurrentGuests;
+            pastData = _weekPastGuests;
+            maxY = 22.0; // Guests
+            break;
+        }
         break;
-      case ChartMetricType.occupancy:
-        curData = _currentOccupancy;
-        pastData = _pastOccupancy;
-        maxY = 110.0; // %
+
+      case ChartPeriod.month:
+        xPoints = _monthDays;
+        minX = 1;
+        maxX = 31;
+        switch (_selectedMetric) {
+          case ChartMetricType.revenue:
+            curData = _monthCurrentRevenue;
+            pastData = _monthPastRevenue;
+            maxY = 5.0; // Million IDR
+            break;
+          case ChartMetricType.occupancy:
+            curData = _monthCurrentOccupancy;
+            pastData = _monthPastOccupancy;
+            maxY = 110.0; // %
+            break;
+          case ChartMetricType.guests:
+            curData = _monthCurrentGuests;
+            pastData = _monthPastGuests;
+            maxY = 22.0; // Guests
+            break;
+        }
         break;
-      case ChartMetricType.guests:
-        curData = _currentGuests;
-        pastData = _pastGuests;
-        maxY = 22.0; // Guests
+
+      case ChartPeriod.year:
+        xPoints = _yearMonths;
+        minX = 0.5;
+        maxX = 12.5;
+        switch (_selectedMetric) {
+          case ChartMetricType.revenue:
+            curData = _yearCurrentRevenue;
+            pastData = _yearPastRevenue;
+            maxY = 70.0; // Million IDR
+            break;
+          case ChartMetricType.occupancy:
+            curData = _yearCurrentOccupancy;
+            pastData = _yearPastOccupancy;
+            maxY = 110.0; // %
+            break;
+          case ChartMetricType.guests:
+            curData = _yearCurrentGuests;
+            pastData = _yearPastGuests;
+            maxY = 260.0; // Guests
+            break;
+        }
         break;
     }
 
     final currentSpots = <FlSpot>[];
     final pastSpots = <FlSpot>[];
 
-    for (int i = 0; i < _days.length; i++) {
-      currentSpots.add(FlSpot(_days[i], curData[i]));
-      pastSpots.add(FlSpot(_days[i], pastData[i]));
+    for (int i = 0; i < xPoints.length; i++) {
+      currentSpots.add(FlSpot(xPoints[i], curData[i]));
+      pastSpots.add(FlSpot(xPoints[i], pastData[i]));
     }
 
     return LineChartData(
@@ -457,7 +840,7 @@ class _ExecutiveTrendChartState extends State<ExecutiveTrendChart> {
         show: true,
         drawVerticalLine: true,
         horizontalInterval: maxY / 5,
-        verticalInterval: 5,
+        verticalInterval: _selectedPeriod == ChartPeriod.month ? 5 : 1,
         getDrawingHorizontalLine: (value) => FlLine(
           color: AppColors.border.withValues(alpha: 0.6),
           strokeWidth: 1,
@@ -470,33 +853,69 @@ class _ExecutiveTrendChartState extends State<ExecutiveTrendChart> {
       ),
       titlesData: FlTitlesData(
         show: true,
-        rightTitles: const AxisTitles(
-          sideTitles: SideTitles(showTitles: false),
-        ),
-        topTitles: const AxisTitles(
-          sideTitles: SideTitles(showTitles: false),
-        ),
+        rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+        topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
         bottomTitles: AxisTitles(
           sideTitles: SideTitles(
             showTitles: true,
             reservedSize: 30,
-            interval: 2,
+            interval: 1,
             getTitlesWidget: (value, meta) {
-              final day = value.toInt();
-              if (day % 4 == 0 || day == 2 || day == 30) {
-                return Padding(
-                  padding: const EdgeInsets.only(top: 8.0),
-                  child: Text(
-                    'Tgl $day',
-                    style: TextStyle(
-                      color: AppColors.textSecondary,
-                      fontSize: 11,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                );
+              final idx = value.toInt();
+              switch (_selectedPeriod) {
+                case ChartPeriod.week:
+                  const daysOfWeek = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'];
+                  if (idx >= 1 && idx <= 7) {
+                    return Padding(
+                      padding: const EdgeInsets.only(top: 8.0),
+                      child: Text(
+                        daysOfWeek[idx - 1],
+                        style: const TextStyle(
+                          color: AppColors.textSecondary,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    );
+                  }
+                  return const SizedBox();
+
+                case ChartPeriod.month:
+                  if (idx % 4 == 0 || idx == 2 || idx == 30) {
+                    return Padding(
+                      padding: const EdgeInsets.only(top: 8.0),
+                      child: Text(
+                        'Tgl $idx',
+                        style: const TextStyle(
+                          color: AppColors.textSecondary,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    );
+                  }
+                  return const SizedBox();
+
+                case ChartPeriod.year:
+                  const months = [
+                    'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun',
+                    'Jul', 'Ags', 'Sep', 'Okt', 'Nov', 'Des'
+                  ];
+                  if (idx >= 1 && idx <= 12) {
+                    return Padding(
+                      padding: const EdgeInsets.only(top: 8.0),
+                      child: Text(
+                        months[idx - 1],
+                        style: const TextStyle(
+                          color: AppColors.textSecondary,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    );
+                  }
+                  return const SizedBox();
               }
-              return const SizedBox();
             },
           ),
         ),
@@ -510,7 +929,9 @@ class _ExecutiveTrendChartState extends State<ExecutiveTrendChart> {
               String text;
               switch (_selectedMetric) {
                 case ChartMetricType.revenue:
-                  text = 'Rp ${value.toStringAsFixed(1)}Jt';
+                  text = _selectedPeriod == ChartPeriod.year
+                      ? 'Rp ${value.toInt()}Jt'
+                      : 'Rp ${value.toStringAsFixed(1)}Jt';
                   break;
                 case ChartMetricType.occupancy:
                   text = '${value.toInt()}%';
@@ -524,7 +945,7 @@ class _ExecutiveTrendChartState extends State<ExecutiveTrendChart> {
                 child: Text(
                   text,
                   textAlign: TextAlign.right,
-                  style: TextStyle(
+                  style: const TextStyle(
                     color: AppColors.textSecondary,
                     fontSize: 11,
                     fontWeight: FontWeight.w500,
@@ -537,25 +958,51 @@ class _ExecutiveTrendChartState extends State<ExecutiveTrendChart> {
       ),
       borderData: FlBorderData(
         show: true,
-        border: Border(
+        border: const Border(
           bottom: BorderSide(color: AppColors.border),
           left: BorderSide(color: AppColors.border),
           top: BorderSide.none,
           right: BorderSide.none,
         ),
       ),
-      minX: 1,
-      maxX: 31,
+      minX: minX,
+      maxX: maxX,
       minY: 0,
       maxY: maxY,
       lineTouchData: LineTouchData(
         handleBuiltInTouches: true,
         touchTooltipData: LineTouchTooltipData(
-          getTooltipColor: (touchedSpot) => AppColors.navy900.withValues(alpha: 0.95),
+          getTooltipColor: (touchedSpot) =>
+              AppColors.navy900.withValues(alpha: 0.95),
           getTooltipItems: (List<LineBarSpot> touchedBarSpots) {
             return touchedBarSpots.map((barSpot) {
               final isCurrent = barSpot.barIndex == 0;
-              final day = barSpot.x.toInt();
+              final idx = barSpot.x.toInt();
+              String headerTime;
+              String periodName;
+
+              switch (_selectedPeriod) {
+                case ChartPeriod.week:
+                  const fullDays = [
+                    'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'
+                  ];
+                  headerTime = (idx >= 1 && idx <= 7) ? fullDays[idx - 1] : 'Hari $idx';
+                  periodName = isCurrent ? 'Minggu Ini' : 'Minggu Lalu';
+                  break;
+                case ChartPeriod.month:
+                  headerTime = 'Tgl $idx Sep';
+                  periodName = isCurrent ? 'September (Kini)' : 'Agustus (Lalu)';
+                  break;
+                case ChartPeriod.year:
+                  const fullMonths = [
+                    'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+                    'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+                  ];
+                  headerTime = (idx >= 1 && idx <= 12) ? fullMonths[idx - 1] : 'Bulan $idx';
+                  periodName = isCurrent ? 'Tahun 2026' : 'Tahun 2025';
+                  break;
+              }
+
               String valStr;
               switch (_selectedMetric) {
                 case ChartMetricType.revenue:
@@ -569,9 +1016,8 @@ class _ExecutiveTrendChartState extends State<ExecutiveTrendChart> {
                   break;
               }
 
-              final periodName = isCurrent ? 'September (Kini)' : 'Agustus (Lalu)';
               return LineTooltipItem(
-                'Tgl $day Sep\n$periodName: $valStr',
+                '$headerTime\n$periodName: $valStr',
                 TextStyle(
                   color: isCurrent ? AppColors.orange500 : Colors.white70,
                   fontWeight: isCurrent ? FontWeight.bold : FontWeight.normal,
@@ -643,6 +1089,60 @@ class _ExecutiveTrendChartState extends State<ExecutiveTrendChart> {
   }
 
   Widget _buildFooterLegend() {
+    String currentLegend;
+    String pastLegend;
+    String peakInsight;
+
+    switch (_selectedPeriod) {
+      case ChartPeriod.week:
+        currentLegend = 'Periode Sekarang (Minggu Ini)';
+        pastLegend = 'Periode Masa Lalu (Minggu Lalu)';
+        switch (_selectedMetric) {
+          case ChartMetricType.revenue:
+            peakInsight = 'Puncak: Sabtu (Rp 4.100.000)';
+            break;
+          case ChartMetricType.occupancy:
+            peakInsight = 'Puncak: Sabtu (Okupansi 100%)';
+            break;
+          case ChartMetricType.guests:
+            peakInsight = 'Puncak: Sabtu (18 Check-In)';
+            break;
+        }
+        break;
+
+      case ChartPeriod.month:
+        currentLegend = 'Periode Sekarang (Sep 2026)';
+        pastLegend = 'Periode Masa Lalu (Ags 2026)';
+        switch (_selectedMetric) {
+          case ChartMetricType.revenue:
+            peakInsight = 'Puncak: 24 Sep (Okupansi 100% - Rp 4.100.000)';
+            break;
+          case ChartMetricType.occupancy:
+            peakInsight = 'Puncak: 24 Sep (Okupansi 100%)';
+            break;
+          case ChartMetricType.guests:
+            peakInsight = 'Puncak: 24 Sep (18 Check-In)';
+            break;
+        }
+        break;
+
+      case ChartPeriod.year:
+        currentLegend = 'Periode Sekarang (Tahun 2026)';
+        pastLegend = 'Periode Masa Lalu (Tahun 2025)';
+        switch (_selectedMetric) {
+          case ChartMetricType.revenue:
+            peakInsight = 'Puncak: Desember (Proyeksi Rp 62.000.000)';
+            break;
+          case ChartMetricType.occupancy:
+            peakInsight = 'Puncak: Desember (Okupansi 94%)';
+            break;
+          case ChartMetricType.guests:
+            peakInsight = 'Puncak: Desember (240 Check-In)';
+            break;
+        }
+        break;
+    }
+
     return Wrap(
       spacing: 16,
       runSpacing: 10,
@@ -662,7 +1162,7 @@ class _ExecutiveTrendChartState extends State<ExecutiveTrendChart> {
             ),
             const SizedBox(width: 8),
             Text(
-              'Periode Sekarang (Sep 2026)',
+              currentLegend,
               style: AppTypography.caption.copyWith(
                 fontWeight: FontWeight.w600,
                 color: AppColors.navy900,
@@ -686,7 +1186,7 @@ class _ExecutiveTrendChartState extends State<ExecutiveTrendChart> {
               ),
               const SizedBox(width: 8),
               Text(
-                'Periode Masa Lalu (Ags 2026)',
+                pastLegend,
                 style: AppTypography.caption.copyWith(
                   fontWeight: FontWeight.w500,
                   color: AppColors.textSecondary,
@@ -706,10 +1206,14 @@ class _ExecutiveTrendChartState extends State<ExecutiveTrendChart> {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.star_rounded, size: 14, color: AppColors.orange500),
+              const Icon(
+                Icons.star_rounded,
+                size: 14,
+                color: AppColors.orange500,
+              ),
               const SizedBox(width: 6),
               Text(
-                'Puncak: 24 Sep (Okupansi 100% - Rp 4.100.000)',
+                peakInsight,
                 style: AppTypography.caption.copyWith(
                   fontWeight: FontWeight.w600,
                   color: AppColors.navy900,
