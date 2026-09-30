@@ -45,107 +45,132 @@ class _RoomCardState extends State<RoomCard> with SingleTickerProviderStateMixin
 
   @override
   Widget build(BuildContext context) {
-    return MouseRegion(
-      onEnter: (_) => setState(() => _hovered = true),
-      onExit:  (_) => setState(() => _hovered = false),
-      cursor: widget.room.isMaintenance
-          ? SystemMouseCursors.basic
-          : SystemMouseCursors.click,
-      child: GestureDetector(
-        onTap: widget.onTap,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 160),
-          curve: Curves.easeOut,
-          decoration: BoxDecoration(
-            color: AppColors.surface,
-            borderRadius: AppRadius.roundedLg,
-            border: Border.all(
-              color: _hovered ? AppColors.navy500 : AppColors.border,
-              width: _hovered ? 1.5 : 1,
-            ),
-            boxShadow: _hovered ? AppElevation.card : AppElevation.none,
-          ),
-          clipBehavior: Clip.antiAlias,
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // 4px status stripe — only color signal (design.md §6.2)
-              AnimatedContainer(
-                duration: const Duration(milliseconds: 160),
-                width: _hovered ? 5 : 4,
-                color: _stripeColor,
-              ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isCompact = constraints.maxWidth < 210;
 
-              // Card Body
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(14, 12, 12, 12),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      // Row 1: Room number + Status badge
-                      Row(
+        return MouseRegion(
+          onEnter: (_) => setState(() => _hovered = true),
+          onExit:  (_) => setState(() => _hovered = false),
+          cursor: widget.room.isMaintenance
+              ? SystemMouseCursors.basic
+              : SystemMouseCursors.click,
+          child: GestureDetector(
+            onTap: widget.onTap,
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 160),
+              curve: Curves.easeOut,
+              decoration: BoxDecoration(
+                color: AppColors.surface,
+                borderRadius: AppRadius.roundedLg,
+                border: Border.all(
+                  color: _hovered ? AppColors.navy500 : AppColors.border,
+                  width: _hovered ? 1.5 : 1,
+                ),
+                boxShadow: _hovered ? AppElevation.card : AppElevation.none,
+              ),
+              clipBehavior: Clip.antiAlias,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // 4px status stripe — only color signal (design.md §6.2)
+                  AnimatedContainer(
+                    duration: const Duration(milliseconds: 160),
+                    width: _hovered ? 5 : 4,
+                    color: _stripeColor,
+                  ),
+
+                  // Card Body
+                  Expanded(
+                    child: Padding(
+                      padding: EdgeInsets.fromLTRB(
+                        isCompact ? 10 : 14,
+                        isCompact ? 10 : 12,
+                        isCompact ? 10 : 12,
+                        isCompact ? 10 : 12,
+                      ),
+                      child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          // Room number & type
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  widget.room.roomNumber,
-                                  style: AppTypography.h2.copyWith(
-                                    color: AppColors.navy900,
-                                    fontWeight: FontWeight.w800,
-                                    letterSpacing: -0.4,
-                                    fontSize: 21,
-                                  ),
+                          // Row 1: Room number + Status badge
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // Room number & type
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      widget.room.roomNumber,
+                                      style: AppTypography.h2.copyWith(
+                                        color: AppColors.navy900,
+                                        fontWeight: FontWeight.w800,
+                                        letterSpacing: -0.4,
+                                        fontSize: isCompact ? 18.5 : 21,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      '${widget.room.roomType} · Lt. ${widget.room.floor}',
+                                      style: AppTypography.caption.copyWith(
+                                        color: AppColors.textSecondary,
+                                        fontSize: isCompact ? 11.5 : 12.5,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ],
                                 ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  '${widget.room.roomType} · Lt. ${widget.room.floor}',
-                                  style: AppTypography.caption.copyWith(
-                                    color: AppColors.textSecondary,
-                                    fontSize: 12.5,
-                                  ),
-                                ),
-                              ],
-                            ),
+                              ),
+
+                              const SizedBox(width: 4),
+                              StatusBadge(
+                                status: widget.room.status,
+                                compact: isCompact,
+                              ),
+                            ],
                           ),
 
-                          const SizedBox(width: 6),
-                          StatusBadge(status: widget.room.status),
+                          // Row 2: Contextual info & Quick Action Pill
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              Expanded(child: _buildContextRow(isCompact: isCompact)),
+                              const SizedBox(width: 6),
+                              _buildActionPill(isCompact: isCompact),
+                            ],
+                          ),
                         ],
                       ),
-
-                      // Row 2: Contextual info & Quick Action Pill
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          Expanded(child: _buildContextRow()),
-                          const SizedBox(width: 8),
-                          _buildActionPill(),
-                        ],
-                      ),
-                    ],
+                    ),
                   ),
-                ),
+                ],
               ),
-            ],
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 
-  Widget _buildActionPill() {
+  Widget _buildActionPill({bool isCompact = false}) {
+    final padding = EdgeInsets.symmetric(
+      horizontal: isCompact ? 7 : 9,
+      vertical: isCompact ? 3.5 : 4.5,
+    );
+    final fontSize = isCompact ? 10.5 : 11.5;
+    final iconSize = isCompact ? 12.0 : 14.0;
+
     switch (widget.room.status) {
       case RoomStatusType.available:
         return AnimatedContainer(
           duration: const Duration(milliseconds: 150),
-          padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4.5),
+          padding: padding,
           decoration: BoxDecoration(
             color: _hovered ? AppColors.orange600 : AppColors.navy100,
             borderRadius: BorderRadius.circular(6),
@@ -155,14 +180,14 @@ class _RoomCardState extends State<RoomCard> with SingleTickerProviderStateMixin
             children: [
               Icon(
                 Icons.add_rounded,
-                size: 14,
+                size: iconSize,
                 color: _hovered ? Colors.white : AppColors.navy700,
               ),
               const SizedBox(width: 3),
               Text(
                 'Check-in',
                 style: TextStyle(
-                  fontSize: 11.5,
+                  fontSize: fontSize,
                   fontWeight: FontWeight.w700,
                   color: _hovered ? Colors.white : AppColors.navy700,
                 ),
@@ -174,7 +199,7 @@ class _RoomCardState extends State<RoomCard> with SingleTickerProviderStateMixin
       case RoomStatusType.occupied:
         return AnimatedContainer(
           duration: const Duration(milliseconds: 150),
-          padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4.5),
+          padding: padding,
           decoration: BoxDecoration(
             color: _hovered ? const Color(0xFFDC2626) : const Color(0xFFFEE2E2),
             borderRadius: BorderRadius.circular(6),
@@ -184,14 +209,14 @@ class _RoomCardState extends State<RoomCard> with SingleTickerProviderStateMixin
             children: [
               Icon(
                 Icons.logout_rounded,
-                size: 13,
+                size: iconSize,
                 color: _hovered ? Colors.white : const Color(0xFFDC2626),
               ),
               const SizedBox(width: 3),
               Text(
                 'Check-out',
                 style: TextStyle(
-                  fontSize: 11.5,
+                  fontSize: fontSize,
                   fontWeight: FontWeight.w700,
                   color: _hovered ? Colors.white : const Color(0xFFDC2626),
                 ),
@@ -203,7 +228,7 @@ class _RoomCardState extends State<RoomCard> with SingleTickerProviderStateMixin
       case RoomStatusType.dirty:
         return AnimatedContainer(
           duration: const Duration(milliseconds: 150),
-          padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4.5),
+          padding: padding,
           decoration: BoxDecoration(
             color: _hovered ? const Color(0xFFD97706) : const Color(0xFFFEF3C7),
             borderRadius: BorderRadius.circular(6),
@@ -213,14 +238,14 @@ class _RoomCardState extends State<RoomCard> with SingleTickerProviderStateMixin
             children: [
               Icon(
                 Icons.check_rounded,
-                size: 14,
+                size: iconSize,
                 color: _hovered ? Colors.white : const Color(0xFFD97706),
               ),
               const SizedBox(width: 3),
               Text(
                 'Bersihkan',
                 style: TextStyle(
-                  fontSize: 11.5,
+                  fontSize: fontSize,
                   fontWeight: FontWeight.w700,
                   color: _hovered ? Colors.white : const Color(0xFFD97706),
                 ),
@@ -231,15 +256,15 @@ class _RoomCardState extends State<RoomCard> with SingleTickerProviderStateMixin
 
       case RoomStatusType.maintenance:
         return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          padding: EdgeInsets.symmetric(horizontal: isCompact ? 6 : 8, vertical: isCompact ? 3 : 4),
           decoration: BoxDecoration(
             color: AppColors.border.withAlpha(80),
             borderRadius: BorderRadius.circular(6),
           ),
-          child: const Text(
+          child: Text(
             'Perbaikan',
             style: TextStyle(
-              fontSize: 11,
+              fontSize: fontSize,
               fontWeight: FontWeight.w600,
               color: AppColors.textDisabled,
             ),
@@ -248,23 +273,25 @@ class _RoomCardState extends State<RoomCard> with SingleTickerProviderStateMixin
     }
   }
 
-  Widget _buildContextRow() {
+  Widget _buildContextRow({bool isCompact = false}) {
+    final fontSize = isCompact ? 11.5 : 13.0;
+
     if (widget.room.isOccupied && widget.room.activeGuestName != null) {
       final isRD = widget.room.bookingSource == 'REDDOORZ';
       return Row(
         children: [
           Icon(
             isRD ? Icons.hotel_class_rounded : Icons.person_rounded,
-            size: 14,
+            size: isCompact ? 12 : 14,
             color: isRD ? const Color(0xFFDC2626) : AppColors.navy500,
           ),
-          const SizedBox(width: 5),
+          const SizedBox(width: 4),
           Expanded(
             child: Text(
               widget.room.activeGuestName!,
               style: AppTypography.bodySm.copyWith(
                 fontWeight: FontWeight.w700,
-                fontSize: 13,
+                fontSize: fontSize,
                 color: AppColors.textPrimary,
               ),
               maxLines: 1,
@@ -272,9 +299,9 @@ class _RoomCardState extends State<RoomCard> with SingleTickerProviderStateMixin
             ),
           ),
           if (isRD) ...[
-            const SizedBox(width: 4),
+            const SizedBox(width: 3),
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+              padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 1),
               decoration: BoxDecoration(
                 color: const Color(0xFFFEE2E2),
                 borderRadius: AppRadius.roundedSm,
@@ -283,7 +310,7 @@ class _RoomCardState extends State<RoomCard> with SingleTickerProviderStateMixin
                 'RD',
                 style: TextStyle(
                   color: Color(0xFFDC2626),
-                  fontSize: 9.5,
+                  fontSize: 9.0,
                   fontWeight: FontWeight.w800,
                 ),
               ),
@@ -296,16 +323,16 @@ class _RoomCardState extends State<RoomCard> with SingleTickerProviderStateMixin
     if (widget.room.isDirty) {
       return Row(
         children: [
-          const Icon(Icons.cleaning_services_outlined,
-              size: 14, color: Color(0xFFD97706)),
-          const SizedBox(width: 5),
+          Icon(Icons.cleaning_services_outlined,
+              size: isCompact ? 12 : 14, color: const Color(0xFFD97706)),
+          const SizedBox(width: 4),
           Expanded(
             child: Text(
-              'Perlu dibersihkan',
+              isCompact ? 'Perlu dibersihkan' : 'Perlu dibersihkan',
               style: AppTypography.caption.copyWith(
                 color: const Color(0xFFD97706),
                 fontWeight: FontWeight.w600,
-                fontSize: 12,
+                fontSize: isCompact ? 11 : 12,
               ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
@@ -319,14 +346,14 @@ class _RoomCardState extends State<RoomCard> with SingleTickerProviderStateMixin
       return Row(
         children: [
           Icon(Icons.build_circle_outlined,
-              size: 14, color: AppColors.textDisabled),
-          const SizedBox(width: 5),
+              size: isCompact ? 12 : 14, color: AppColors.textDisabled),
+          const SizedBox(width: 4),
           Expanded(
             child: Text(
               'Fasilitas off',
               style: AppTypography.caption.copyWith(
                 color: AppColors.textDisabled,
-                fontSize: 12,
+                fontSize: isCompact ? 11 : 12,
               ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
@@ -342,7 +369,7 @@ class _RoomCardState extends State<RoomCard> with SingleTickerProviderStateMixin
       style: AppTypography.bodySm.copyWith(
         color: AppColors.navy700,
         fontWeight: FontWeight.w700,
-        fontSize: 13,
+        fontSize: fontSize,
       ),
       maxLines: 1,
       overflow: TextOverflow.ellipsis,

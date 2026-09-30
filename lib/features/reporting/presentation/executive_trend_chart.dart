@@ -98,8 +98,11 @@ class _ExecutiveTrendChartState extends State<ExecutiveTrendChart> {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 600;
+
     return Container(
-      padding: const EdgeInsets.all(AppSpacing.lg),
+      padding: EdgeInsets.all(isMobile ? AppSpacing.md : AppSpacing.lg),
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: AppRadius.roundedLg,
@@ -122,7 +125,7 @@ class _ExecutiveTrendChartState extends State<ExecutiveTrendChart> {
           const SizedBox(height: AppSpacing.lg),
 
           // The Interactive Line Chart
-          SizedBox(height: 320, child: LineChart(_buildChartData())),
+          SizedBox(height: isMobile ? 260 : 320, child: LineChart(_buildChartData(isMobile: isMobile))),
           const SizedBox(height: AppSpacing.md),
 
           // Footer Legend & Insights
@@ -748,7 +751,7 @@ class _ExecutiveTrendChartState extends State<ExecutiveTrendChart> {
     );
   }
 
-  LineChartData _buildChartData() {
+  LineChartData _buildChartData({bool isMobile = false}) {
     List<double> curData;
     List<double> pastData;
     List<double> xPoints;
@@ -923,7 +926,9 @@ class _ExecutiveTrendChartState extends State<ExecutiveTrendChart> {
           sideTitles: SideTitles(
             showTitles: true,
             interval: maxY / 5,
-            reservedSize: _selectedMetric == ChartMetricType.revenue ? 68 : 45,
+            reservedSize: _selectedMetric == ChartMetricType.revenue
+                ? (isMobile ? 54 : 68)
+                : (isMobile ? 38 : 45),
             getTitlesWidget: (value, meta) {
               if (value < 0) return const SizedBox();
               String text;

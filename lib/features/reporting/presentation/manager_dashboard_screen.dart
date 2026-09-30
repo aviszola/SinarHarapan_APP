@@ -79,6 +79,76 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
     context.go('/login');
   }
 
+  Future<void> _handleToggleMaintenance(RoomModel room) async {
+    try {
+      await ref.read(roomListProvider.notifier).toggleMaintenance(room.id);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            backgroundColor: room.isMaintenance ? AppColors.statusAvailable : AppColors.statusMaintenance,
+            content: Text(room.isMaintenance
+                ? 'Kamar ${room.roomNumber} diaktifkan kembali ke status Tersedia.'
+                : 'Kamar ${room.roomNumber} diubah ke mode Perbaikan / Maintenance.'),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            backgroundColor: AppColors.statusOccupied,
+            content: Text(e.toString().replaceAll('Exception: ', '')),
+          ),
+        );
+      }
+    }
+  }
+
+  void _handleDeleteRoom(RoomModel room) {
+    showDialog(
+      context: context,
+      builder: (dialogCtx) => AlertDialog(
+        title: Text('Hapus Kamar ${room.roomNumber}?'),
+        content: Text('Apakah Anda yakin ingin menghapus unit kamar ${room.roomNumber} (Tipe ${room.roomType}) dari inventaris hotel?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogCtx).pop(),
+            child: const Text('Batal'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: AppColors.statusOccupied,
+            ),
+            onPressed: () async {
+              Navigator.of(dialogCtx).pop();
+              try {
+                await ref.read(roomListProvider.notifier).deleteRoom(room.id);
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      backgroundColor: AppColors.statusOccupied,
+                      content: Text('Kamar ${room.roomNumber} berhasil dihapus dari inventaris.'),
+                    ),
+                  );
+                }
+              } catch (e) {
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      backgroundColor: AppColors.statusOccupied,
+                      content: Text(e.toString().replaceAll('Exception: ', '')),
+                    ),
+                  );
+                }
+              }
+            },
+            child: const Text('Hapus Unit'),
+          ),
+        ],
+      ),
+    );
+  }
+
   bool _isExportingExcel = false;
   bool _isExportingPdf = false;
 
@@ -378,116 +448,119 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
             child: Column(
               children: [
                 // Top Action Bar
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: 12),
-                  decoration: const BoxDecoration(
-                    color: AppColors.surface,
-                    border: Border(bottom: BorderSide(color: AppColors.border)),
-                  ),
-                  child: Row(
-                    children: [
-                      // Hamburger button on compact / tablet / mobile
-                      if (isCompact)
-                        Builder(
-                          builder: (bContext) => Padding(
-                            padding: const EdgeInsets.only(right: 8.0),
-                            child: IconButton(
-                              icon: const Icon(Icons.menu, color: AppColors.navy900),
-                              tooltip: 'Buka Menu Navigasi',
-                              onPressed: () => Scaffold.of(bContext).openDrawer(),
+                SafeArea(
+                  bottom: false,
+                  child: Container(
+                    padding: EdgeInsets.symmetric(horizontal: isMobile ? AppSpacing.sm + 4 : AppSpacing.md, vertical: 10),
+                    decoration: const BoxDecoration(
+                      color: AppColors.surface,
+                      border: Border(bottom: BorderSide(color: AppColors.border)),
+                    ),
+                    child: Row(
+                      children: [
+                        // Hamburger button on compact / tablet / mobile
+                        if (isCompact)
+                          Builder(
+                            builder: (bContext) => Padding(
+                              padding: const EdgeInsets.only(right: 6.0),
+                              child: IconButton(
+                                icon: const Icon(Icons.menu, color: AppColors.navy900),
+                                tooltip: 'Buka Menu Navigasi',
+                                onPressed: () => Scaffold.of(bContext).openDrawer(),
+                              ),
                             ),
                           ),
+
+                        Expanded(
+                          child: Text(
+                            _getTabTitle(_activeNavIndex, isMobile: isMobile),
+                            style: (isMobile ? AppTypography.bodyLg : AppTypography.h2).copyWith(
+                              color: AppColors.navy900,
+                              fontWeight: FontWeight.w700,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ),
 
-                      Expanded(
-                        child: Text(
-                          _getTabTitle(_activeNavIndex),
-                          style: (isMobile ? AppTypography.bodyLg : AppTypography.h2).copyWith(
-                            color: AppColors.navy900,
-                            fontWeight: FontWeight.w700,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
+                        const SizedBox(width: AppSpacing.xs),
 
-                      const SizedBox(width: AppSpacing.sm),
-
-                      // Quick Jump to Receptionist View
-                      if (isMobile)
-                        IconButton(
-                          tooltip: 'Mode Resepsionis (Frontdesk)',
-                          icon: const Icon(Icons.storefront_outlined, color: AppColors.navy700),
-                          onPressed: () => context.go('/receptionist/rooms'),
-                        )
-                      else
-                        AppButton(
-                          label: 'Mode Resepsionis',
-                          variant: AppButtonVariant.outline,
-                          icon: Icons.storefront_outlined,
-                          onPressed: () => context.go('/receptionist/rooms'),
-                        ),
-
-                      const SizedBox(width: 6),
-
-                      // If in Reports tab or Overview: show export buttons
-                      if (_activeNavIndex == 2 || _activeNavIndex == 0) ...[
-                        if (isMobile) ...[
-                          IconButton(
-                            tooltip: 'Ekspor Excel (.xlsx)',
-                            icon: const Icon(Icons.table_view_outlined, color: Color(0xFF16A34A)),
-                            onPressed: _handleExportExcel,
-                          ),
-                          IconButton(
-                            tooltip: 'Ekspor PDF Resmi',
-                            icon: const Icon(Icons.picture_as_pdf_outlined, color: AppColors.orange600),
-                            onPressed: _handleExportPdf,
-                          ),
-                        ] else ...[
-                          AppButton(
-                            label: 'Ekspor Excel',
-                            variant: AppButtonVariant.secondary,
-                            icon: Icons.table_view_outlined,
-                            isLoading: _isExportingExcel,
-                            onPressed: _handleExportExcel,
-                          ),
-                          const SizedBox(width: AppSpacing.xs),
-                          AppButton(
-                            label: 'Ekspor PDF',
-                            variant: AppButtonVariant.outline,
-                            icon: Icons.picture_as_pdf_outlined,
-                            isLoading: _isExportingPdf,
-                            onPressed: _handleExportPdf,
-                          ),
-                        ],
-                      ],
-
-                      // If in Inventory tab: show add room button
-                      if (_activeNavIndex == 1)
+                        // Quick Jump to Receptionist View
                         if (isMobile)
                           IconButton(
-                            tooltip: 'Tambah Unit Kamar',
-                            icon: const Icon(Icons.add_circle, color: AppColors.orange600),
-                            onPressed: () {
-                              showDialog(
-                                context: context,
-                                builder: (_) => const RoomCrudDialog(),
-                              );
-                            },
+                            tooltip: 'Mode Resepsionis (Frontdesk)',
+                            icon: const Icon(Icons.storefront_outlined, color: AppColors.navy700),
+                            onPressed: () => context.go('/receptionist/rooms'),
                           )
                         else
                           AppButton(
-                            label: 'Tambah Kamar',
-                            variant: AppButtonVariant.primary,
-                            icon: Icons.add,
-                            onPressed: () {
-                              showDialog(
-                                context: context,
-                                builder: (_) => const RoomCrudDialog(),
-                              );
-                            },
+                            label: 'Mode Resepsionis',
+                            variant: AppButtonVariant.outline,
+                            icon: Icons.storefront_outlined,
+                            onPressed: () => context.go('/receptionist/rooms'),
                           ),
-                    ],
+
+                        const SizedBox(width: 4),
+
+                        // If in Reports tab or Overview: show export buttons
+                        if (_activeNavIndex == 2 || _activeNavIndex == 0) ...[
+                          if (isMobile) ...[
+                            IconButton(
+                              tooltip: 'Ekspor Excel (.xlsx)',
+                              icon: const Icon(Icons.table_view_outlined, color: Color(0xFF16A34A)),
+                              onPressed: _handleExportExcel,
+                            ),
+                            IconButton(
+                              tooltip: 'Ekspor PDF Resmi',
+                              icon: const Icon(Icons.picture_as_pdf_outlined, color: AppColors.orange600),
+                              onPressed: _handleExportPdf,
+                            ),
+                          ] else ...[
+                            AppButton(
+                              label: 'Ekspor Excel',
+                              variant: AppButtonVariant.secondary,
+                              icon: Icons.table_view_outlined,
+                              isLoading: _isExportingExcel,
+                              onPressed: _handleExportExcel,
+                            ),
+                            const SizedBox(width: AppSpacing.xs),
+                            AppButton(
+                              label: 'Ekspor PDF',
+                              variant: AppButtonVariant.outline,
+                              icon: Icons.picture_as_pdf_outlined,
+                              isLoading: _isExportingPdf,
+                              onPressed: _handleExportPdf,
+                            ),
+                          ],
+                        ],
+
+                        // If in Inventory tab: show add room button
+                        if (_activeNavIndex == 1)
+                          if (isMobile)
+                            IconButton(
+                              tooltip: 'Tambah Unit Kamar',
+                              icon: const Icon(Icons.add_circle, color: AppColors.orange600),
+                              onPressed: () {
+                                showDialog(
+                                  context: context,
+                                  builder: (_) => const RoomCrudDialog(),
+                                );
+                              },
+                            )
+                          else
+                            AppButton(
+                              label: 'Tambah Kamar',
+                              variant: AppButtonVariant.primary,
+                              icon: Icons.add,
+                              onPressed: () {
+                                showDialog(
+                                  context: context,
+                                  builder: (_) => const RoomCrudDialog(),
+                                );
+                              },
+                            ),
+                      ],
+                    ),
                   ),
                 ),
 
@@ -506,7 +579,21 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
     );
   }
 
-  String _getTabTitle(int index) {
+  String _getTabTitle(int index, {bool isMobile = false}) {
+    if (isMobile) {
+      switch (index) {
+        case 0:
+          return 'Analytics';
+        case 1:
+          return 'Inventaris';
+        case 2:
+          return 'Laporan';
+        case 3:
+          return 'Audit Trail';
+        default:
+          return 'Dashboard';
+      }
+    }
     switch (index) {
       case 0:
         return 'Executive Analytics & Performance';
@@ -838,25 +925,26 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
         children: [
           Padding(
             padding: const EdgeInsets.all(AppSpacing.md),
-            child: Row(
+            child: Wrap(
+              alignment: WrapAlignment.spaceBetween,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              spacing: AppSpacing.md,
+              runSpacing: AppSpacing.sm,
               children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Daftar Seluruh Unit Kamar (${rooms.length} Kamar Terdaftar)',
-                        style: AppTypography.h3,
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        'Manajer berwenang mengubah tarif, mengatur mode perbaikan, atau menambah unit.',
-                        style: AppTypography.caption,
-                      ),
-                    ],
-                  ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Daftar Seluruh Unit Kamar (${rooms.length} Kamar Terdaftar)',
+                      style: AppTypography.h3,
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'Manajer berwenang mengubah tarif, mengatur mode perbaikan, atau menambah unit.',
+                      style: AppTypography.caption,
+                    ),
+                  ],
                 ),
-                const SizedBox(width: AppSpacing.md),
                 AppButton(
                   label: 'Tambah Kamar Baru',
                   variant: AppButtonVariant.primary,
@@ -875,6 +963,126 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
 
           LayoutBuilder(
             builder: (context, constraints) {
+              final isMobile = constraints.maxWidth < 720;
+
+              if (isMobile) {
+                // Mobile Card View for Rooms
+                return ListView.separated(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: rooms.length,
+                  separatorBuilder: (_, __) => const Divider(height: 1),
+                  itemBuilder: (context, index) {
+                    final room = rooms[index];
+                    return Padding(
+                      padding: const EdgeInsets.all(AppSpacing.md),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Container(
+                                width: 44,
+                                height: 44,
+                                decoration: BoxDecoration(
+                                  color: AppColors.navy100,
+                                  borderRadius: AppRadius.roundedSm,
+                                ),
+                                alignment: Alignment.center,
+                                child: Text(
+                                  room.roomNumber,
+                                  style: AppTypography.h3.copyWith(
+                                    color: AppColors.navy900,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Tipe ${room.roomType}',
+                                      style: AppTypography.bodySm.copyWith(fontWeight: FontWeight.w700),
+                                    ),
+                                    Text(
+                                      'Lantai ${room.floor} · ${currencyFormatter.format(room.basePricePerNight)}/mlm',
+                                      style: AppTypography.caption,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              StatusBadge(status: room.status),
+                            ],
+                          ),
+                          if (room.facilities.isNotEmpty) ...[
+                            const SizedBox(height: 8),
+                            Wrap(
+                              spacing: 4,
+                              runSpacing: 4,
+                              children: room.facilities.map((f) => Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: AppColors.bg,
+                                  borderRadius: BorderRadius.circular(4),
+                                  border: Border.all(color: AppColors.border),
+                                ),
+                                child: Text(f, style: const TextStyle(fontSize: 10.5, color: AppColors.textSecondary)),
+                              )).toList(),
+                            ),
+                          ],
+                          const SizedBox(height: 10),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              OutlinedButton.icon(
+                                style: OutlinedButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                  visualDensity: VisualDensity.compact,
+                                ),
+                                icon: const Icon(Icons.edit_outlined, size: 15, color: AppColors.navy700),
+                                label: const Text('Ubah', style: TextStyle(fontSize: 12)),
+                                onPressed: () {
+                                  showDialog(
+                                    context: context,
+                                    builder: (_) => RoomCrudDialog(roomToEdit: room),
+                                  );
+                                },
+                              ),
+                              const SizedBox(width: 8),
+                              OutlinedButton.icon(
+                                style: OutlinedButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                  visualDensity: VisualDensity.compact,
+                                ),
+                                icon: Icon(
+                                  Icons.build_circle_outlined,
+                                  size: 15,
+                                  color: room.isMaintenance ? const Color(0xFF16A34A) : AppColors.textSecondary,
+                                ),
+                                label: Text(
+                                  room.isMaintenance ? 'Aktifkan' : 'Maintenance',
+                                  style: const TextStyle(fontSize: 12),
+                                ),
+                                onPressed: room.isOccupied ? null : () => _handleToggleMaintenance(room),
+                              ),
+                              const SizedBox(width: 8),
+                              IconButton(
+                                tooltip: 'Hapus Kamar',
+                                icon: const Icon(Icons.delete_outline, size: 18, color: AppColors.statusOccupied),
+                                onPressed: room.isOccupied ? null : () => _handleDeleteRoom(room),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                );
+              }
+
+              // Desktop Table View
               final contentWidth = math.max(880.0, constraints.maxWidth);
               return SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
@@ -970,83 +1178,13 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
                                         label: room.isMaintenance ? 'Aktifkan' : 'Maintenance',
                                         variant: AppButtonVariant.outline,
                                         icon: Icons.build_circle_outlined,
-                                        onPressed: room.isOccupied
-                                            ? null
-                                            : () async {
-                                                try {
-                                                  await ref.read(roomListProvider.notifier).toggleMaintenance(room.id);
-                                                  if (context.mounted) {
-                                                    ScaffoldMessenger.of(context).showSnackBar(
-                                                      SnackBar(
-                                                        backgroundColor: room.isMaintenance ? AppColors.statusAvailable : AppColors.statusMaintenance,
-                                                        content: Text(room.isMaintenance
-                                                            ? 'Kamar ${room.roomNumber} diaktifkan kembali ke status Tersedia.'
-                                                            : 'Kamar ${room.roomNumber} diubah ke mode Perbaikan / Maintenance.'),
-                                                      ),
-                                                    );
-                                                  }
-                                                } catch (e) {
-                                                  if (context.mounted) {
-                                                    ScaffoldMessenger.of(context).showSnackBar(
-                                                      SnackBar(
-                                                        backgroundColor: AppColors.statusOccupied,
-                                                        content: Text(e.toString().replaceAll('Exception: ', '')),
-                                                      ),
-                                                    );
-                                                  }
-                                                }
-                                              },
+                                        onPressed: room.isOccupied ? null : () => _handleToggleMaintenance(room),
                                       ),
                                       const SizedBox(width: 8),
                                       IconButton(
                                         tooltip: 'Hapus Kamar',
                                         icon: const Icon(Icons.delete_outline, color: AppColors.statusOccupied),
-                                        onPressed: room.isOccupied
-                                            ? null
-                                            : () {
-                                                showDialog(
-                                                  context: context,
-                                                  builder: (dialogCtx) => AlertDialog(
-                                                    title: Text('Hapus Kamar ${room.roomNumber}?'),
-                                                    content: Text('Apakah Anda yakin ingin menghapus unit kamar ${room.roomNumber} (Tipe ${room.roomType}) dari inventaris hotel?'),
-                                                    actions: [
-                                                      TextButton(
-                                                        onPressed: () => Navigator.of(dialogCtx).pop(),
-                                                        child: const Text('Batal'),
-                                                      ),
-                                                      FilledButton(
-                                                        style: FilledButton.styleFrom(
-                                                          backgroundColor: AppColors.statusOccupied,
-                                                        ),
-                                                        onPressed: () async {
-                                                          Navigator.of(dialogCtx).pop();
-                                                          try {
-                                                            await ref.read(roomListProvider.notifier).deleteRoom(room.id);
-                                                            if (context.mounted) {
-                                                              ScaffoldMessenger.of(context).showSnackBar(
-                                                                SnackBar(
-                                                                  backgroundColor: AppColors.statusOccupied,
-                                                                  content: Text('Kamar ${room.roomNumber} berhasil dihapus dari inventaris.'),
-                                                                ),
-                                                              );
-                                                            }
-                                                          } catch (e) {
-                                                            if (context.mounted) {
-                                                              ScaffoldMessenger.of(context).showSnackBar(
-                                                                SnackBar(
-                                                                  backgroundColor: AppColors.statusOccupied,
-                                                                  content: Text(e.toString().replaceAll('Exception: ', '')),
-                                                                ),
-                                                              );
-                                                            }
-                                                          }
-                                                        },
-                                                        child: const Text('Hapus Unit'),
-                                                      ),
-                                                    ],
-                                                  ),
-                                                );
-                                              },
+                                        onPressed: room.isOccupied ? null : () => _handleDeleteRoom(room),
                                       ),
                                     ],
                                   ),
@@ -1123,6 +1261,97 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
 
           LayoutBuilder(
             builder: (context, constraints) {
+              final isMobile = constraints.maxWidth < 720;
+
+              if (isMobile) {
+                // Mobile Card View for Transactions
+                return ListView.separated(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: rooms.length,
+                  separatorBuilder: (_, __) => const Divider(height: 1),
+                  itemBuilder: (context, index) {
+                    final room = rooms[index];
+                    final hasGuest = room.activeGuestName != null;
+                    final invoice = room.invoiceNumber ?? 'INV/SH/20260924/${(index + 1).toString().padLeft(4, '0')}';
+                    final guest = room.activeGuestName ?? 'Tamu Walk-in';
+                    final phone = room.activeGuestPhone ?? '081234567890';
+                    final source = room.bookingSource ?? (index % 2 == 0 ? 'REDDOORZ' : 'WALK_IN');
+                    final total = room.basePricePerNight * (index % 3 + 1);
+
+                    return Padding(
+                      padding: const EdgeInsets.all(AppSpacing.md),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(invoice, style: AppTypography.caption.copyWith(fontWeight: FontWeight.w700, color: AppColors.navy900)),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: hasGuest ? AppColors.statusErrorBg : AppColors.statusSuccessBg,
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: Text(
+                                  hasGuest ? 'Menginap' : 'Selesai',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w700,
+                                    color: hasGuest ? AppColors.statusOccupied : const Color(0xFF16A34A),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 6),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(guest, style: AppTypography.bodySm.copyWith(fontWeight: FontWeight.w700)),
+                                    const SizedBox(height: 2),
+                                    Text('Kamar ${room.roomNumber} (${room.roomType}) · WA: $phone', style: AppTypography.caption),
+                                  ],
+                                ),
+                              ),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color: source == 'REDDOORZ' ? Colors.red.shade50 : AppColors.navy100,
+                                      borderRadius: AppRadius.roundedSm,
+                                    ),
+                                    child: Text(
+                                      source,
+                                      style: AppTypography.overline.copyWith(
+                                        color: source == 'REDDOORZ' ? Colors.red.shade700 : AppColors.navy700,
+                                        fontSize: 10,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    currencyFormatter.format(total),
+                                    style: AppTypography.bodySm.copyWith(fontWeight: FontWeight.w800, color: AppColors.navy900),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                );
+              }
+
+              // Desktop Table View
               final contentWidth = math.max(920.0, constraints.maxWidth);
               return SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
@@ -1270,6 +1499,65 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
 
           LayoutBuilder(
             builder: (context, constraints) {
+              final isMobile = constraints.maxWidth < 720;
+
+              if (isMobile) {
+                // Mobile Card View for Audit Trail
+                return ListView.separated(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: _sampleAuditLogs.length,
+                  separatorBuilder: (_, __) => const Divider(height: 1),
+                  itemBuilder: (context, index) {
+                    final log = _sampleAuditLogs[index];
+                    final timeStr = DateFormat('dd MMM, HH:mm').format(log.timestamp);
+
+                    return Padding(
+                      padding: const EdgeInsets.all(AppSpacing.md),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                decoration: BoxDecoration(
+                                  color: AppColors.navy100,
+                                  borderRadius: AppRadius.roundedSm,
+                                ),
+                                child: Text(
+                                  log.actionType,
+                                  style: AppTypography.overline.copyWith(
+                                    color: AppColors.navy700,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ),
+                              Text(
+                                timeStr,
+                                style: AppTypography.caption.copyWith(color: AppColors.textSecondary, fontSize: 11),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 6),
+                          Text(log.details, style: AppTypography.bodySm.copyWith(fontWeight: FontWeight.w600)),
+                          const SizedBox(height: 4),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(log.userName, style: AppTypography.caption.copyWith(color: AppColors.textSecondary)),
+                              Text('IP: ${log.ipAddress}', style: const TextStyle(fontSize: 10.5, fontFamily: 'monospace', color: AppColors.textDisabled)),
+                            ],
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                );
+              }
+
+              // Desktop Table View
               final contentWidth = math.max(760.0, constraints.maxWidth);
               return SingleChildScrollView(
                 scrollDirection: Axis.horizontal,

@@ -582,16 +582,20 @@ class _InvoicePreviewDialogState extends State<InvoicePreviewDialog> {
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Text(
-                                'TOTAL PEMBAYARAN',
-                                style: AppTypography.h3.copyWith(
-                                  fontWeight: FontWeight.w800,
-                                  color: AppColors.navy900,
+                              Expanded(
+                                child: Text(
+                                  'TOTAL PEMBAYARAN',
+                                  style: (isMobile ? AppTypography.bodySm : AppTypography.h3).copyWith(
+                                    fontWeight: FontWeight.w800,
+                                    color: AppColors.navy900,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
                                 ),
                               ),
+                              const SizedBox(width: 8),
                               Text(
                                 currencyFormatter.format(widget.grandTotal),
-                                style: AppTypography.h2.copyWith(
+                                style: (isMobile ? AppTypography.h3 : AppTypography.h2).copyWith(
                                   fontWeight: FontWeight.w800,
                                   color: AppColors.navy900,
                                 ),

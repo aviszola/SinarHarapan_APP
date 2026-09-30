@@ -447,16 +447,20 @@ class _CheckOutDialogState extends ConsumerState<CheckOutDialog> {
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Text(
-                                  'Total Tagihan Pelunasan:',
-                                  style: AppTypography.h3.copyWith(
-                                    fontWeight: FontWeight.w700,
-                                    color: AppColors.navy900,
+                                Expanded(
+                                  child: Text(
+                                    'Total Tagihan Pelunasan:',
+                                    style: (isMobile ? AppTypography.bodySm : AppTypography.h3).copyWith(
+                                      fontWeight: FontWeight.w700,
+                                      color: AppColors.navy900,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
                                   ),
                                 ),
+                                const SizedBox(width: 8),
                                 Text(
                                   currencyFormatter.format(_grandTotal),
-                                  style: AppTypography.h2.copyWith(
+                                  style: (isMobile ? AppTypography.h3 : AppTypography.h2).copyWith(
                                     fontWeight: FontWeight.w800,
                                     color: AppColors.navy900,
                                   ),

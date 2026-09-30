@@ -98,134 +98,157 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
             child: Container(
               height: double.infinity,
               color: AppColors.surface,
-              child: Center(
-                child: FadeTransition(
-                  opacity: _fadeIn,
-                  child: SlideTransition(
-                    position: _slideUp,
-                    child: SingleChildScrollView(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: size.width > 900 ? 48 : 24,
-                        vertical: 40,
-                      ),
-                      child: ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 420),
-                        child: Form(
-                          key: _formKey,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              // Mobile-only logo
-                              if (size.width <= 900) ...[
-                                _MobileLogo(),
-                                const SizedBox(height: AppSpacing.xl),
-                              ],
+              child: SafeArea(
+                child: Center(
+                  child: FadeTransition(
+                    opacity: _fadeIn,
+                    child: SlideTransition(
+                      position: _slideUp,
+                      child: SingleChildScrollView(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: size.width > 900 ? 48 : (size.width < 400 ? 20 : 28),
+                          vertical: size.width < 600 ? 20 : 40,
+                        ),
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 420),
+                          child: Form(
+                            key: _formKey,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                // Mobile-only logo
+                                if (size.width <= 900) ...[
+                                  _MobileLogo(),
+                                  const SizedBox(height: AppSpacing.lg),
+                                ],
 
-                              // Section heading
-                              Text(
-                                'Masuk ke Sistem',
-                                style: AppTypography.h1.copyWith(
-                                  color: AppColors.textPrimary,
-                                  letterSpacing: -0.5,
-                                ),
-                              ),
-                              const SizedBox(height: AppSpacing.xs),
-                              Text(
-                                'Masukkan kredensial akun staf Anda untuk melanjutkan.',
-                                style: AppTypography.body.copyWith(
-                                  color: AppColors.textSecondary,
-                                ),
-                              ),
-
-                              const SizedBox(height: AppSpacing.xl),
-
-                              // Error Banner
-                              if (authState.errorMessage != null) ...[
-                                _ErrorBanner(message: authState.errorMessage!),
-                                const SizedBox(height: AppSpacing.md),
-                              ],
-
-                              // Username
-                              AppTextField(
-                                label: 'Nama Pengguna',
-                                hint: 'receptionist atau manager',
-                                controller: _usernameController,
-                                prefixIcon: Icons.person_outline_rounded,
-                                validator: (v) => (v == null || v.trim().isEmpty)
-                                    ? 'Username wajib diisi'
-                                    : null,
-                              ),
-
-                              const SizedBox(height: AppSpacing.md),
-
-                              // Password
-                              AppTextField(
-                                label: 'Kata Sandi',
-                                hint: 'Masukkan kata sandi',
-                                controller: _passwordController,
-                                isPassword: true,
-                                prefixIcon: Icons.lock_outline_rounded,
-                                validator: (v) =>
-                                    (v == null || v.isEmpty) ? 'Password wajib diisi' : null,
-                                onSubmitted: (_) => _handleLogin(),
-                              ),
-
-                              const SizedBox(height: AppSpacing.xl),
-
-                              // Primary CTA
-                              AppButton(
-                                label: 'Masuk ke Sistem',
-                                variant: AppButtonVariant.primary,
-                                icon: Icons.login_rounded,
-                                isLoading: authState.isLoading,
-                                onPressed: _handleLogin,
-                              ),
-
-                              const SizedBox(height: AppSpacing.xl),
-
-                              // Divider
-                              _DividerLabel(label: 'Akses Cepat Evaluasi'),
-
-                              const SizedBox(height: AppSpacing.md),
-
-                              // Quick login pills
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: AppButton(
-                                      label: 'Resepsionis',
-                                      variant: AppButtonVariant.outline,
-                                      icon: Icons.badge_outlined,
-                                      onPressed: authState.isLoading
-                                          ? null
-                                          : () => _handleQuickLogin(UserRole.receptionist),
-                                    ),
+                                // Section heading
+                                Text(
+                                  'Masuk ke Sistem',
+                                  style: (size.width < 400 ? AppTypography.h2 : AppTypography.h1).copyWith(
+                                    color: AppColors.textPrimary,
+                                    letterSpacing: -0.5,
                                   ),
-                                  const SizedBox(width: AppSpacing.sm),
-                                  Expanded(
-                                    child: AppButton(
-                                      label: 'Manajer Hotel',
-                                      variant: AppButtonVariant.secondary,
-                                      icon: Icons.admin_panel_settings_outlined,
-                                      onPressed: authState.isLoading
-                                          ? null
-                                          : () => _handleQuickLogin(UserRole.manager),
-                                    ),
+                                ),
+                                const SizedBox(height: AppSpacing.xs),
+                                Text(
+                                  'Masukkan kredensial akun staf Anda untuk melanjutkan.',
+                                  style: AppTypography.body.copyWith(
+                                    color: AppColors.textSecondary,
+                                    fontSize: size.width < 400 ? 13.5 : 15,
+                                  ),
+                                ),
+
+                                const SizedBox(height: AppSpacing.xl),
+
+                                // Error Banner
+                                if (authState.errorMessage != null) ...[
+                                  _ErrorBanner(message: authState.errorMessage!),
+                                  const SizedBox(height: AppSpacing.md),
+                                ],
+
+                                // Username
+                                AppTextField(
+                                  label: 'Nama Pengguna',
+                                  hint: 'receptionist atau manager',
+                                  controller: _usernameController,
+                                  prefixIcon: Icons.person_outline_rounded,
+                                  validator: (v) => (v == null || v.trim().isEmpty)
+                                      ? 'Username wajib diisi'
+                                      : null,
+                                ),
+
+                                const SizedBox(height: AppSpacing.md),
+
+                                // Password
+                                AppTextField(
+                                  label: 'Kata Sandi',
+                                  hint: 'Masukkan kata sandi',
+                                  controller: _passwordController,
+                                  isPassword: true,
+                                  prefixIcon: Icons.lock_outline_rounded,
+                                  validator: (v) =>
+                                      (v == null || v.isEmpty) ? 'Password wajib diisi' : null,
+                                  onSubmitted: (_) => _handleLogin(),
+                                ),
+
+                                const SizedBox(height: AppSpacing.xl),
+
+                                // Primary CTA
+                                AppButton(
+                                  label: 'Masuk ke Sistem',
+                                  variant: AppButtonVariant.primary,
+                                  icon: Icons.login_rounded,
+                                  isLoading: authState.isLoading,
+                                  onPressed: _handleLogin,
+                                ),
+
+                                const SizedBox(height: AppSpacing.xl),
+
+                                // Divider
+                                _DividerLabel(label: 'Akses Cepat Evaluasi'),
+
+                                const SizedBox(height: AppSpacing.md),
+
+                                // Quick login buttons (stacked on narrow mobile screens)
+                                if (size.width < 380) ...[
+                                  AppButton(
+                                    label: 'Resepsionis',
+                                    variant: AppButtonVariant.outline,
+                                    icon: Icons.badge_outlined,
+                                    onPressed: authState.isLoading
+                                        ? null
+                                        : () => _handleQuickLogin(UserRole.receptionist),
+                                  ),
+                                  const SizedBox(height: AppSpacing.sm),
+                                  AppButton(
+                                    label: 'Manajer Hotel',
+                                    variant: AppButtonVariant.secondary,
+                                    icon: Icons.admin_panel_settings_outlined,
+                                    onPressed: authState.isLoading
+                                        ? null
+                                        : () => _handleQuickLogin(UserRole.manager),
+                                  ),
+                                ] else ...[
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        child: AppButton(
+                                          label: 'Resepsionis',
+                                          variant: AppButtonVariant.outline,
+                                          icon: Icons.badge_outlined,
+                                          onPressed: authState.isLoading
+                                              ? null
+                                              : () => _handleQuickLogin(UserRole.receptionist),
+                                        ),
+                                      ),
+                                      const SizedBox(width: AppSpacing.sm),
+                                      Expanded(
+                                        child: AppButton(
+                                          label: 'Manajer Hotel',
+                                          variant: AppButtonVariant.secondary,
+                                          icon: Icons.admin_panel_settings_outlined,
+                                          onPressed: authState.isLoading
+                                              ? null
+                                              : () => _handleQuickLogin(UserRole.manager),
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ],
-                              ),
 
-                              const SizedBox(height: AppSpacing.xxl),
+                                const SizedBox(height: AppSpacing.xl),
 
-                              // Footer note
-                              Text(
-                                'Hotel Sinar Harapan — RedDoorz Partner\nSistem manajemen properti v1.0',
-                                style: AppTypography.caption.copyWith(
-                                  color: AppColors.textDisabled,
+                                // Footer note
+                                Text(
+                                  'Hotel Sinar Harapan — RedDoorz Partner\nSistem manajemen properti v1.0',
+                                  style: AppTypography.caption.copyWith(
+                                    color: AppColors.textDisabled,
+                                  ),
+                                  textAlign: TextAlign.center,
                                 ),
-                                textAlign: TextAlign.center,
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
                         ),
                       ),

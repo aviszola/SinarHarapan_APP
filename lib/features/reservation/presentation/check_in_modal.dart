@@ -377,43 +377,43 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
                           style: AppTypography.bodySm.copyWith(fontWeight: FontWeight.w600),
                         ),
                         const SizedBox(height: AppSpacing.xs),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: InkWell(
-                                onTap: () {
-                                  setState(() {
-                                    _bookingSource = 'WALK_IN';
-                                    if (_paymentMethod == 'REDDOORZ_PREPAID') {
-                                      _paymentMethod = 'CASH';
-                                    }
-                                  });
-                                },
-                                borderRadius: AppRadius.roundedMd,
-                                child: Container(
-                                  padding: const EdgeInsets.all(12),
-                                  decoration: BoxDecoration(
+                        Builder(
+                          builder: (context) {
+                            final walkInCard = InkWell(
+                              onTap: () {
+                                setState(() {
+                                  _bookingSource = 'WALK_IN';
+                                  if (_paymentMethod == 'REDDOORZ_PREPAID') {
+                                    _paymentMethod = 'CASH';
+                                  }
+                                });
+                              },
+                              borderRadius: AppRadius.roundedMd,
+                              child: Container(
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: _bookingSource == 'WALK_IN'
+                                      ? AppColors.navy100
+                                      : AppColors.surface,
+                                  border: Border.all(
                                     color: _bookingSource == 'WALK_IN'
-                                        ? AppColors.navy100
-                                        : AppColors.surface,
-                                    border: Border.all(
+                                        ? AppColors.navy700
+                                        : AppColors.border,
+                                    width: _bookingSource == 'WALK_IN' ? 2 : 1,
+                                  ),
+                                  borderRadius: AppRadius.roundedMd,
+                                ),
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      Icons.person_pin_circle_outlined,
                                       color: _bookingSource == 'WALK_IN'
                                           ? AppColors.navy700
-                                          : AppColors.border,
-                                      width: _bookingSource == 'WALK_IN' ? 2 : 1,
+                                          : AppColors.textSecondary,
                                     ),
-                                    borderRadius: AppRadius.roundedMd,
-                                  ),
-                                  child: Row(
-                                    children: [
-                                      Icon(
-                                        Icons.person_pin_circle_outlined,
-                                        color: _bookingSource == 'WALK_IN'
-                                            ? AppColors.navy700
-                                            : AppColors.textSecondary,
-                                      ),
-                                      const SizedBox(width: 8),
-                                      Column(
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: Column(
                                         crossAxisAlignment: CrossAxisAlignment.start,
                                         children: [
                                           Text(
@@ -431,45 +431,45 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
                                           ),
                                         ],
                                       ),
-                                    ],
-                                  ),
+                                    ),
+                                  ],
                                 ),
                               ),
-                            ),
-                            const SizedBox(width: AppSpacing.md),
-                            Expanded(
-                              child: InkWell(
-                                onTap: () {
-                                  setState(() {
-                                    _bookingSource = 'REDDOORZ';
-                                    _paymentMethod = 'REDDOORZ_PREPAID';
-                                  });
-                                },
-                                borderRadius: AppRadius.roundedMd,
-                                child: Container(
-                                  padding: const EdgeInsets.all(12),
-                                  decoration: BoxDecoration(
+                            );
+
+                            final redDoorzCard = InkWell(
+                              onTap: () {
+                                setState(() {
+                                  _bookingSource = 'REDDOORZ';
+                                  _paymentMethod = 'REDDOORZ_PREPAID';
+                                });
+                              },
+                              borderRadius: AppRadius.roundedMd,
+                              child: Container(
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: _bookingSource == 'REDDOORZ'
+                                      ? Colors.red.shade50
+                                      : AppColors.surface,
+                                  border: Border.all(
                                     color: _bookingSource == 'REDDOORZ'
-                                        ? Colors.red.shade50
-                                        : AppColors.surface,
-                                    border: Border.all(
+                                        ? Colors.red.shade700
+                                        : AppColors.border,
+                                    width: _bookingSource == 'REDDOORZ' ? 2 : 1,
+                                  ),
+                                  borderRadius: AppRadius.roundedMd,
+                                ),
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      Icons.hotel_class_rounded,
                                       color: _bookingSource == 'REDDOORZ'
                                           ? Colors.red.shade700
-                                          : AppColors.border,
-                                      width: _bookingSource == 'REDDOORZ' ? 2 : 1,
+                                          : AppColors.textSecondary,
                                     ),
-                                    borderRadius: AppRadius.roundedMd,
-                                  ),
-                                  child: Row(
-                                    children: [
-                                      Icon(
-                                        Icons.hotel_class_rounded,
-                                        color: _bookingSource == 'REDDOORZ'
-                                            ? Colors.red.shade700
-                                            : AppColors.textSecondary,
-                                      ),
-                                      const SizedBox(width: 8),
-                                      Column(
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: Column(
                                         crossAxisAlignment: CrossAxisAlignment.start,
                                         children: [
                                           Text(
@@ -487,12 +487,30 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
                                           ),
                                         ],
                                       ),
-                                    ],
-                                  ),
+                                    ),
+                                  ],
                                 ),
                               ),
-                            ),
-                          ],
+                            );
+
+                            if (isMobile) {
+                              return Column(
+                                children: [
+                                  walkInCard,
+                                  const SizedBox(height: AppSpacing.sm),
+                                  redDoorzCard,
+                                ],
+                              );
+                            }
+
+                            return Row(
+                              children: [
+                                Expanded(child: walkInCard),
+                                const SizedBox(width: AppSpacing.md),
+                                Expanded(child: redDoorzCard),
+                              ],
+                            );
+                          },
                         ),
 
                         if (_bookingSource == 'REDDOORZ') ...[
