@@ -4,9 +4,11 @@ import 'package:intl/intl.dart';
 import '../../../app/theme.dart';
 import '../../room_management/domain/room_model.dart';
 import '../../shared_widgets/app_button.dart';
+import '../domain/invoice_pdf_service.dart';
+import '../domain/invoice_sequence_service.dart';
 import 'whatsapp_receipt_dialog.dart';
 
-class InvoicePreviewDialog extends StatelessWidget {
+class InvoicePreviewDialog extends StatefulWidget {
   final RoomModel room;
   final double roomTotal;
   final double lateFee;
@@ -15,18 +17,226 @@ class InvoicePreviewDialog extends StatelessWidget {
   final double grandTotal;
   final String receptionistName;
   final bool autoOpenWhatsApp;
+  final String? customTitle;
+  final String? customSubtitle;
+  final VoidCallback? onConfirmCheckIn;
 
   const InvoicePreviewDialog({
     super.key,
     required this.room,
     required this.roomTotal,
-    required this.lateFee,
-    required this.minibarFee,
-    required this.damageFee,
+    this.lateFee = 0,
+    this.minibarFee = 0,
+    this.damageFee = 0,
     required this.grandTotal,
     required this.receptionistName,
     this.autoOpenWhatsApp = false,
+    this.customTitle,
+    this.customSubtitle,
+    this.onConfirmCheckIn,
   });
+
+  @override
+  State<InvoicePreviewDialog> createState() => _InvoicePreviewDialogState();
+}
+
+class _InvoicePreviewDialogState extends State<InvoicePreviewDialog> {
+  bool _isDownloadingPdf = false;
+  bool _isPrinting = false;
+
+  Future<void> _handleDownloadPdf(String invoiceNumber) async {
+    if (_isDownloadingPdf) return;
+    setState(() => _isDownloadingPdf = true);
+
+    try {
+      final savedPath = await InvoicePdfService.saveInvoicePdf(
+        room: widget.room,
+        roomTotal: widget.roomTotal,
+        lateFee: widget.lateFee,
+        minibarFee: widget.minibarFee,
+        damageFee: widget.damageFee,
+        grandTotal: widget.grandTotal,
+        receptionistName: widget.receptionistName,
+        invoiceNumber: invoiceNumber,
+      );
+
+      if (!mounted) return;
+
+      if (savedPath == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Pengunduhan PDF dibatalkan.'),
+            duration: Duration(seconds: 2),
+          ),
+        );
+        return;
+      }
+
+      final fileName = savedPath.split(RegExp(r'[\\/]')).last;
+
+      _showDownloadSuccessDialog(savedPath, fileName);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: AppColors.navy700,
+          duration: const Duration(seconds: 5),
+          content: Row(
+            children: [
+              const Icon(Icons.picture_as_pdf_outlined, color: Colors.white),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  'Faktur PDF resmi tersimpan: $fileName',
+                  style: const TextStyle(color: Colors.white, fontSize: 13),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+          action: SnackBarAction(
+            label: 'BUKA',
+            textColor: AppColors.orange500,
+            onPressed: () => InvoicePdfService.openFile(savedPath),
+          ),
+        ),
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            backgroundColor: Colors.red.shade700,
+            content: Text('Gagal mengunduh PDF: $e'),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isDownloadingPdf = false);
+    }
+  }
+
+  Future<void> _handlePrint(String invoiceNumber) async {
+    if (_isPrinting) return;
+    setState(() => _isPrinting = true);
+    try {
+      await InvoicePdfService.printReceipt(
+        room: widget.room,
+        roomTotal: widget.roomTotal,
+        lateFee: widget.lateFee,
+        minibarFee: widget.minibarFee,
+        damageFee: widget.damageFee,
+        grandTotal: widget.grandTotal,
+        receptionistName: widget.receptionistName,
+        invoiceNumber: invoiceNumber,
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            backgroundColor: Colors.red.shade700,
+            content: Text('Gagal membuka printer: $e'),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isPrinting = false);
+    }
+  }
+
+  void _showDownloadSuccessDialog(String filePath, String fileName) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: const Color(0xFFDCFCE7),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Icon(Icons.check_circle_rounded, color: Color(0xFF16A34A), size: 24),
+            ),
+            const SizedBox(width: 12),
+            const Expanded(
+              child: Text(
+                'Faktur PDF Tersimpan!',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.navy900),
+              ),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Dokumen faktur resmi berhasil diunduh dan tersimpan ke perangkat lokal Anda:',
+              style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
+            ),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppColors.bg,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: AppColors.border),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.picture_as_pdf_rounded, color: Color(0xFFDC2626), size: 22),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          fileName,
+                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: AppColors.navy900),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    filePath,
+                    style: const TextStyle(fontSize: 11, color: AppColors.textSecondary),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Tutup'),
+          ),
+          OutlinedButton.icon(
+            icon: const Icon(Icons.folder_open_rounded, size: 16),
+            label: const Text('Buka Folder'),
+            onPressed: () {
+              InvoicePdfService.openFolder(filePath);
+            },
+          ),
+          ElevatedButton.icon(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.navy700,
+              foregroundColor: Colors.white,
+            ),
+            icon: const Icon(Icons.open_in_new_rounded, size: 16),
+            label: const Text('Buka Berkas PDF'),
+            onPressed: () {
+              InvoicePdfService.openFile(filePath);
+            },
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -42,8 +252,8 @@ class InvoicePreviewDialog extends StatelessWidget {
     );
 
     final now = DateTime.now();
-    final invoiceNumber = room.invoiceNumber ??
-        'INV/SH/${now.year}${now.month.toString().padLeft(2, '0')}${now.day.toString().padLeft(2, '0')}/${room.roomNumber}';
+    final invoiceNumber = widget.room.invoiceNumber ??
+        InvoiceSequenceService.instance.generateNextInvoiceNumber(transactionDate: now);
 
     return Dialog(
       insetPadding: EdgeInsets.symmetric(
@@ -65,7 +275,7 @@ class InvoicePreviewDialog extends StatelessWidget {
                 children: [
                   Expanded(
                     child: Text(
-                      'Faktur Pelunasan & Struk Kasir',
+                      widget.customTitle ?? 'Faktur Pembayaran & Struk Kasir (Check-In)',
                       style: (isMobile ? AppTypography.h3 : AppTypography.h2).copyWith(
                         color: AppColors.navy900,
                         fontWeight: FontWeight.w700,
@@ -83,7 +293,7 @@ class InvoicePreviewDialog extends StatelessWidget {
               const Divider(height: 16),
 
               // WhatsApp Prompt Banner if autoOpenWhatsApp is true
-              if (autoOpenWhatsApp) ...[
+              if (widget.autoOpenWhatsApp) ...[
                 Container(
                   margin: const EdgeInsets.only(bottom: AppSpacing.sm),
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
@@ -111,7 +321,7 @@ class InvoicePreviewDialog extends StatelessWidget {
                                 style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12, color: Color(0xFF16A34A)),
                               ),
                               Text(
-                                'Kirim bukti bayar resmi ke ${room.activeGuestPhone ?? "kontak WhatsApp tamu"}.',
+                                'Kirim bukti bayar resmi ke ${widget.room.activeGuestPhone ?? "kontak WhatsApp tamu"}.',
                                 style: const TextStyle(fontSize: 11, color: Color(0xFF15803D)),
                               ),
                             ],
@@ -132,13 +342,13 @@ class InvoicePreviewDialog extends StatelessWidget {
                           showDialog(
                             context: context,
                             builder: (_) => WhatsAppReceiptDialog(
-                              room: room,
-                              roomTotal: roomTotal,
-                              lateFee: lateFee,
-                              minibarFee: minibarFee,
-                              damageFee: damageFee,
-                              grandTotal: grandTotal,
-                              receptionistName: receptionistName,
+                              room: widget.room,
+                              roomTotal: widget.roomTotal,
+                              lateFee: widget.lateFee,
+                              minibarFee: widget.minibarFee,
+                              damageFee: widget.damageFee,
+                              grandTotal: widget.grandTotal,
+                              receptionistName: widget.receptionistName,
                             ),
                           );
                         },
@@ -229,7 +439,7 @@ class InvoicePreviewDialog extends StatelessWidget {
                                   const SizedBox(height: 4),
                                   Text('NAMA TAMU:', style: AppTypography.overline),
                                   Text(
-                                    room.activeGuestName ?? 'Tamu Walk-in',
+                                    widget.room.activeGuestName ?? 'Tamu Walk-in',
                                     style: AppTypography.bodySm.copyWith(
                                       fontWeight: FontWeight.w600,
                                     ),
@@ -252,7 +462,7 @@ class InvoicePreviewDialog extends StatelessWidget {
                                   const SizedBox(height: 4),
                                   Text('KAMAR & KANAL:', style: AppTypography.overline),
                                   Text(
-                                    'Kamar ${room.roomNumber} (${room.bookingSource ?? 'WALK_IN'})',
+                                    'Kamar ${widget.room.roomNumber} (${widget.room.bookingSource ?? 'WALK_IN'})',
                                     style: AppTypography.bodySm.copyWith(
                                       fontWeight: FontWeight.w600,
                                     ),
@@ -290,17 +500,17 @@ class InvoicePreviewDialog extends StatelessWidget {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    'Sewa Kamar ${room.roomNumber} (${room.roomType})',
+                                    'Sewa Kamar ${widget.room.roomNumber} (${widget.room.roomType})',
                                     style: AppTypography.bodySm.copyWith(fontWeight: FontWeight.w600),
                                   ),
                                   Text(
-                                    'Check-in: ${room.checkInTime != null ? DateFormat('dd/MM HH:mm').format(room.checkInTime!) : "-"}',
+                                    'Check-in: ${widget.room.checkInTime != null ? DateFormat('dd/MM HH:mm').format(widget.room.checkInTime!) : "-"}',
                                     style: AppTypography.caption,
                                   ),
                                 ],
                               ),
                               Text(
-                                currencyFormatter.format(roomTotal),
+                                currencyFormatter.format(widget.roomTotal),
                                 style: AppTypography.bodySm.copyWith(fontWeight: FontWeight.w600),
                               ),
                             ],
@@ -308,7 +518,7 @@ class InvoicePreviewDialog extends StatelessWidget {
                         ),
 
                         // Item 2: Late Fee
-                        if (lateFee > 0)
+                        if (widget.lateFee > 0)
                           Padding(
                             padding: const EdgeInsets.symmetric(vertical: 6),
                             child: Row(
@@ -319,7 +529,7 @@ class InvoicePreviewDialog extends StatelessWidget {
                                   style: AppTypography.bodySm,
                                 ),
                                 Text(
-                                  currencyFormatter.format(lateFee),
+                                  currencyFormatter.format(widget.lateFee),
                                   style: AppTypography.bodySm,
                                 ),
                               ],
@@ -327,7 +537,7 @@ class InvoicePreviewDialog extends StatelessWidget {
                           ),
 
                         // Item 3: Minibar
-                        if (minibarFee > 0)
+                        if (widget.minibarFee > 0)
                           Padding(
                             padding: const EdgeInsets.symmetric(vertical: 6),
                             child: Row(
@@ -338,7 +548,7 @@ class InvoicePreviewDialog extends StatelessWidget {
                                   style: AppTypography.bodySm,
                                 ),
                                 Text(
-                                  currencyFormatter.format(minibarFee),
+                                  currencyFormatter.format(widget.minibarFee),
                                   style: AppTypography.bodySm,
                                 ),
                               ],
@@ -346,7 +556,7 @@ class InvoicePreviewDialog extends StatelessWidget {
                           ),
 
                         // Item 4: Damage Fee
-                        if (damageFee > 0)
+                        if (widget.damageFee > 0)
                           Padding(
                             padding: const EdgeInsets.symmetric(vertical: 6),
                             child: Row(
@@ -357,7 +567,7 @@ class InvoicePreviewDialog extends StatelessWidget {
                                   style: AppTypography.bodySm,
                                 ),
                                 Text(
-                                  currencyFormatter.format(damageFee),
+                                  currencyFormatter.format(widget.damageFee),
                                   style: AppTypography.bodySm,
                                 ),
                               ],
@@ -373,14 +583,14 @@ class InvoicePreviewDialog extends StatelessWidget {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Text(
-                                'TOTAL PELUNASAN',
+                                'TOTAL PEMBAYARAN',
                                 style: AppTypography.h3.copyWith(
                                   fontWeight: FontWeight.w800,
                                   color: AppColors.navy900,
                                 ),
                               ),
                               Text(
-                                currencyFormatter.format(grandTotal),
+                                currencyFormatter.format(widget.grandTotal),
                                 style: AppTypography.h2.copyWith(
                                   fontWeight: FontWeight.w800,
                                   color: AppColors.navy900,
@@ -405,7 +615,7 @@ class InvoicePreviewDialog extends StatelessWidget {
                               const SizedBox(width: 8),
                               Flexible(
                                 child: Text(
-                                  'STATUS: LUNAS (PAID) • Resepsionis: $receptionistName',
+                                  'STATUS: LUNAS (PAID) • Biaya sewa kamar dibayar saat check-in • Resepsionis: ${widget.receptionistName}',
                                   textAlign: TextAlign.center,
                                   style: AppTypography.caption.copyWith(
                                     color: const Color(0xFF16A34A),
@@ -441,7 +651,7 @@ class InvoicePreviewDialog extends StatelessWidget {
                 runSpacing: AppSpacing.sm,
                 children: [
                   AppButton(
-                    label: 'Tutup',
+                    label: widget.onConfirmCheckIn != null ? 'Kembali ke Form' : 'Tutup',
                     variant: AppButtonVariant.ghost,
                     onPressed: () => Navigator.of(context).pop(),
                   ),
@@ -468,13 +678,13 @@ class InvoicePreviewDialog extends StatelessWidget {
                           showDialog(
                             context: context,
                             builder: (_) => WhatsAppReceiptDialog(
-                              room: room,
-                              roomTotal: roomTotal,
-                              lateFee: lateFee,
-                              minibarFee: minibarFee,
-                              damageFee: damageFee,
-                              grandTotal: grandTotal,
-                              receptionistName: receptionistName,
+                              room: widget.room,
+                              roomTotal: widget.roomTotal,
+                              lateFee: widget.lateFee,
+                              minibarFee: widget.minibarFee,
+                              damageFee: widget.damageFee,
+                              grandTotal: widget.grandTotal,
+                              receptionistName: widget.receptionistName,
                             ),
                           );
                         },
@@ -484,29 +694,30 @@ class InvoicePreviewDialog extends StatelessWidget {
                         label: 'Thermal Printer',
                         variant: AppButtonVariant.secondary,
                         icon: Icons.print_outlined,
-                        onPressed: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Perintah cetak struk thermal 80mm dikirim ke printer kasir USB/Bluetooth...'),
-                            ),
-                          );
-                        },
+                        isLoading: _isPrinting,
+                        onPressed: _isPrinting ? null : () => _handlePrint(invoiceNumber),
                       ),
 
-                      // Exactly ONE primary orange CTA
+                      // Download PDF (Menyimpan berkas PDF faktur ke penyimpanan lokal)
                       AppButton(
-                        label: 'Unduh Berkas PDF',
-                        variant: AppButtonVariant.primary,
+                        label: 'Unduh PDF',
+                        variant: widget.onConfirmCheckIn != null ? AppButtonVariant.secondary : AppButtonVariant.primary,
                         icon: Icons.picture_as_pdf_outlined,
-                        onPressed: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              backgroundColor: AppColors.navy700,
-                              content: Text('Mengunduh faktur resmi $invoiceNumber.pdf...'),
-                            ),
-                          );
-                        },
+                        isLoading: _isDownloadingPdf,
+                        onPressed: _isDownloadingPdf ? null : () => _handleDownloadPdf(invoiceNumber),
                       ),
+
+                      // If check-in confirmation flow
+                      if (widget.onConfirmCheckIn != null)
+                        AppButton(
+                          label: 'Konfirmasi Lunas & Masuk Kamar',
+                          variant: AppButtonVariant.primary,
+                          icon: Icons.check_circle_outline_rounded,
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                            widget.onConfirmCheckIn!();
+                          },
+                        ),
                     ],
                   ),
                 ],

@@ -4,12 +4,10 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../../app/theme.dart';
-import '../../auth/presentation/auth_controller.dart';
 import '../../room_management/domain/room_model.dart';
 import '../../room_management/presentation/room_controller.dart';
 import '../../shared_widgets/app_button.dart';
 import '../../shared_widgets/app_text_field.dart';
-import 'invoice_preview_dialog.dart';
 
 class CheckOutDialog extends ConsumerStatefulWidget {
   final RoomModel room;
@@ -80,34 +78,143 @@ class _CheckOutDialogState extends ConsumerState<CheckOutDialog> {
   double get _grandTotal => _roomSubtotal + _additionalTotal;
 
   void _handleConfirmCheckOut() async {
-    final authState = ref.read(authStateProvider);
-    final receptionistName = authState.user?.fullName ?? 'Siti Rahmawati';
-
     // Update room status to DIRTY (needs cleaning per FR-OUT-04)
-    await ref.read(roomListProvider.notifier).checkOut(
+    final additional = _additionalTotal;
+    final updatedRoom = await ref.read(roomListProvider.notifier).checkOut(
           roomId: widget.room.id,
-          additionalCharges: _additionalTotal,
+          additionalCharges: additional,
         );
 
     if (mounted) {
       Navigator.of(context).pop();
 
-      // Show Invoice Preview Dialog
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (_) => InvoicePreviewDialog(
-          room: widget.room,
-          roomTotal: _roomSubtotal,
-          lateFee: _lateFee,
-          minibarFee: _minibarFee,
-          damageFee: _damageFee,
-          grandTotal: _grandTotal,
-          receptionistName: receptionistName,
-          autoOpenWhatsApp: _sendWaReceipt,
-        ),
-      );
+      // Sesuai alur baru:
+      // - Jika TIDAK ada biaya tambahan (additionalCharges == 0):
+      //   Langsung selesai, status kamar berubah ke Kuning (Dirty), TANPA dokumen/invoice baru.
+      // - Jika ADA biaya tambahan:
+      //   Tercatat di reservasi yang sama, tampilkan dialog struk sederhana tanda terima biaya tambahan (bukan invoice baru ber-nomor baru).
+      if (additional > 0) {
+        _showAdditionalChargesReceiptDialog(updatedRoom ?? widget.room, additional);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            backgroundColor: AppColors.statusDirty,
+            content: Row(
+              children: [
+                const Icon(Icons.cleaning_services_rounded, color: Colors.white),
+                const SizedBox(width: 8),
+                Text(
+                  'Check-Out Kamar ${widget.room.roomNumber} selesai tanpa biaya tambahan. Status kamar beralih ke Dirty.',
+                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+                ),
+              ],
+            ),
+          ),
+        );
+      }
     }
+  }
+
+  void _showAdditionalChargesReceiptDialog(RoomModel room, double additionalTotal) {
+    final currencyFormatter = NumberFormat.currency(
+      locale: 'id_ID',
+      symbol: 'Rp ',
+      decimalDigits: 0,
+    );
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: AppRadius.roundedLg),
+        title: Row(
+          children: [
+            const Icon(Icons.receipt_outlined, color: AppColors.navy700),
+            const SizedBox(width: 8),
+            const Expanded(
+              child: Text(
+                'Tanda Terima Biaya Tambahan',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+              ),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Kamar: ${room.roomNumber} • Tamu: ${room.activeGuestName ?? "-"}'),
+            Text('No. Invoice Awal: ${room.invoiceNumber ?? "-"} (Telah Lunas di Check-in)', style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+            const Divider(height: 20),
+            if (_lateFee > 0)
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text('Denda Late Check-out:'),
+                  Text(currencyFormatter.format(_lateFee), style: const TextStyle(fontWeight: FontWeight.bold)),
+                ],
+              ),
+            if (_minibarFee > 0) ...[
+              const SizedBox(height: 4),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text('Minibar / Laundry:'),
+                  Text(currencyFormatter.format(_minibarFee), style: const TextStyle(fontWeight: FontWeight.bold)),
+                ],
+              ),
+            ],
+            if (_damageFee > 0) ...[
+              const SizedBox(height: 4),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text('Ganti Rugi Kerusakan:'),
+                  Text(currencyFormatter.format(_damageFee), style: const TextStyle(fontWeight: FontWeight.bold)),
+                ],
+              ),
+            ],
+            const Divider(height: 20),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text('Total Biaya Tambahan:', style: TextStyle(fontWeight: FontWeight.bold)),
+                Text(
+                  currencyFormatter.format(additionalTotal),
+                  style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.orange600, fontSize: 15),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'Catatan: Biaya ini dicatat pada data reservasi yang sama, bukan merupakan invoice baru.',
+              style: TextStyle(fontSize: 11, fontStyle: FontStyle.italic, color: AppColors.textSecondary),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Tutup'),
+          ),
+          ElevatedButton.icon(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.navy700,
+              foregroundColor: Colors.white,
+            ),
+            icon: const Icon(Icons.print_outlined, size: 16),
+            label: const Text('Cetak Struk'),
+            onPressed: () {
+              Navigator.of(ctx).pop();
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Mencetak struk rincian biaya tambahan ke thermal printer...'),
+                ),
+              );
+            },
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -411,9 +518,11 @@ class _CheckOutDialogState extends ConsumerState<CheckOutDialog> {
                     onPressed: () => Navigator.of(context).pop(),
                   ),
                   AppButton(
-                    label: 'Konfirmasi Check-Out & Cetak',
+                    label: _additionalTotal > 0
+                        ? 'Selesaikan Check-Out & Cetak Struk Tambahan'
+                        : 'Selesaikan Check-Out (Tanpa Biaya)',
                     variant: AppButtonVariant.primary,
-                    icon: Icons.receipt_long_rounded,
+                    icon: _additionalTotal > 0 ? Icons.receipt_long_rounded : Icons.check_circle_outline_rounded,
                     onPressed: _handleConfirmCheckOut,
                   ),
                 ],

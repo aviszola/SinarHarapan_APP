@@ -1153,7 +1153,7 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
                           builder: (context) {
                             final room = rooms[index];
                             final hasGuest = room.activeGuestName != null;
-                            final invoice = room.invoiceNumber ?? 'INV/SH/20260924/00${index + 1}';
+                            final invoice = room.invoiceNumber ?? 'INV/SH/20260924/${(index + 1).toString().padLeft(4, '0')}';
                             final guest = room.activeGuestName ?? 'Tamu Walk-in';
                             final phone = room.activeGuestPhone ?? '081234567890';
                             final source = room.bookingSource ?? (index % 2 == 0 ? 'REDDOORZ' : 'WALK_IN');

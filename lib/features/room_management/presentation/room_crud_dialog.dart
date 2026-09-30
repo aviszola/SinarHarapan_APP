@@ -64,6 +64,183 @@ class _RoomCrudDialogState extends ConsumerState<RoomCrudDialog> {
     super.dispose();
   }
 
+  void _showAddFacilityDialog() {
+    final customController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (dialogCtx) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            final remainingPresets = _availableFacilities
+                .where((f) => !_selectedFacilities.contains(f))
+                .toList();
+
+            return AlertDialog(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              title: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: AppColors.orange50,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Icon(Icons.hotel_class_outlined, color: AppColors.orange600, size: 20),
+                  ),
+                  const SizedBox(width: 10),
+                  const Text(
+                    'Tambah Fasilitas Kamar',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.navy900,
+                    ),
+                  ),
+                ],
+              ),
+              content: SizedBox(
+                width: 440,
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (remainingPresets.isNotEmpty) ...[
+                        const Text(
+                          'PILIH DARI FASILITAS STANDAR',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.textSecondary,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: remainingPresets.map((facility) {
+                            return ActionChip(
+                              avatar: const Icon(Icons.add_circle_outline, size: 15, color: AppColors.navy700),
+                              label: Text(facility),
+                              labelStyle: AppTypography.caption.copyWith(
+                                color: AppColors.navy900,
+                                fontWeight: FontWeight.w600,
+                              ),
+                              backgroundColor: AppColors.navy50,
+                              side: const BorderSide(color: AppColors.border),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                              onPressed: () {
+                                setState(() {
+                                  _selectedFacilities.add(facility);
+                                });
+                                setDialogState(() {});
+                              },
+                            );
+                          }).toList(),
+                        ),
+                        const SizedBox(height: 18),
+                        const Divider(height: 1),
+                        const SizedBox(height: 16),
+                      ],
+
+                      const Text(
+                        'TAMBAH FASILITAS KUSTOM',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.textSecondary,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: TextField(
+                              controller: customController,
+                              decoration: InputDecoration(
+                                hintText: 'Contoh: Hair Dryer, Mesin Kopi...',
+                                hintStyle: const TextStyle(fontSize: 13, color: AppColors.textDisabled),
+                                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                  borderSide: const BorderSide(color: AppColors.border),
+                                ),
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                  borderSide: const BorderSide(color: AppColors.border),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                  borderSide: const BorderSide(color: AppColors.navy700, width: 1.5),
+                                ),
+                              ),
+                              style: const TextStyle(fontSize: 13),
+                              onSubmitted: (value) {
+                                final text = value.trim();
+                                if (text.isNotEmpty) {
+                                  setState(() {
+                                    _selectedFacilities.add(text);
+                                    if (!_availableFacilities.contains(text)) {
+                                      _availableFacilities.add(text);
+                                    }
+                                  });
+                                  customController.clear();
+                                  setDialogState(() {});
+                                }
+                              },
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          ElevatedButton.icon(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.navy900,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                            ),
+                            icon: const Icon(Icons.add, size: 16),
+                            label: const Text('Tambah', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+                            onPressed: () {
+                              final text = customController.text.trim();
+                              if (text.isNotEmpty) {
+                                setState(() {
+                                  _selectedFacilities.add(text);
+                                  if (!_availableFacilities.contains(text)) {
+                                    _availableFacilities.add(text);
+                                  }
+                                });
+                                customController.clear();
+                                setDialogState(() {});
+                              }
+                            },
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              actions: [
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.navy900,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  ),
+                  onPressed: () => Navigator.of(dialogCtx).pop(),
+                  child: const Text('Selesai'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
   void _handleSave() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -277,28 +454,42 @@ class _RoomCrudDialogState extends ConsumerState<RoomCrudDialog> {
                         Wrap(
                           spacing: 8,
                           runSpacing: 8,
-                          children: _availableFacilities.map((facility) {
-                            final isChecked = _selectedFacilities.contains(facility);
-                            return FilterChip(
-                              label: Text(facility),
-                              selected: isChecked,
-                              selectedColor: AppColors.navy100,
-                              checkmarkColor: AppColors.navy700,
-                              labelStyle: AppTypography.caption.copyWith(
-                                color: isChecked ? AppColors.navy700 : AppColors.textPrimary,
-                                fontWeight: isChecked ? FontWeight.w600 : FontWeight.w500,
-                              ),
-                              onSelected: (selected) {
-                                setState(() {
-                                  if (selected) {
-                                    _selectedFacilities.add(facility);
-                                  } else {
+                          crossAxisAlignment: WrapCrossAlignment.center,
+                          children: [
+                            ..._selectedFacilities.map((facility) {
+                              return InputChip(
+                                label: Text(facility),
+                                labelStyle: AppTypography.caption.copyWith(
+                                  color: AppColors.navy900,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                                backgroundColor: AppColors.navy50,
+                                side: const BorderSide(color: AppColors.border),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                deleteIcon: const Icon(Icons.close, size: 15, color: AppColors.navy700),
+                                deleteButtonTooltipMessage: 'Hapus $facility',
+                                onDeleted: () {
+                                  setState(() {
                                     _selectedFacilities.remove(facility);
-                                  }
-                                });
-                              },
-                            );
-                          }).toList(),
+                                  });
+                                },
+                              );
+                            }),
+
+                            // Tombol Tambah Fasilitas
+                            ActionChip(
+                              avatar: const Icon(Icons.add_circle, size: 16, color: AppColors.orange600),
+                              label: const Text('Tambah Fasilitas'),
+                              labelStyle: AppTypography.caption.copyWith(
+                                color: AppColors.orange600,
+                                fontWeight: FontWeight.w700,
+                              ),
+                              backgroundColor: AppColors.orange50,
+                              side: const BorderSide(color: AppColors.orange500, width: 1),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                              onPressed: _showAddFacilityDialog,
+                            ),
+                          ],
                         ),
                       ],
                     ),
