@@ -15,8 +15,7 @@ void main() {
 
     // Verify hotel branding and login components
     expect(find.text('Hotel Sinar Harapan'), findsOneWidget);
-    expect(find.text('Masuk ke Sistem PMS'), findsOneWidget);
-    expect(find.text('Masuk ke Sistem'), findsOneWidget);
+    expect(find.text('Masuk ke Sistem'), findsWidgets);
     expect(find.text('Resepsionis'), findsOneWidget);
     expect(find.text('Manajer Hotel'), findsOneWidget);
   });

@@ -4,6 +4,10 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../../app/theme.dart';
+import '../../auth/presentation/auth_controller.dart';
+import '../../checkout/domain/invoice_pdf_service.dart';
+import '../../checkout/domain/invoice_sequence_service.dart';
+import '../../checkout/presentation/invoice_preview_dialog.dart';
 import '../../room_management/domain/room_model.dart';
 import '../../room_management/presentation/room_controller.dart';
 import '../../shared_widgets/app_button.dart';
@@ -142,7 +146,7 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
     });
   }
 
-  void _handleSubmit() async {
+  void _handleReviewInvoice() {
     if (!_formKey.currentState!.validate()) return;
 
     // Validate anti-duplicate NIK in active rooms (FR-RES-07)
@@ -162,9 +166,42 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
 
     final effectiveTotal = _currentEffectiveTotal;
     final calculatedBasePrice = effectiveTotal / _totalNights;
+    final authState = ref.read(authStateProvider);
+    final receptionistName = authState.user?.fullName ?? 'Siti Rahmawati';
 
+    final previewInvoiceNumber =
+        InvoiceSequenceService.instance.generateNextInvoiceNumber(transactionDate: DateTime.now());
+
+    final dummyRoomForPreview = widget.room.copyWith(
+      activeGuestName: _nameController.text.trim(),
+      guestNik: cleanNik,
+      activeGuestPhone: _phoneController.text.trim(),
+      bookingSource: _bookingSource,
+      reddoorzBookingCode: _bookingSource == 'REDDOORZ' ? _bookingCodeController.text.trim() : null,
+      checkInTime: DateTime.now(),
+      expectedCheckOutTime: DateTime.now().add(Duration(days: _totalNights)),
+      invoiceNumber: previewInvoiceNumber,
+    );
+
+    // Tampilkan Dialog Pratinjau Invoice Check-In
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => InvoicePreviewDialog(
+        room: dummyRoomForPreview,
+        roomTotal: effectiveTotal,
+        grandTotal: effectiveTotal,
+        receptionistName: receptionistName,
+        customTitle: 'Pratinjau Faktur Pembayaran (Check-In)',
+        onConfirmCheckIn: () => _executeFinalCheckIn(previewInvoiceNumber, calculatedBasePrice),
+      ),
+    );
+  }
+
+  void _executeFinalCheckIn(String invoiceNumber, double calculatedBasePrice) async {
+    final cleanNik = _nikController.text.trim();
     try {
-      await ref.read(roomListProvider.notifier).checkIn(
+      final updatedRoom = await ref.read(roomListProvider.notifier).checkIn(
             roomId: widget.room.id,
             guestName: _nameController.text.trim(),
             guestNik: cleanNik,
@@ -176,22 +213,56 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
             totalNights: _totalNights,
             basePrice: calculatedBasePrice,
             paymentMethod: _paymentMethod,
+            invoiceNumber: invoiceNumber,
           );
 
       if (mounted) {
-        Navigator.of(context).pop();
+        Navigator.of(context).pop(); // Tutup CheckInModal
+        final targetRoom = updatedRoom ??
+            widget.room.copyWith(
+              activeGuestName: _nameController.text.trim(),
+              guestNik: cleanNik,
+              activeGuestPhone: _phoneController.text.trim(),
+              bookingSource: _bookingSource,
+              reddoorzBookingCode: _bookingSource == 'REDDOORZ'
+                  ? _bookingCodeController.text.trim()
+                  : null,
+              invoiceNumber: invoiceNumber,
+              checkInTime: DateTime.now(),
+            );
+        final authState = ref.read(authStateProvider);
+        final receptionistName = authState.user?.fullName ?? 'Siti Rahmawati';
+        final totalBayar = calculatedBasePrice * _totalNights;
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             backgroundColor: AppColors.statusAvailable,
+            duration: const Duration(seconds: 7),
             content: Row(
               children: [
                 const Icon(Icons.check_circle_outline, color: Colors.white),
                 const SizedBox(width: 8),
-                Text(
-                  'Check-in Kamar ${widget.room.roomNumber} berhasil! Notifikasi WA pengingat check-out telah dijadwalkan.',
-                  style: const TextStyle(color: Colors.white),
+                Expanded(
+                  child: Text(
+                    'Check-in Kamar ${widget.room.roomNumber} berhasil & Lunas! Invoice $invoiceNumber telah diterbitkan.',
+                    style: const TextStyle(color: Colors.white),
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
               ],
+            ),
+            action: SnackBarAction(
+              label: 'UNDUH PDF',
+              textColor: Colors.white,
+              onPressed: () {
+                InvoicePdfService.saveInvoicePdf(
+                  room: targetRoom,
+                  roomTotal: totalBayar,
+                  grandTotal: totalBayar,
+                  receptionistName: receptionistName,
+                  invoiceNumber: invoiceNumber,
+                );
+              },
             ),
           ),
         );
@@ -201,6 +272,10 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
         _errorMessage = e.toString().replaceAll('Exception: ', '');
       });
     }
+  }
+
+  void _handleSubmit() async {
+    _handleReviewInvoice();
   }
 
   @override
@@ -957,9 +1032,9 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
                     ),
                     // Exactly ONE primary orange CTA per design.md rules
                     AppButton(
-                      label: 'Simpan & Check-In Tamu',
+                      label: 'Pratinjau Invoice & Selesaikan',
                       variant: AppButtonVariant.primary,
-                      icon: Icons.check_circle_outline_rounded,
+                      icon: Icons.receipt_long_rounded,
                       onPressed: _handleSubmit,
                     ),
                   ],

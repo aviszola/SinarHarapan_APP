@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../checkout/domain/invoice_sequence_service.dart';
 import '../../shared_widgets/status_badge.dart';
 import '../data/room_repository.dart';
 import '../domain/room_model.dart';
@@ -46,6 +47,9 @@ class RoomListNotifier extends StateNotifier<AsyncValue<List<RoomModel>>> {
   Future<void> loadRooms() async {
     try {
       final rooms = await _repository.getRooms();
+      InvoiceSequenceService.instance.seedFromInvoices(
+        rooms.map((r) => r.invoiceNumber),
+      );
       state = AsyncValue.data(rooms);
     } catch (e, st) {
       state = AsyncValue.error(e, st);
@@ -84,7 +88,7 @@ class RoomListNotifier extends StateNotifier<AsyncValue<List<RoomModel>>> {
     await loadRooms();
   }
 
-  Future<void> checkIn({
+  Future<RoomModel?> checkIn({
     required String roomId,
     required String guestName,
     String? guestNik,
@@ -94,9 +98,10 @@ class RoomListNotifier extends StateNotifier<AsyncValue<List<RoomModel>>> {
     required int totalNights,
     required double basePrice,
     required String paymentMethod,
+    String? invoiceNumber,
   }) async {
     final currentList = state.value;
-    if (currentList == null) return;
+    if (currentList == null) return null;
 
     final room = currentList.firstWhere((r) => r.id == roomId);
     final now = DateTime.now();
@@ -108,6 +113,12 @@ class RoomListNotifier extends StateNotifier<AsyncValue<List<RoomModel>>> {
       0,
     );
 
+    // Sesuai alur baru: Invoice diterbitkan langsung di awal saat check-in
+    final generatedInvoice = invoiceNumber ??
+        InvoiceSequenceService.instance.generateNextInvoiceNumber(
+          transactionDate: now,
+        );
+
     final updated = room.copyWith(
       status: RoomStatusType.occupied,
       activeGuestName: guestName,
@@ -117,28 +128,37 @@ class RoomListNotifier extends StateNotifier<AsyncValue<List<RoomModel>>> {
       reddoorzBookingCode: reddoorzBookingCode,
       checkInTime: now,
       expectedCheckOutTime: expectedCheckout,
-      invoiceNumber: 'INV/SH/${now.year}${now.month.toString().padLeft(2, '0')}${now.day.toString().padLeft(2, '0')}/${room.roomNumber}',
+      invoiceNumber: generatedInvoice,
       waReminderStatus: 'SENT',
     );
 
     await _repository.updateRoom(updated);
     await loadRooms();
+    return updated;
   }
 
-  Future<void> checkOut({
+  Future<RoomModel?> checkOut({
     required String roomId,
     required double additionalCharges,
+    DateTime? checkOutTime,
   }) async {
     final currentList = state.value;
-    if (currentList == null) return;
+    if (currentList == null) return null;
 
     final room = currentList.firstWhere((r) => r.id == roomId);
+
+    // Sesuai alur baru:
+    // Invoice utama sudah diterbitkan saat check-in.
+    // Saat check-out, TIDAK ada nomor invoice baru yang dibuat.
+    // Jika ada biaya tambahan, cukup dicatat di additionalCharges pada data reservasi yang sama.
     final updated = room.copyWith(
       status: RoomStatusType.dirty, // Setelah checkout menjadi dirty untuk dibersihkan
+      additionalCharges: additionalCharges > 0 ? additionalCharges : null,
     );
 
     await _repository.updateRoom(updated);
     await loadRooms();
+    return updated;
   }
 
   Future<void> addRoom({

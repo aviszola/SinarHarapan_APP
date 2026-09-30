@@ -12,10 +12,27 @@ void main() async {
   FlutterError.onError = (FlutterErrorDetails details) {
     final exceptionStr = details.exceptionAsString();
     if (exceptionStr.contains('keysPressed') ||
-        exceptionStr.contains('RawKeyDownEvent')) {
+        exceptionStr.contains('_pressedKeys') ||
+        exceptionStr.contains('physical key is already pressed') ||
+        exceptionStr.contains('KeyDownEvent') ||
+        exceptionStr.contains('RawKeyDownEvent') ||
+        exceptionStr.contains('HardwareKeyboard')) {
       return;
     }
     FlutterError.presentError(details);
+  };
+
+  WidgetsBinding.instance.platformDispatcher.onError = (error, stack) {
+    final errorStr = error.toString();
+    if (errorStr.contains('keysPressed') ||
+        errorStr.contains('_pressedKeys') ||
+        errorStr.contains('physical key is already pressed') ||
+        errorStr.contains('KeyDownEvent') ||
+        errorStr.contains('RawKeyDownEvent') ||
+        errorStr.contains('HardwareKeyboard')) {
+      return true;
+    }
+    return false;
   };
 
   // Allow google_fonts to fetch fonts from network (required on desktop)

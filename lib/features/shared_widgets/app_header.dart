@@ -277,6 +277,54 @@ class _ActiveGuestsChipState extends State<_ActiveGuestsChip> {
   Widget build(BuildContext context) {
     final hasGuests = widget.count > 0;
 
+    final Color bgColor;
+    final Color borderColor;
+    final Color iconColor;
+    final Color textColor;
+    final Color badgeBgColor;
+    final Color badgeTextColor;
+    final List<BoxShadow>? shadows;
+
+    if (hasGuests) {
+      if (_hovered) {
+        bgColor = AppColors.orange600;
+        borderColor = AppColors.orange500;
+        iconColor = Colors.white;
+        textColor = Colors.white;
+        badgeBgColor = Colors.white;
+        badgeTextColor = AppColors.orange600;
+        shadows = [
+          BoxShadow(
+            color: AppColors.orange600.withValues(alpha: 0.45),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ];
+      } else {
+        bgColor = AppColors.orange600.withValues(alpha: 0.18);
+        borderColor = AppColors.orange500.withValues(alpha: 0.6);
+        iconColor = AppColors.orange500;
+        textColor = Colors.white;
+        badgeBgColor = AppColors.orange600;
+        badgeTextColor = Colors.white;
+        shadows = [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.15),
+            blurRadius: 4,
+            offset: const Offset(0, 1),
+          ),
+        ];
+      }
+    } else {
+      bgColor = _hovered ? AppColors.navy700 : AppColors.navy700.withValues(alpha: 0.5);
+      borderColor = Colors.white.withValues(alpha: 0.15);
+      iconColor = Colors.white70;
+      textColor = Colors.white70;
+      badgeBgColor = Colors.transparent;
+      badgeTextColor = Colors.transparent;
+      shadows = null;
+    }
+
     return MouseRegion(
       onEnter: (_) => setState(() => _hovered = true),
       onExit: (_)  => setState(() => _hovered = false),
@@ -286,53 +334,58 @@ class _ActiveGuestsChipState extends State<_ActiveGuestsChip> {
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 150),
           padding: EdgeInsets.symmetric(
-            horizontal: widget.compact ? 8 : 12,
-            vertical: 6,
+            horizontal: widget.compact ? 10 : 14,
+            vertical: 7,
           ),
           decoration: BoxDecoration(
-            color: hasGuests
-                ? (_hovered ? AppColors.orange600 : AppColors.orange600.withAlpha(30))
-                : (_hovered ? AppColors.navy700 : AppColors.navy700.withAlpha(180)),
+            color: bgColor,
             borderRadius: AppRadius.roundedMd,
-            border: Border.all(
-              color: hasGuests
-                  ? AppColors.orange600.withAlpha(_hovered ? 255 : 100)
-                  : Colors.white.withAlpha(20),
-            ),
+            border: Border.all(color: borderColor, width: 1.2),
+            boxShadow: shadows,
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(
-                Icons.people_outline_rounded,
+                Icons.people_alt_rounded,
                 size: 16,
-                color: hasGuests ? AppColors.orange600 : Colors.white70,
+                color: iconColor,
               ),
               if (!widget.compact) ...[
-                const SizedBox(width: 6),
+                const SizedBox(width: 7),
                 Text(
                   'Tamu Aktif',
                   style: AppTypography.caption.copyWith(
-                    color: hasGuests ? AppColors.orange600 : Colors.white70,
-                    fontWeight: FontWeight.w600,
+                    color: textColor,
+                    fontWeight: FontWeight.w700,
                     fontSize: 13,
+                    letterSpacing: 0.2,
                   ),
                 ),
               ],
               if (hasGuests) ...[
-                const SizedBox(width: 6),
+                const SizedBox(width: 8),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
                   decoration: BoxDecoration(
-                    color: AppColors.orange600,
+                    color: badgeBgColor,
                     borderRadius: AppRadius.roundedFull,
+                    boxShadow: _hovered
+                        ? [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.15),
+                              blurRadius: 3,
+                              offset: const Offset(0, 1),
+                            ),
+                          ]
+                        : null,
                   ),
                   child: Text(
                     '${widget.count}',
-                    style: const TextStyle(
-                      color: Colors.white,
+                    style: TextStyle(
+                      color: badgeTextColor,
                       fontSize: 12,
-                      fontWeight: FontWeight.w700,
+                      fontWeight: FontWeight.w800,
                     ),
                   ),
                 ),

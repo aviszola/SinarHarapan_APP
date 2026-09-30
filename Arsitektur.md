@@ -47,9 +47,11 @@ Sistem dibangun sebagai **modular monolith** dengan pemisahan tegas antara front
              │
              ▼
 ┌──────────────────────┐
-│  SUPABASE STORAGE     │
-│  (Bucket foto KTP,    │
-│   signed URL 15 menit)│
+│  STORAGE               │
+│  (Bucket foto dokumen  │
+│   identitas: KTP/      │
+│   Paspor/SIM, signed   │
+│   URL 15 menit)        │
 └──────────────────────┘
 ```
 
@@ -107,12 +109,13 @@ lib/
 - Form check-in yang sedang diisi disimpan otomatis ke **Hive local box** setiap perubahan field (debounce 500ms).
 - Saat submit gagal karena jaringan terputus, data tersimpan dalam antrian **"pending sync"** dengan indikator visual di UI.
 - Background retry setiap 30 detik hingga berhasil terkirim atau resepsionis membatalkan secara manual.
-- Foto KTP yang sudah discan disimpan sementara secara lokal (cache) sebelum upload berhasil, untuk mencegah pemindaian ulang.
+- Foto dokumen identitas (KTP/Paspor/SIM) yang sudah discan disimpan sementara secara lokal (cache) sebelum upload berhasil, untuk mencegah pemindaian ulang.
 
-### 2.4 Modul OCR di Sisi Client
+### 2.4 Modul OCR Multi Jenis Dokumen di Sisi Client
+- Resepsionis memilih jenis dokumen (KTP/Paspor/SIM) terlebih dahulu sebelum kamera aktif — dikirim sebagai `documentType` ke backend.
 - Kamera diakses via `camera` / `image_picker` package.
 - Gambar dikompres (max 1.5MB, resize longest-edge 1600px) sebelum dikirim ke backend agar sesuai batas performa OCR (FR non-fungsional: proses OCR ≤ 3 detik).
-- Endpoint: `POST /api/ocr/extract-ktp` (multipart/form-data) → backend meneruskan ke Google Cloud Vision API.
+- Endpoint: `POST /api/ocr/extract-identity` (multipart/form-data, field `image` + `documentType`) → backend memilih parser (KTP/SIM berbasis label, Paspor berbasis MRZ) lalu meneruskan hasil OCR mentah ke Google Cloud Vision API sebelum diparsing.
 
 ### 2.5 Cetak Thermal Printer
 - Integrasi via plugin `esc_pos_printer` / `blue_thermal_printer` (Bluetooth/USB) untuk printer 58mm/80mm.
@@ -135,7 +138,7 @@ app/
 │   │   ├── [id]/route.ts               # GET, PATCH, DELETE
 │   │   └── status/route.ts             # GET realtime status grid
 │   ├── ocr/
-│   │   └── extract-ktp/route.ts        # POST — proxy ke Google Vision API
+│   │   └── extract-identity/route.ts   # POST — proxy ke Google Vision API, dispatch parser per documentType
 │   ├── reservations/
 │   │   ├── route.ts                    # POST create check-in
 │   │   └── [id]/
@@ -183,7 +186,7 @@ Error response:
 ```json
 {
   "success": false,
-  "error": { "code": "VALIDATION_ERROR", "message": "NIK harus 16 digit angka" }
+  "error": { "code": "VALIDATION_ERROR", "message": "Format nomor identitas tidak valid untuk jenis dokumen KTP" }
 }
 ```
 - **Validasi input:** setiap route handler memvalidasi body/query dengan skema Zod sebelum diteruskan ke business logic layer.
@@ -214,36 +217,40 @@ Logic:
 ```
 Implementasi: Vercel Cron Jobs / node-cron pada deployment container terpisah (tergantung platform hosting — lihat §6).
 
-### 3.5 Integrasi Google Cloud Vision API (OCR)
+### 3.5 Integrasi Google Cloud Vision API (OCR Multi Jenis Dokumen)
 
 ```
-POST /api/ocr/extract-ktp
-Request: multipart/form-data { image: File }
+POST /api/ocr/extract-identity
+Request: multipart/form-data { image: File, documentType: "KTP" | "PASSPORT" | "SIM" }
 
 Alur:
-1. Terima file gambar dari Flutter (sudah dikompres di client)
-2. Simpan sementara ke Supabase Storage (bucket: ktp-temp)
-3. Kirim ke Google Vision API (Document Text Detection)
-4. Parse hasil teks mentah dengan regex/pattern matcher:
-   - NIK: pattern 16 digit angka
-   - Nama: baris setelah label "Nama"
-   - Alamat: baris setelah label "Alamat"
+1. Terima file gambar dari Flutter (sudah dikompres di client) + jenis dokumen yang dipilih resepsionis
+2. Simpan sementara ke storage (bucket: identity-temp)
+3. Kirim ke Google Vision API (Document Text Detection) — hasil OCR mentah sama untuk ketiga jenis dokumen
+4. Backend dispatch ke parser sesuai documentType (lihat backend.md §8.3 untuk detail lengkap):
+   - KTP: regex/pattern matcher berbasis label ("Nama", "Alamat") — NIK pattern 16 digit angka
+   - SIM: regex serupa KTP, No. SIM 12-16 digit, tanpa alamat
+   - PASSPORT: parsing MRZ (Machine Readable Zone) berbasis posisi karakter tetap (BUKAN regex
+     label — paspor tidak punya label field seperti KTP), menghasilkan nomor paspor, nama, dan
+     kode kewarganegaraan 3 huruf (ICAO 9303)
 5. Kembalikan JSON terstruktur + confidence score ke client
-6. Jika confidence rendah (<70%) → flag "perlu_verifikasi_manual": true
+6. Jika confidence rendah (<70%) → flag "perluVerifikasiManual": true
 
-Response:
+Response (contoh KTP):
 {
   "success": true,
   "data": {
-    "nik": "3578xxxxxxxxxxxx",
-    "nama": "BUDI SANTOSO",
+    "idType": "KTP",
+    "idNumber": "3578xxxxxxxxxxxx",
+    "namaLengkap": "BUDI SANTOSO",
     "alamat": "JL. MERDEKA NO. 10, MALANG",
+    "nationality": "Indonesia",
     "confidence": 0.92,
-    "perlu_verifikasi_manual": false
+    "perluVerifikasiManual": false
   }
 }
 ```
-Timeout: 3 detik (sesuai NFR). Jika timeout → response fallback yang mengarahkan client ke mode input manual penuh.
+Timeout: 3 detik (sesuai NFR). Jika timeout → response fallback yang mengarahkan client ke mode input manual penuh. Berlaku sama untuk ketiga jenis dokumen — OCR tidak pernah memblokir proses check-in.
 
 ### 3.6 Integrasi WhatsApp Gateway (Fonnte/Wablas)
 
@@ -317,17 +324,20 @@ CREATE TABLE rooms (
 CREATE INDEX idx_rooms_status ON rooms(status);
 CREATE INDEX idx_rooms_type_floor ON rooms(room_type, floor);
 
--- 3. TABEL DATA INDUK TAMU
+-- 3. TABEL DATA INDUK TAMU (mendukung KTP/Paspor/SIM — lihat database.md §2.3 untuk detail)
 CREATE TABLE guests (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    nik VARCHAR(16) UNIQUE,
+    id_type VARCHAR(20) CHECK (id_type IN ('KTP', 'PASSPORT', 'SIM', 'OTHER')) NOT NULL,
+    id_number VARCHAR(30) NOT NULL,
     full_name VARCHAR(150) NOT NULL,
     address TEXT,
+    nationality VARCHAR(50),
     phone_whatsapp VARCHAR(20) NOT NULL,
-    ktp_image_url TEXT,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+    id_image_url TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    UNIQUE (id_type, id_number)
 );
-CREATE INDEX idx_guests_nik ON guests(nik);
+CREATE INDEX idx_guests_id_number ON guests(id_type, id_number);
 CREATE INDEX idx_guests_phone ON guests(phone_whatsapp);
 
 -- 4. TABEL TRANSAKSI RESERVASI
@@ -392,12 +402,12 @@ CREATE INDEX idx_activity_logs_created ON activity_logs(created_at);
 | Autentikasi | JWT (HS256 minimum, disarankan RS256), expiry 12 jam, refresh token opsional untuk shift panjang |
 | Password | bcrypt, cost factor ≥ 10, tidak pernah di-log |
 | Transport | HTTPS/TLS 1.3 wajib di seluruh endpoint, HSTS header diaktifkan |
-| Data at rest | AES-256 encryption pada bucket Supabase Storage untuk foto KTP |
-| Akses foto KTP | Signed URL dengan masa berlaku 15 menit, regenerasi otomatis saat dibutuhkan, tidak ada URL publik permanen |
+| Data at rest | AES-256 encryption pada bucket storage untuk foto dokumen identitas (KTP/Paspor/SIM) |
+| Akses foto dokumen identitas | Signed URL dengan masa berlaku 15 menit, regenerasi otomatis saat dibutuhkan, tidak ada URL publik permanen |
 | Otorisasi | RBAC middleware di setiap route backend, validasi ulang di frontend untuk UX (bukan pengganti validasi backend) |
 | Rate limiting | Login endpoint dibatasi untuk mencegah brute-force |
 | Audit trail | Seluruh aksi sensitif tercatat dengan `user_id`, `action_type`, `resource_id`, timestamp, IP address |
-| Kepatuhan | Prinsip minimisasi data & retensi selaras dengan UU PDP — data KTP hanya digunakan untuk keperluan administrasi hotel |
+| Kepatuhan | Prinsip minimisasi data & retensi selaras dengan UU PDP — data dokumen identitas (KTP/Paspor/SIM) hanya digunakan untuk keperluan administrasi hotel |
 
 ---
 
@@ -416,7 +426,7 @@ CREATE INDEX idx_activity_logs_created ON activity_logs(created_at);
 - **Frontend Flutter Web:** build sebagai static web bundle, di-hosting via CDN (Vercel/Netlify/Firebase Hosting) atau di-package sebagai aplikasi desktop (Flutter Windows/Linux build) untuk instalasi lokal di PC kasir bila diperlukan mode kios.
 - **Backend Next.js:** deploy di Vercel (serverless functions untuk Route Handlers) atau container (Docker) di VPS bila cron job memerlukan proses long-running yang lebih stabil daripada serverless cron.
 - **Database:** Supabase managed PostgreSQL (termasuk backup otomatis harian, point-in-time recovery).
-- **Storage:** Supabase Storage bucket privat (`ktp-documents`) dengan RLS (Row Level Security) policy hanya dapat diakses via signed URL dari backend.
+- **Storage:** Supabase Storage bucket privat (`identity-documents`) dengan RLS (Row Level Security) policy hanya dapat diakses via signed URL dari backend.
 - **Cron Scheduler:** Vercel Cron (jika serverless) atau `node-cron` dalam container terpisah yang selalu aktif (jika self-hosted) untuk memastikan job 10-menit tidak terlewat akibat cold-start serverless.
 
 ### 6.3 Monitoring & Observability
@@ -441,7 +451,7 @@ Alur:
 
 | Jenis Test | Cakupan | Tools |
 |---|---|---|
-| Unit Test | Business logic (kalkulasi tarif, validasi NIK/WA, generator invoice number) | Jest (backend), Flutter Test (frontend) |
+| Unit Test | Business logic (kalkulasi tarif, validasi nomor identitas per jenis dokumen/WA, generator invoice number) | Jest (backend), Flutter Test (frontend) |
 | Integration Test | Endpoint API kritis: login, check-in, check-out, export laporan | Jest + Supertest |
 | E2E Test | Alur penuh check-in → check-out → invoice (Sprint 4) | Playwright / Flutter Integration Test |
 | Load Test | Simulasi beban bergantian sesuai DoD §8.2 PRD | k6 / Artillery |

@@ -17,6 +17,7 @@ class RoomModel {
   final DateTime? checkInTime;
   final DateTime? expectedCheckOutTime;
   final String? invoiceNumber;
+  final double? additionalCharges;
   final String? waReminderStatus; // SENT, DELIVERED, READ, FAILED
 
   const RoomModel({
@@ -35,6 +36,7 @@ class RoomModel {
     this.checkInTime,
     this.expectedCheckOutTime,
     this.invoiceNumber,
+    this.additionalCharges,
     this.waReminderStatus,
   });
 
@@ -59,6 +61,7 @@ class RoomModel {
     DateTime? checkInTime,
     DateTime? expectedCheckOutTime,
     String? invoiceNumber,
+    double? additionalCharges,
     String? waReminderStatus,
     bool clearActiveReservation = false,
   }) {
@@ -78,6 +81,7 @@ class RoomModel {
       checkInTime: clearActiveReservation ? null : (checkInTime ?? this.checkInTime),
       expectedCheckOutTime: clearActiveReservation ? null : (expectedCheckOutTime ?? this.expectedCheckOutTime),
       invoiceNumber: clearActiveReservation ? null : (invoiceNumber ?? this.invoiceNumber),
+      additionalCharges: clearActiveReservation ? null : (additionalCharges ?? this.additionalCharges),
       waReminderStatus: clearActiveReservation ? null : (waReminderStatus ?? this.waReminderStatus),
     );
   }

@@ -9,6 +9,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../app/theme.dart';
 import '../../room_management/domain/room_model.dart';
 import '../../shared_widgets/app_button.dart';
+import '../domain/invoice_sequence_service.dart';
 
 class WhatsAppReceiptDialog extends StatefulWidget {
   final RoomModel room;
@@ -308,10 +309,9 @@ class _WhatsAppReceiptDialogState extends State<WhatsAppReceiptDialog> {
       decimalDigits: 0,
     );
 
-    final now = DateTime.now();
     final invoiceNumber =
         widget.room.invoiceNumber ??
-        'INV/SH/${now.year}${now.month.toString().padLeft(2, '0')}${now.day.toString().padLeft(2, '0')}/${widget.room.roomNumber}';
+        InvoiceSequenceService.instance.generateNextInvoiceNumber(transactionDate: DateTime.now());
 
     final messageText = _generateReceiptText(currencyFormatter, invoiceNumber);
     final cleanPhone = _sanitizePhoneNumber(_phoneController.text.trim());

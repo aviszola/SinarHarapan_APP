@@ -847,7 +847,8 @@ HASIL: 3 hit ditemukan:
 | **E1** | Input biaya tambahan | FR-OUT-02 | *"Opsi input: denda late check-out, minibar/laundry, kerusakan"* | 3 field input interaktif tersedia di modal check-out | **STATIC** | [check_out_dialog.dart:23](file:///c:/Sinar%20Harapan%20APP/sinarharapan_app/lib/features/checkout/presentation/check_out_dialog.dart#L23) | **PASS** | - |
 | **E2** | C/O tepat waktu | FR-OUT-05 | *"Tidak ada denda late check-out dihitung jika waktu valid"* | Denda bernilai Rp 0 jika `now <= expectedCheckOutTime` | **STATIC** | [check_out_dialog.dart:50](file:///c:/Sinar%20Harapan%20APP/sinarharapan_app/lib/features/checkout/presentation/check_out_dialog.dart#L50) | **PASS** | - |
 | **E3** | Denda keterlambatan | FR-OUT-05 | *"Sistem menghitung otomatis denda late check-out"* | Dihitung otomatis: `jam keterlambatan * Rp 50.000` | **STATIC** | [check_out_dialog.dart:55](file:///c:/Sinar%20Harapan%20APP/sinarharapan_app/lib/features/checkout/presentation/check_out_dialog.dart#L55) | **PASS** | - |
-| **E4** | Format nomor faktur | FR-OUT-03 | *"Format nomor invoice: INV/SH/YYYYMMDD/XXXX"* (Arsitektur §4.3) | Menggunakan nomor kamar alih-alih sequence: `INV/SH/YYYYMMDD/101` | **STATIC** | [room_controller.dart:120](file:///c:/Sinar%20Harapan%20APP/sinarharapan_app/lib/features/room_management/presentation/room_controller.dart#L120) | **FAIL** | QA-OUT-01 |
+| **E4** | Format nomor faktur | FR-OUT-03 | *"Format nomor invoice: INV/SH/YYYYMMDD/XXXX"* (Arsitektur §4.3) | Generator sentral `InvoiceSequenceService` menghasilkan format 4-digit harian unik saat check-out, teruji sekuensial tanpa duplikat | **AUTOMATED** | [invoice_sequence_service.dart:15](file:///c:/Sinar%20Harapan%20APP/sinarharapan_app/lib/features/checkout/domain/invoice_sequence_service.dart#L15) | **PASS** | QA-OUT-01 |
+| **E4b** | Sinkronisasi generator faktur | FR-OUT-03 | *"Hanya satu generator penomoran faktur terpusat di seluruh sistem"* | Sebelumnya terdapat 4 generator berbeda (kamar, dialog, WA, dashboard). Telah disatukan ke `InvoiceSequenceService` | **AUTOMATED** | [invoice_sequence_and_large_export_test.dart:21](file:///c:/Sinar%20Harapan%20APP/sinarharapan_app/test/qa/invoice_sequence_and_large_export_test.dart#L21) | **PASS** | QA-OUT-05 |
 | **E5** | Kelengkapan invoice | FR-OUT-03 | *"Logo SH, Logo RedDoorz, Nomor Kamar, Tamu, Rincian, Resepsionis"* | Tarif denda keterlambatan di-hardcode Rp 50.000/jam tanpa panel konfigurasi manajer | **STATIC** | [invoice_preview_dialog.dart:165](file:///c:/Sinar%20Harapan%20APP/sinarharapan_app/lib/features/checkout/presentation/invoice_preview_dialog.dart#L165) | **FAIL** | QA-OUT-02 |
 | **E6** | Gaya visual struk | Design §7 | *"Dirender formal seperti struk asli, border tegas"* | Tampilan kertas putih struk, garis pemisah tegas | **STATIC** | [invoice_preview_dialog.dart:158](file:///c:/Sinar%20Harapan%20APP/sinarharapan_app/lib/features/checkout/presentation/invoice_preview_dialog.dart#L158) | **PASS** | - |
 | **E7** | Cetak thermal printer | FR-OUT-03 | *"Fitur cetak langsung ke thermal printer (58mm/80mm)"* | Tombol hanya memicu mock SnackBar, tanpa perintah ESC/POS riil | **STATIC** | [invoice_preview_dialog.dart:488](file:///c:/Sinar%20Harapan%20APP/sinarharapan_app/lib/features/checkout/presentation/invoice_preview_dialog.dart#L488) | **PARTIAL** | QA-OUT-03 |
@@ -1100,12 +1101,39 @@ HASIL: 3 hit ditemukan:
 - **Judul:** Penomoran Invoice Menggunakan Nomor Kamar, Membuka Risiko Duplikasi Nomor Faktur
 - **Tingkat Keparahan:** TINGGI (P2)
 - **Langkah Reproduksi:**
-  1. Buka `invoice_preview_dialog.dart` baris 40.
-  2. Amati logika generator nomor invoice default.
-- **Expected Behavior:** Format nomor invoice unik otomatis: `INV/SH/YYYYMMDD/XXXX` dengan urutan counter sekuensial 4 digit ([PRD.MD:169](file:///c:/Sinar%20Harapan%20APP/sinarharapan_app/PRD.MD#L169)).
-- **Actual Behavior:** Generator default membuat nomor invoice dengan format `INV/SH/YYYYMMDD/{room.roomNumber}`, bukan nomor sekuensial unik ([invoice_preview_dialog.dart:40](file:///c:/Sinar%20Harapan%20APP/sinarharapan_app/lib/features/checkout/presentation/invoice_preview_dialog.dart#L40)).
-- **Dampak Bisnis / Teknis:** Bila kamar 101 dihuni oleh dua tamu berbeda pada hari yang sama (mis. check-in siang setelah check-out pagi), nomor faktur akan terduplikasi sama persis.
-- **Rekomendasi Perbaikan:** Gunakan sekuens generator unik terpusat dari server/database atau UUID v4 substring.
+  1. Tamu A check-in ke Kamar 101, lalu check-out di hari yang sama.
+  2. Kamar dibersihkan menjadi Hijau (Available).
+  3. Tamu B check-in ke Kamar 101 pada hari yang sama, lalu check-out.
+  4. Amati nomor invoice kedua transaksi tersebut.
+- **Expected Behavior:** Format nomor invoice unik terstandarisasi: `INV/SH/YYYYMMDD/XXXX` dengan urutan counter sekuensial 4-digit harian yang bertambah terus (0001, 0002) dan reset di awal hari baru (Arsitektur §4.3 dan [PRD.MD:169](file:///c:/Sinar%20Harapan%20APP/sinarharapan_app/PRD.MD#L169)).
+- **Actual Behavior (Sebelum Perbaikan):**
+  1. Generator lama di `room_controller.dart:120` membuat nomor invoice saat check-in dengan format `INV/SH/YYYYMMDD/{room.roomNumber}` (memakai nomor kamar, bukan nomor sequence unik).
+  2. Jika kamar 101 check-out dua kali pada hari yang sama, kedua invoice bernilai identik `INV/SH/YYYYMMDD/101` (duplikasi fatal).
+  3. Pada laporan ekspor, data fallback menggunakan 3 digit (`001`) alih-alih 4 digit terstandarisasi.
+- **Dampak Bisnis / Teknis:** Pelanggaran standar akuntansi hotel dan audit keuangan; membuka celah duplikasi faktur pada sistem perpajakan hotel.
+- **Rekomendasi Perbaikan:** Buat service terpusat `InvoiceSequenceService` dengan counter persisten per-hari yang di-increment saat check-out nyata dilakukan.
+- **Status Verifikasi:** **SOLVED** (Telah diperbaiki di `InvoiceSequenceService`, `room_controller.dart`, dan diverifikasi via unit test `test/qa/invoice_sequence_and_large_export_test.dart`).
+
+### QA-OUT-05: Inkonsistensi dan Konflik Multi-Generator Nomor Invoice pada Modul Berbeda
+- **ID Bug:** QA-OUT-05
+- **Modul:** Check-In, Check-Out & Laporan
+- **Role Diuji:** Resepsionis & Manajer
+- **Requirement:** FR-OUT-03 & FR-REP-03 ([PRD.MD:169](file:///c:/Sinar%20Harapan%20APP/sinarharapan_app/PRD.MD#L169))
+- **Judul:** Inkonsistensi dan Konflik Multi-Generator Nomor Invoice pada Modul Berbeda
+- **Tingkat Keparahan:** TINGGI (P2)
+- **Langkah Reproduksi:**
+  1. Lacak pembuatan string `INV/SH/` pada seluruh basis kode `lib/`.
+  2. Bandingkan pola pembuatan faktur di `room_controller.dart`, `invoice_preview_dialog.dart`, `whatsapp_receipt_dialog.dart`, `manager_dashboard_screen.dart`, dan `report_export_service.dart`.
+- **Expected Behavior:** Hanya ada satu generator penomoran faktur terpusat dan terstandarisasi di seluruh siklus hidup aplikasi.
+- **Actual Behavior (Sebelum Perbaikan):** Ditemukan 4 implementasi terpisah dengan format berbeda:
+  - `room_controller.dart:120`: Menggunakan `INV/SH/YYYYMMDD/{room.roomNumber}` saat check-in.
+  - `invoice_preview_dialog.dart:46`: Fallback dialog memakai nomor kamar jika invoice null.
+  - `whatsapp_receipt_dialog.dart:314`: Fallback struk WA memakai nomor kamar jika invoice null.
+  - `manager_dashboard_screen.dart:1156`: Fallback tabel memakai `INV/SH/20260924/00${index + 1}` (3 digit).
+  - `report_export_service.dart`: Sempat memakai `DateTime.now()` saat unduh laporan sehingga tanggal faktur berubah mengikuti tanggal ekspor.
+- **Dampak Bisnis / Teknis:** Nomor invoice tidak konsisten antar tampilan layar, struk fisik, chat WhatsApp, dan laporan keuangan Excel.
+- **Rekomendasi Perbaikan:** Sentralisasi generator nomor invoice ke `InvoiceSequenceService.instance.generateNextInvoiceNumber()` yang hanya dipanggil satu kali saat check-out riil, dan service laporan hanya membaca data yang tersimpan.
+- **Status Verifikasi:** **SOLVED** (Seluruh 4 file telah diselaraskan ke `InvoiceSequenceService`).
 
 ### QA-OUT-02: Besaran Tarif Denda Keterlambatan Check-out Di-hardcode Rp 50.000/Jam
 - **ID Bug:** QA-OUT-02
