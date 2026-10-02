@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/network/api_client.dart';
 import '../data/auth_repository.dart';
 import '../domain/user_model.dart';
 
@@ -36,7 +37,12 @@ class AuthState {
 class AuthNotifier extends StateNotifier<AuthState> {
   final AuthRepository _repo;
 
-  AuthNotifier(this._repo) : super(const AuthState());
+  AuthNotifier(this._repo) : super(const AuthState()) {
+    // Daftarkan callback saat 401 gagal di-refresh
+    ApiClient().setForceLogoutCallback(() {
+      logout();
+    });
+  }
 
   Future<bool> login(String username, String password) async {
     state = state.copyWith(isLoading: true, errorMessage: null);
@@ -54,21 +60,12 @@ class AuthNotifier extends StateNotifier<AuthState> {
   }
 
   Future<bool> quickLogin(UserRole role) async {
-    state = state.copyWith(isLoading: true, errorMessage: null);
-    try {
-      final user = await _repo.loginAsQuickRole(role);
-      state = state.copyWith(user: user, isLoading: false);
-      return true;
-    } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        errorMessage: e.toString().replaceAll('Exception: ', ''),
-      );
-      return false;
-    }
+    final username = role == UserRole.receptionist ? 'receptionist' : 'manager';
+    return login(username, 'password123');
   }
 
   void logout() {
+    _repo.logout(); // Hapus token lokal + panggil POST /auth/logout best-effort
     state = const AuthState();
   }
 }

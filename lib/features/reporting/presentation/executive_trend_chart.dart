@@ -217,20 +217,23 @@ class _ExecutiveTrendChartState extends State<ExecutiveTrendChart> {
           crossAxisAlignment: WrapCrossAlignment.center,
           children: [
             // ── Timeframe Selector (Week / Month / Year) ───────────────
-            Container(
-              padding: const EdgeInsets.all(3),
-              decoration: BoxDecoration(
-                color: AppColors.navy50,
-                borderRadius: BorderRadius.circular(9),
-                border: Border.all(color: AppColors.border),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  _buildPeriodPill(ChartPeriod.week, Icons.view_week_outlined),
-                  _buildPeriodPill(ChartPeriod.month, Icons.calendar_view_month_outlined),
-                  _buildPeriodPill(ChartPeriod.year, Icons.calendar_today_outlined),
-                ],
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Container(
+                padding: const EdgeInsets.all(3),
+                decoration: BoxDecoration(
+                  color: AppColors.navy50,
+                  borderRadius: BorderRadius.circular(9),
+                  border: Border.all(color: AppColors.border),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _buildPeriodPill(ChartPeriod.week, Icons.view_week_outlined),
+                    _buildPeriodPill(ChartPeriod.month, Icons.calendar_view_month_outlined),
+                    _buildPeriodPill(ChartPeriod.year, Icons.calendar_today_outlined),
+                  ],
+                ),
               ),
             ),
 
@@ -1148,77 +1151,25 @@ class _ExecutiveTrendChartState extends State<ExecutiveTrendChart> {
         break;
     }
 
-    return Wrap(
-      spacing: 16,
-      runSpacing: 10,
-      crossAxisAlignment: WrapCrossAlignment.center,
-      children: [
-        // Current Legend
-        Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 18,
-              height: 4,
-              decoration: BoxDecoration(
-                color: AppColors.orange500,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            const SizedBox(width: 8),
-            Text(
-              currentLegend,
-              style: AppTypography.caption.copyWith(
-                fontWeight: FontWeight.w600,
-                color: AppColors.navy900,
-              ),
-            ),
-          ],
-        ),
-
-        // Past Legend
-        if (_showPastPeriod)
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: [
+          // Current Legend
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               Container(
                 width: 18,
-                height: 3,
+                height: 4,
                 decoration: BoxDecoration(
-                  color: AppColors.navy700.withValues(alpha: 0.45),
+                  color: AppColors.orange500,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
               const SizedBox(width: 8),
               Text(
-                pastLegend,
-                style: AppTypography.caption.copyWith(
-                  fontWeight: FontWeight.w500,
-                  color: AppColors.textSecondary,
-                ),
-              ),
-            ],
-          ),
-
-        // High Peak Observation
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-          decoration: BoxDecoration(
-            color: AppColors.bg,
-            borderRadius: BorderRadius.circular(6),
-            border: Border.all(color: AppColors.border),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(
-                Icons.star_rounded,
-                size: 14,
-                color: AppColors.orange500,
-              ),
-              const SizedBox(width: 6),
-              Text(
-                peakInsight,
+                currentLegend,
                 style: AppTypography.caption.copyWith(
                   fontWeight: FontWeight.w600,
                   color: AppColors.navy900,
@@ -1226,8 +1177,63 @@ class _ExecutiveTrendChartState extends State<ExecutiveTrendChart> {
               ),
             ],
           ),
-        ),
-      ],
+          const SizedBox(width: 16),
+
+          // Past Legend
+          if (_showPastPeriod) ...[
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 18,
+                  height: 3,
+                  decoration: BoxDecoration(
+                    color: AppColors.navy700.withValues(alpha: 0.45),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  pastLegend,
+                  style: AppTypography.caption.copyWith(
+                    fontWeight: FontWeight.w500,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(width: 16),
+          ],
+
+          // High Peak Observation
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            decoration: BoxDecoration(
+              color: AppColors.bg,
+              borderRadius: BorderRadius.circular(6),
+              border: Border.all(color: AppColors.border),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(
+                  Icons.star_rounded,
+                  size: 14,
+                  color: AppColors.orange500,
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  peakInsight,
+                  style: AppTypography.caption.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.navy900,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

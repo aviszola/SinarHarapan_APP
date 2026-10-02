@@ -426,18 +426,20 @@ class _MobileLogo extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 12),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Hotel Sinar Harapan',
-              style: AppTypography.h3.copyWith(color: AppColors.textPrimary),
-            ),
-            Text(
-              'RedDoorz Partner · PMS',
-              style: AppTypography.caption,
-            ),
-          ],
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Hotel Sinar Harapan',
+                style: AppTypography.h3.copyWith(color: AppColors.textPrimary),
+              ),
+              Text(
+                'RedDoorz Partner · PMS',
+                style: AppTypography.caption,
+              ),
+            ],
+          ),
         ),
       ],
     );

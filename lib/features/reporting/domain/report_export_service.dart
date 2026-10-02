@@ -790,6 +790,20 @@ class ReportExportService {
     return savedPath;
   }
 
+  /// Menyimpan bytes biner unduhan backend langsung ke berkas lokal
+  static Future<String?> saveBytesToFile({
+    required List<int> bytes,
+    required String fileName,
+  }) async {
+    final ext = fileName.split('.').last;
+    return saveWithPicker(
+      bytes: Uint8List.fromList(bytes),
+      defaultFileName: fileName,
+      fileExtension: ext,
+      dialogTitle: 'Simpan Laporan',
+    );
+  }
+
   /// Menyimpan berkas menggunakan dialog "Save As" OS atau fallback direktori Downloads
   static Future<String?> saveWithPicker({
     required Uint8List bytes,

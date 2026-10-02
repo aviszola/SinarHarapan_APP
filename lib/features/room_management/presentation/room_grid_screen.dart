@@ -4,12 +4,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../app/theme.dart';
+import '../../../core/config/app_config.dart';
 import '../../auth/presentation/auth_controller.dart';
 import '../../checkout/presentation/check_out_dialog.dart';
 import '../../reservation/presentation/active_guests_modal.dart';
 import '../../reservation/presentation/check_in_modal.dart';
 import '../../shared_widgets/app_header.dart';
-import '../../shared_widgets/status_badge.dart';
 import '../domain/room_model.dart';
 import 'room_card.dart';
 import 'room_controller.dart';
@@ -148,6 +148,20 @@ class _RoomGridScreenState extends ConsumerState<RoomGridScreen> {
       backgroundColor: AppColors.bg,
       body: Column(
         children: [
+          // Banner DATA CONTOH jika mode mock aktif
+          if (AppConfig.useMock)
+            Container(
+              width: double.infinity,
+              color: Colors.amber.shade800,
+              padding: const EdgeInsets.symmetric(vertical: 4),
+              child: const Center(
+                child: Text(
+                  '⚠️ DATA CONTOH (MOCK MODE AKTIF) - JANGAN GUNAKAN UNTUK TRANSAKSI ASLI',
+                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 11),
+                ),
+              ),
+            ),
+
           // ── Top Bar ─────────────────────────────────────────────
           ReceptionistTopBar(
             userName: userName,
@@ -155,7 +169,10 @@ class _RoomGridScreenState extends ConsumerState<RoomGridScreen> {
             activeWaCount: occupiedCount,
             onLogout: _handleLogout,
             onOpenActiveGuests: _handleOpenActiveGuests,
-            onOpenManagerPortal: () => context.go('/manager/dashboard'),
+            // Sembunyikan portal Manajer jika login sebagai Resepsionis
+            onOpenManagerPortal: authState.user?.isManager == true
+                ? () => context.go('/manager/dashboard')
+                : null,
           ),
 
           // ── Stats Ribbon ─────────────────────────────────────────

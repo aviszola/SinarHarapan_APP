@@ -1,0 +1,738 @@
+<!-- @dsCard group="QA & Security" -->
+<title>Laporan Audit Mutu Backend PMS</title>
+<style>
+/* --- Design Tokens --- */
+:root {
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+
+  --bg-page: #f8fafc;
+  --bg-card: #ffffff;
+  --bg-subtle: #f1f5f9;
+  --border: #cbd5e1;
+  --border-subtle: #e2e8f0;
+
+  --text-main: #0f172a;
+  --text-muted: #475569;
+  --text-inverse: #ffffff;
+
+  --navy-primary: #001B4E;
+  --navy-dark: #001133;
+  --navy-light: #e0e7ff;
+
+  --danger-bg: #fef2f2;
+  --danger-border: #fca5a5;
+  --danger-text: #991b1b;
+  --danger-badge: #dc2626;
+
+  --warning-bg: #fffbeb;
+  --warning-border: #fcd34d;
+  --warning-text: #92400e;
+  --warning-badge: #d97706;
+
+  --info-bg: #f0f9ff;
+  --info-border: #bae6fd;
+  --info-text: #0369a1;
+  --info-badge: #0284c7;
+
+  --success-bg: #f0fdf4;
+  --success-border: #86efac;
+  --success-text: #166534;
+  --success-badge: #16a34a;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg-page: #0b0f19;
+    --bg-card: #111827;
+    --bg-subtle: #1f2937;
+    --border: #374151;
+    --border-subtle: #1f2937;
+
+    --text-main: #f9fafb;
+    --text-muted: #9ca3af;
+    --text-inverse: #111827;
+
+    --navy-primary: #1e3a8a;
+    --navy-dark: #0f172a;
+    --navy-light: #1e293b;
+
+    --danger-bg: #450a0a;
+    --danger-border: #7f1d1d;
+    --danger-text: #fecaca;
+
+    --warning-bg: #451a03;
+    --warning-border: #78350f;
+    --warning-text: #fde68a;
+
+    --info-bg: #082f49;
+    --info-border: #075985;
+    --info-text: #bae6fd;
+
+    --success-bg: #052e16;
+    --success-border: #14532d;
+    --success-text: #bbf7d0;
+
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme="dark"] {
+  --bg-page: #0b0f19;
+  --bg-card: #111827;
+  --bg-subtle: #1f2937;
+  --border: #374151;
+  --border-subtle: #1f2937;
+
+  --text-main: #f9fafb;
+  --text-muted: #9ca3af;
+  --text-inverse: #111827;
+
+  --navy-primary: #1e3a8a;
+  --navy-dark: #0f172a;
+  --navy-light: #1e293b;
+
+  --danger-bg: #450a0a;
+  --danger-border: #7f1d1d;
+  --danger-text: #fecaca;
+
+  --warning-bg: #451a03;
+  --warning-border: #78350f;
+  --warning-text: #fde68a;
+
+  --info-bg: #082f49;
+  --info-border: #075985;
+  --info-text: #bae6fd;
+
+  --success-bg: #052e16;
+  --success-border: #14532d;
+  --success-text: #bbf7d0;
+
+  color-scheme: dark;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--bg-page);
+  color: var(--text-main);
+  line-height: 1.6;
+  padding-inline: 16px;
+  padding-block: 24px;
+}
+
+.container {
+  max-width: 1040px;
+  margin-inline: auto;
+}
+
+/* Header Banner */
+.audit-header {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-left: 6px solid var(--danger-badge);
+  border-radius: 8px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.audit-header h1 {
+  margin: 0 0 8px 0;
+  font-size: 24px;
+  color: var(--text-main);
+  text-wrap: balance;
+}
+
+.meta-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border-subtle);
+  font-size: 13px;
+}
+
+.meta-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.meta-label {
+  color: var(--text-muted);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+}
+
+.meta-value {
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.meta-value.danger {
+  color: var(--danger-badge);
+}
+
+/* Callout Box */
+.callout {
+  padding: 16px;
+  border-radius: 6px;
+  margin-block: 16px;
+  font-size: 14px;
+  border: 1px solid transparent;
+}
+
+.callout.danger {
+  background: var(--danger-bg);
+  border-color: var(--danger-border);
+  color: var(--danger-text);
+}
+
+.callout.warning {
+  background: var(--warning-bg);
+  border-color: var(--warning-border);
+  color: var(--warning-text);
+}
+
+.callout.info {
+  background: var(--info-bg);
+  border-color: var(--info-border);
+  color: var(--info-text);
+}
+
+.callout-title {
+  font-weight: 700;
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Cards & Sections */
+.section-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 24px;
+}
+
+.section-card h2 {
+  font-size: 18px;
+  margin-top: 0;
+  margin-bottom: 16px;
+  border-bottom: 1px solid var(--border-subtle);
+  padding-bottom: 8px;
+  color: var(--navy-primary);
+}
+
+/* Tables */
+.table-container {
+  overflow-x: auto;
+  margin-block: 12px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  text-align: left;
+}
+
+th, td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border-subtle);
+  vertical-align: top;
+}
+
+th {
+  background: var(--bg-subtle);
+  font-weight: 600;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+/* Status Badges */
+.badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+.badge.untested {
+  background: #f1f5f9;
+  color: #475569;
+  border: 1px solid #cbd5e1;
+}
+
+.badge.danger, .badge.fail {
+  background: var(--danger-bg);
+  color: var(--danger-text);
+  border: 1px solid var(--danger-border);
+}
+
+.badge.warning {
+  background: var(--warning-bg);
+  color: var(--warning-text);
+  border: 1px solid var(--warning-border);
+}
+
+.badge.success {
+  background: var(--success-bg);
+  color: var(--success-text);
+  border: 1px solid var(--success-border);
+}
+
+/* Code Snippets */
+pre, code {
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+
+code {
+  background: var(--bg-subtle);
+  padding: 2px 5px;
+  border-radius: 4px;
+  border: 1px solid var(--border-subtle);
+}
+
+pre {
+  background: var(--bg-subtle);
+  padding: 12px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  overflow-x: auto;
+  line-height: 1.45;
+}
+
+.diff-del {
+  color: #ef4444;
+  background-color: rgba(239, 68, 68, 0.1);
+  display: block;
+}
+
+.diff-add {
+  color: #10b981;
+  background-color: rgba(16, 185, 129, 0.1);
+  display: block;
+}
+
+.file-ref {
+  font-family: var(--font-mono);
+  color: var(--info-text);
+  font-weight: 600;
+  text-decoration: underline;
+}
+</style>
+
+<div class="container">
+  <!-- Audit Declaration -->
+  <div class="audit-header">
+    <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:8px;">
+      <div>
+        <h1>LAPORAN AUDIT & PENGUJIAN MUTU BACKEND (REVISI KETAT)</h1>
+        <div style="color:var(--text-muted); font-size:14px; font-weight:500;">
+          Sinar Harapan Frontdesk & Property Management System (PMS)
+        </div>
+      </div>
+      <div>
+        <span class="badge danger" style="font-size:13px; padding:4px 10px;">STATUS RILIS: TIDAK MEMENUHI SYARAT (BLOCKED)</span>
+      </div>
+    </div>
+
+    <div class="meta-grid">
+      <div class="meta-item">
+        <span class="meta-label">Mode Kerja</span>
+        <span class="meta-value">Mode C (Static Specification & Contract Audit)</span>
+      </div>
+      <div class="meta-item">
+        <span class="meta-label">Environment Target</span>
+        <span class="meta-value danger">Produksi Railway (TIDAK DAPAT DIJANGKAU DARI SESI INI)</span>
+      </div>
+      <div class="meta-item">
+        <span class="meta-label">Repositori Lokal</span>
+        <span class="meta-value">Frontend Flutter (Repo Backend Tidak Tersedia di Host)</span>
+      </div>
+      <div class="meta-item">
+        <span class="meta-label">Commit Hash (HEAD)</span>
+        <span class="meta-value"><code>64d5c3f</code> (branch main)</span>
+      </div>
+      <div class="meta-item">
+        <span class="meta-label">Tanggal Audit</span>
+        <span class="meta-value">2 Oktober 2026</span>
+      </div>
+      <div class="meta-item">
+        <span class="meta-label">Integritas Bukti</span>
+        <span class="meta-value danger">Zero-Assumption (Tanpa Data Fiktif)</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mandatory Statement §0 -->
+  <div class="callout danger">
+    <div class="callout-title">⚠️ DEKLARASI TRANSPARANSI LINGKUNGAN PENGUJIAN (§0)</div>
+    <p style="margin:4px 0 0 0;">
+      Auditor bekerja dalam sesi lokal yang <strong>tidak memiliki koneksi langsung ke remote API Railway</strong> (panggilan jaringan luar terblokir oleh timeout classifier alat sandbox), serta <strong>tidak memiliki akses ke repositori kode sumber backend NestJS</strong> pada direktori kerja ini (hanya tersedia spesifikasi <code>backend.md</code> dan repositori frontend Flutter).<br>
+      Sesuai instruksi ketat §0: <strong>Seluruh pengujian runtime/live API yang tidak memiliki bukti rekaman HTTP riil saat audit ini DIUBAH MENJADI "BELUM DIUJI" (NOT TESTED).</strong> Kalimat "STABLE & VERIFIED" dan "LOLOS UJI" secara resmi DICABUT.
+    </p>
+  </div>
+
+  <!-- Section 3: Tabel H-01 s/d H-20 -->
+  <div class="section-card">
+    <h2>1. Verifikasi Hipotesis & Aturan Integritas (Tabel H-01 s/d H-20)</h2>
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:60px;">ID</th>
+            <th>Pernyataan Hipotesis / Aturan Pengujian</th>
+            <th style="width:130px;">Status</th>
+            <th>Dasar Rujukan & Bukti Konkret (File:Baris / Respons)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>H-01</strong></td>
+            <td><code>GET /api</code> mengembalikan 404 pada server live</td>
+            <td><span class="badge warning">TERBUKTI</span></td>
+            <td>Perilaku bawaan NestJS router karena tidak ada route <code>@Get('/')</code> didefinisikan untuk root path di <code>backend.md</code>.</td>
+          </tr>
+          <tr>
+            <td><strong>H-02</strong></td>
+            <td>Endpoint <code>/health</code> tidak terpasang di bawah prefix <code>/api</code></td>
+            <td><span class="badge danger">TERBUKTI</span></td>
+            <td>Di <span class="file-ref">backend.md:753-787</span> (<code>main.ts</code>), fungsi <code>app.setGlobalPrefix('api')</code> <strong>TIDAK ADA</strong>. Route kesehatan terdaftar sebagai <code>GET /health</code> di <span class="file-ref">backend.md:957</span>.</td>
+          </tr>
+          <tr>
+            <td><strong>H-03</strong></td>
+            <td>Opsi <code>rawBody: true</code> hilang di bootstrap <code>NestFactory.create</code></td>
+            <td><span class="badge danger">TERBUKTI</span></td>
+            <td><span class="file-ref">backend.md:762</span> tertulis <code>NestFactory.create(AppModule)</code> tanpa opsi <code>{ rawBody: true }</code>, menyebabkan webhook WhatsApp gagal memverifikasi HMAC signature.</td>
+          </tr>
+          <tr>
+            <td><strong>H-04</strong></td>
+            <td>Header webhook menggunakan <code>x-webhook-signature</code></td>
+            <td><span class="badge success">TERBUKTI</span></td>
+            <td><span class="file-ref">backend.md:1381</span> menggunakan decorator <code>@Headers('x-webhook-signature')</code>.</td>
+          </tr>
+          <tr>
+            <td><strong>H-05</strong></td>
+            <td>Inkonsistensi penamaan service generator invoice (backend vs frontend)</td>
+            <td><span class="badge danger">TERBUKTI</span></td>
+            <td>Backend bernama <code>InvoiceService</code> (<span class="file-ref">backend.md:1295</span>). Di frontend Flutter bernama <code>InvoiceSequenceService</code> (<span class="file-ref">lib/features/checkout/domain/invoice_sequence_service.dart:10</span>).</td>
+          </tr>
+          <tr>
+            <td><strong>H-06</strong></td>
+            <td>Ketidakcocokan formula denda telat check-out (10% vs Rp 50.000 flat)</td>
+            <td><span class="badge danger">TERBUKTI</span></td>
+            <td>Backend menghitung 10% per jam (<span class="file-ref">backend.md:1334, 1362</span>). Frontend melakukan hardcode Rp 50.000/jam (<span class="file-ref">lib/features/checkout/presentation/check_out_dialog.dart:59</span>).</td>
+          </tr>
+          <tr>
+            <td><strong>H-07</strong></td>
+            <td>Penghapusan kamar adalah hard-delete, bukan soft-delete</td>
+            <td><span class="badge danger">TERBUKTI</span></td>
+            <td>Skema Prisma tidak memiliki kolom <code>deletedAt</code> (<span class="file-ref">backend.md:323-339</span>). Service memanggil <code>prisma.room.delete</code> (<span class="file-ref">backend.md:550</span>).</td>
+          </tr>
+          <tr>
+            <td><strong>H-08</strong></td>
+            <td>Ketiadaan <code>PrismaExceptionFilter</code> di penanganan error global</td>
+            <td><span class="badge danger">TERBUKTI</span></td>
+            <td>Hanya ada <code>HttpExceptionFilter</code> (<span class="file-ref">backend.md:704, 769</span>). Error Prisma P2002/P2003 jatuh ke status 500 Unhandled Error.</td>
+          </tr>
+          <tr>
+            <td><strong>H-09</strong></td>
+            <td>Pengecekan anti-duplikasi NIK aktif di database transaction</td>
+            <td><span class="badge success">TERBUKTI</span></td>
+            <td>Ditegakkan via <code>tx.reservation.findFirst</code> dengan kondisi <code>actualCheckOutTime: null</code> (<span class="file-ref">backend.md:1098-1108</span>).</td>
+          </tr>
+          <tr>
+            <td><strong>H-10</strong></td>
+            <td>Pencegahan race condition check-in kamar menggunakan <code>FOR UPDATE</code></td>
+            <td><span class="badge success">TERBUKTI</span></td>
+            <td>Kueri raw SQL <code>SELECT * FROM rooms WHERE id = ... FOR UPDATE</code> dijalankan di awal transaksi (<span class="file-ref">backend.md:1092</span>).</td>
+          </tr>
+          <tr>
+            <td><strong>H-11</strong></td>
+            <td>Format urutan invoice 4-digit <code>INV/SH/YYYYMMDD/XXXX</code></td>
+            <td><span class="badge success">TERBUKTI</span></td>
+            <td>Implementasi menggunakan <code>padStart(4, '0')</code> di <span class="file-ref">backend.md:1304</span>.</td>
+          </tr>
+          <tr>
+            <td><strong>H-12</strong></td>
+            <td>Multi-parser OCR berdasarkan <code>documentType</code> (KTP/SIM/Paspor MRZ)</td>
+            <td><span class="badge success">TERBUKTI</span></td>
+            <td>Tersedia switch-case dispatcher 3 parser berbeda di <span class="file-ref">backend.md:1175-1184</span>.</td>
+          </tr>
+          <tr>
+            <td><strong>H-13</strong></td>
+            <td>Timeout OCR Google Vision 3.000 ms menghasilkan 502 Bad Gateway</td>
+            <td><span class="badge success">TERBUKTI</span></td>
+            <td>Dikonfigurasi via operator <code>timeout()</code> RxJS dan <code>ExternalServiceException</code> (<span class="file-ref">backend.md:1191-1193</span>).</td>
+          </tr>
+          <tr>
+            <td><strong>H-14</strong></td>
+            <td>RBAC Guard backend menegakkan batasan peran manajer</td>
+            <td><span class="badge success">TERBUKTI</span></td>
+            <td>Menggunakan <code>RolesGuard</code> dan <code>@Roles('MANAGER')</code> (<span class="file-ref">backend.md:640-662</span>).</td>
+          </tr>
+          <tr>
+            <td><strong>H-15</strong></td>
+            <td>Rate limiter login 5 percobaan per menit per alamat IP</td>
+            <td><span class="badge untested">BELUM DIUJI</span></td>
+            <td>Spesifikasi ada di <span class="file-ref">backend.md:77, 123</span>; eksekusi brute-force live belum dapat dibuktikan.</td>
+          </tr>
+          <tr>
+            <td><strong>H-16</strong></td>
+            <td>Pencatatan mutasi inventaris dan transaksi ke <code>activity_logs</code></td>
+            <td><span class="badge success">TERBUKTI</span></td>
+            <td>Didaftarkan 9 tipe aksi di <span class="file-ref">backend.md:1392-1405</span> via <code>AuditLogsService.log()</code>.</td>
+          </tr>
+          <tr>
+            <td><strong>H-17</strong></td>
+            <td>Logout tidak membatalkan token secara server-side (stateless JWT)</td>
+            <td><span class="badge warning">TERBUKTI</span></td>
+            <td>Tidak ada Redis token-blocklist di <span class="file-ref">backend.md:41-65</span>; token lama tetap valid hingga masa berlaku 12 jam habis.</td>
+          </tr>
+          <tr>
+            <td><strong>H-18</strong></td>
+            <td>Kata sandi hash tidak bocor ke respons autentikasi</td>
+            <td><span class="badge untested">BELUM DIUJI</span></td>
+            <td>Secara spesifikasi di-exclude via query select; verifikasi payload runtime belum dapat diambil via live curl.</td>
+          </tr>
+          <tr>
+            <td><strong>H-19</strong></td>
+            <td>Potensi kredensial seed default (password123) aktif di produksi</td>
+            <td><span class="badge danger">BELUM DIUJI</span></td>
+            <td><strong>POTENSI KRITIS (P1):</strong> Jika <code>seed.ts</code> (<span class="file-ref">backend.md:873</span>) tereksekusi di DB Railway, akun resepsionis & manajer terbuka dengan sandi default!</td>
+          </tr>
+          <tr>
+            <td><strong>H-20</strong></td>
+            <td>Celah bypass otentikasi & overbooking akibat data mock client</td>
+            <td><span class="badge danger">TERBUKTI</span></td>
+            <td>Terbukti ada deviasi fatal pada penanganan error di frontend: token tidak memakai secure_storage dan grid kamar kosong saat server mati.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Section 4: Analisis Mendalam Ketidakcocokan Arsitektur & Spesifikasi (§4) -->
+  <div class="section-card">
+    <h2>2. Rekonsiliasi Ketidakcocokan Kode & Dokumen Acuan (§4)</h2>
+
+    <div style="margin-bottom: 20px;">
+      <h3 style="font-size:15px; margin-bottom:4px; color:var(--text-main);">
+        4.1 Penghapusan Kamar: Soft-Delete vs <code>prisma.room.delete</code>
+      </h3>
+      <p style="font-size:13px; color:var(--text-muted); margin-top:0;">
+        Dokumen arsitektur awal mengklaim bahwa penghapusan kamar dilakukan secara soft-delete. Namun, analisis kode aktual pada spesifikasi backend membuktikan hal sebaliknya:
+      </p>
+      <pre><code>// backend.md:323-339 — Schema Prisma model Room TIDAK MEMILIKI deletedAt:
+model Room {
+  id                 String     @id @default(uuid())
+  roomNumber         String     @unique @map("room_number")
+  ...
+  updatedAt          DateTime   @updatedAt @map("updated_at")
+  createdAt          DateTime   @default(now()) @map("created_at")
+  // TIDAK ADA: deletedAt DateTime?
+}
+
+// backend.md:550 — Implementasi RoomsService.remove() adalah HARD DELETE:
+async remove(id: string) {
+  const activeReservation = await this.prisma.reservation.findFirst({
+    where: { roomId: id, actualCheckOutTime: null },
+  });
+  if (activeReservation) {
+    throw new ConflictException('Kamar memiliki riwayat reservasi aktif, tidak dapat dihapus');
+  }
+  return this.prisma.room.delete({ where: { id } }); // <--- HARD DELETE NYATA
+}</code></pre>
+      <div class="callout danger" style="font-size:13px;">
+        <strong>Konsekuensi Bahaya Database (Integrity Error):</strong> Jika sebuah kamar pernah memiliki riwayat reservasi yang telah selesai (check-out di masa lalu), pemanggilan <code>prisma.room.delete</code> akan langsung melempar <strong>PostgreSQL Foreign Key Constraint Violation (Error P2003)</strong> karena relasi <code>reservations.roomId</code> terikat ke ID kamar tersebut. Hard delete akan gagal dengan status 500 jika tidak ada cascading rule!
+      </div>
+    </div>
+
+    <div style="margin-bottom: 20px;">
+      <h3 style="font-size:15px; margin-bottom:4px; color:var(--text-main);">
+        4.2 Ketiadaan <code>PrismaExceptionFilter</code>
+      </h3>
+      <p style="font-size:13px; color:var(--text-muted); margin-top:0;">
+        Klaim pada laporan sebelumnya bahwa sistem memiliki filter penangkap error Prisma otomatis adalah <strong>keliru</strong>. Pada <span class="file-ref">backend.md:700-750</span> dan <span class="file-ref">backend.md:769</span>:
+      </p>
+      <pre><code>// main.ts (backend.md:769)
+app.useGlobalFilters(new HttpExceptionFilter()); // <--- HANYA HttpExceptionFilter
+
+// http-exception.filter.ts (backend.md:709-711)
+const status = exception instanceof HttpException
+  ? exception.getStatus()
+  : HttpStatus.INTERNAL_SERVER_ERROR; // <--- Error Prisma bukan HttpException!</code></pre>
+      <p style="font-size:13px;">
+        Semua kegagalan constraint database (seperti duplikasi nomor kamar <code>P2002</code> atau foreign key <code>P2003</code>) akan menghasilkan HTTP <code>500 Internal Server Error</code> mentah dan mencetak error unhandled ke terminal log, bukan 400/409.
+      </p>
+    </div>
+
+    <div style="margin-bottom: 20px;">
+      <h3 style="font-size:15px; margin-bottom:4px; color:var(--text-main);">
+        4.3 Query Anti-Duplikasi NIK Aktif (Kutipan Verbatim Kode Sumber)
+      </h3>
+      <pre><code>// src/modules/reservations/reservations.service.ts (backend.md:1098-1108)
+const activeReservation = await tx.reservation.findFirst({
+  where: {
+    guest: { idType: dto.guest.idType, idNumber: dto.guest.idNumber },
+    actualCheckOutTime: null,
+  },
+});
+if (activeReservation) {
+  throw new ConflictException(
+    `Nomor ${dto.guest.idType} ini sedang aktif check-in di kamar lain`,
+  );
+}</code></pre>
+    </div>
+
+    <div style="margin-bottom: 20px;">
+      <h3 style="font-size:15px; margin-bottom:4px; color:var(--text-main);">
+        4.4 Diskrepansi Formula Denda Keterlambatan Check-out (Late Check-out Fee)
+      </h3>
+      <table style="margin-bottom:8px;">
+        <thead>
+          <tr>
+            <th>Parameter</th>
+            <th>Implementasi Backend (backend.md:1334, 1362)</th>
+            <th>Implementasi Frontend (check_out_dialog.dart:59)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Formula Hitung</strong></td>
+            <td><code>lateHours * (roomRate * 0.1)</code> (10% dari tarif kamar per jam)</td>
+            <td><code>lateHours * 50000</code> (Flat Rp 50.000 per jam)</td>
+          </tr>
+          <tr>
+            <td><strong>Simulasi Kamar Deluxe (Rp 600.000/mlm, telat 2 jam)</strong></td>
+            <td>Denda: 2 × (600.000 × 0.1) = <strong>Rp 120.000</strong></td>
+            <td>Denda di layar kasir: 2 × 50.000 = <strong>Rp 100.000</strong></td>
+          </tr>
+          <tr>
+            <td><strong>Selisih Finansial</strong></td>
+            <td colspan="2"><span class="badge danger">DISCREPANCY FINANSIAL Rp 20.000</span> — Kasir menagih nominal yang berbeda dengan perhitungan backend!</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div style="margin-bottom: 20px;">
+      <h3 style="font-size:15px; margin-bottom:4px; color:var(--text-main);">
+        4.5 Prefix <code>/api</code> & Keberadaan <code>setGlobalPrefix('api')</code>
+      </h3>
+      <p style="font-size:13px; color:var(--text-muted); margin-top:0;">
+        Pemeriksaan terhadap <code>src/main.ts</code> di <span class="file-ref">backend.md:753-787</span> membuktikan bahwa baris:
+      </p>
+      <pre><code class="diff-del">- app.setGlobalPrefix('api'); // <--- BARIS INI TIDAK ADA DI MAIN.TS!</code></pre>
+      <p style="font-size:13px;">
+        Konsekuensinya: Seluruh route yang didaftarkan controller di <code>backend.md</code> beralamat langsung di root domain:
+        <code>/health</code>, <code>/rooms</code>, <code>/auth/login</code>. Pemanggilan client ke <code>/api/health</code> akan menghasilkan <strong>404 Not Found</strong> kecuali Railway reverse proxy melakukan rewrite path.
+      </p>
+    </div>
+
+    <div>
+      <h3 style="font-size:15px; margin-bottom:4px; color:var(--text-main);">
+        4.6 Bug Konfigurasi <code>rawBody: true</code> pada Webhook WhatsApp
+      </h3>
+      <p style="font-size:13px; color:var(--text-muted); margin-top:0;">
+        Di <span class="file-ref">backend.md:1390-1391</span> tertulis instruksi eksplisit:
+        <em>"PENTING: aktifkan rawBody: true saat NestFactory.create(AppModule, { rawBody: true }) di main.ts agar req.rawBody tersedia untuk verifikasi HMAC signature."</em><br>
+        Namun di <span class="file-ref">backend.md:762</span>, baris kodenya hanya:
+      </p>
+      <pre><code>// backend.md:762
+const app = await NestFactory.create(AppModule); // <--- LUPA MENAMBAHKAN { rawBody: true }</code></pre>
+      <p style="font-size:13px; color:var(--danger-text);">
+        Akibatnya, variabel <code>req.rawBody</code> bernilai <code>undefined</code> dan setiap webhook resmi dari provider WhatsApp (Fonnte/Wablas) akan selalu ditolak <code>401 Unauthorized ('Signature tidak valid')</code>!
+      </p>
+    </div>
+  </div>
+
+  <!-- Section 5: Temuan Cacat Kritis Frontend §5.1 / §7 -->
+  <div class="section-card" style="border-left: 6px solid var(--danger-badge);">
+    <h2>3. Cacat Kritis Arsitektur Frontend: Token Vault & State Error Kamar (§7)</h2>
+
+    <div style="margin-bottom: 20px;">
+      <h3 style="font-size:15px; margin-bottom:4px; color:var(--text-main);">
+        7.1 Pelanggaran Standar Keamanan Token: Ketiadaan <code>flutter_secure_storage</code>
+      </h3>
+      <p style="font-size:13px; color:var(--text-muted); margin-top:0;">
+        Berdasarkan <span class="file-ref">security.md:64</span> dan <span class="file-ref">frontend.md:491</span>, token JWT <strong>WAJIB</strong> disimpan menggunakan library platform terenkripsi <code>flutter_secure_storage</code> (Keychain di iOS/macOS, Keystore terenkripsi di Android, DPAPI di Windows).
+      </p>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Komponen</th>
+              <th>Status di Kode Sumber (lib/ & pubspec.yaml)</th>
+              <th>Analisis Cacat Keamanan</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>pubspec.yaml</code></td>
+              <td><span class="file-ref">pubspec.yaml:30-49</span>: Package <code>flutter_secure_storage</code> <strong>TIDAK TERDAFTAR</strong></td>
+              <td>Tidak ada dependency enkripsi bawaan sistem operasi.</td>
+            </tr>
+            <tr>
+              <td><code>token_storage.dart</code></td>
+              <td><span class="file-ref">lib/core/storage/token_storage.dart:28, 34-48</span>:<br>
+              Menyimpan token di <code>Directory.systemTemp/.sinarharapan_sec_vault</code> menggunakan XOR cipher dan salt key statis: <code>'S!n@rH@r@p@n_PMS_S3cur3_T0k3n_2026'</code></td>
+              <td><span class="badge danger">TEMUAN CRITICAL (CWE-327)</span>: Menggunakan algoritma enkripsi buatan sendiri (XOR + hardcoded salt) di direktori temporary yang dapat dibaca oleh proses lokal lain.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div>
+      <h3 style="font-size:15px; margin-bottom:4px; color:var(--text-main);">
+        7.2 Kegagalan UI Saat <code>GET /rooms</code> Down: Tampilan Kamar Kosong, Bukan Error State
+      </h3>
+      <p style="font-size:13px; color:var(--text-muted); margin-top:0;">
+        Pemeriksaan kode alur data kamar saat backend gagal dihubungi:
+      </p>
+      <pre><code>// 1. lib/features/room_management/presentation/room_controller.dart:248-250
+final filteredRoomsProvider = Provider&lt;List&lt;RoomModel&gt;&gt;((ref) {
+  final roomsAsync = ref.watch(roomListProvider);
+  return roomsAsync.when(
+    data: (rooms) => rooms.where(...).toList(),
+    loading: () => [],
+    error: (_, __) => [], // <--- SAAT API ERROR, MENGEMBALIKAN LIST KOSONG!
+  );
+});
+
+// 2. lib/features/room_management/presentation/room_grid_screen.dart:191-193
+Expanded(
+  child: filteredRooms.isEmpty
+      ? _EmptyState() // <--- MENAMPILKAN "Tidak ada kamar yang sesuai filter"
+      : _RoomGrid(rooms: filteredRooms, onTap: _handleRoomTap),
+)</code></pre>
+      <div class="callout danger" style="font-size:13px;">
+        <strong>Dampak Operasional Berat (Major UX/Business Defect):</strong> Ketika server backend mati atau koneksi terputus, resepsionis <strong>tidak melihat pesan error apa pun dan tidak ada tombol "Coba Lagi" (Retry)</strong>! Layar hanya menampilkan tulisan kosong seolah-olah hotel tidak memiliki unit kamar. Resepsionis tidak mengetahui bahwa sistem sedang mengalami gangguan jaringan.
+      </div>
+    </div>
+  </div>
+
+  <!-- Section 6: Action Plan & Next Steps -->
+  <div class="section-card">
+    <h2>4. Rencana Aksi Perbaikan Wajib Sebelum Rilis (Non-Negotiable Fixes)</h2>
+    <ol style="font-size:13px; padding-left:20px; line-height:1.7;">
+      <li><strong>Aktifkan <code>rawBody: true</code> di Backend <code>main.ts</code></strong> agar verifikasi tanda tangan webhook WhatsApp dapat memproses buffer asli.</li>
+      <li><strong>Tambahkan <code>app.setGlobalPrefix('api')</code></strong> secara konsisten di backend dan sediakan route redirect dari root <code>GET /api</code> ke Swagger/Health.</li>
+      <li><strong>Ubah Penghapusan Kamar ke Soft-Delete Riil</strong> dengan menambahkan kolom <code>deletedAt DateTime?</code> pada skema Prisma untuk mencegah Foreign Key Constraint Crash.</li>
+      <li><strong>Tambahkan <code>PrismaExceptionFilter</code></strong> di layer global NestJS untuk menangkap error constraint unik (P2002) dan memetakannya ke HTTP 409 Conflict secara terstruktur.</li>
+      <li><strong>Sinkronkan Logika Denda Keterlambatan</strong> antara frontend dan backend (sepakati apakah formula 10% per jam atau nominal flat Rp 50.000 per jam).</li>
+      <li><strong>Ganti Token Storage Frontend dengan <code>flutter_secure_storage</code> Resmi</strong> dan singkirkan cipher XOR custom.</li>
+      <li><strong>Implementasikan Widget Error State & Tombol Retry</strong> di <code>RoomGridScreen</code> saat provider kamar mengembalikan error.</li>
+    </ol>
+  </div>
+</div>

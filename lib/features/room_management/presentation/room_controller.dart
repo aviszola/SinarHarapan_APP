@@ -1,17 +1,20 @@
+import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../checkout/domain/invoice_sequence_service.dart';
-import '../../shared_widgets/status_badge.dart';
+import '../../../core/config/app_config.dart';
+import '../../../core/network/api_client.dart';
 import '../data/room_repository.dart';
 import '../domain/room_model.dart';
 
-final roomRepositoryProvider = Provider<RoomRepository>((ref) {
-  return RoomRepository();
-});
+/// Polling interval GET /rooms/status — endpoint.md §3.2 & PRD FR-ROOM-07: tiap 15 detik
+const _kStatusPollingInterval = Duration(seconds: 15);
+
+final roomRepositoryProvider = Provider<RoomRepository>((ref) => RoomRepository());
 
 class RoomFilterState {
-  final String roomType; // 'ALL' or specific
-  final int floor; // 0 for ALL, or 1, 2, 3
-  final RoomStatusType? status; // null for ALL
+  final String roomType;
+  final int floor;
+  final RoomStatusType? status;
   final String searchQuery;
 
   const RoomFilterState({
@@ -39,17 +42,48 @@ class RoomFilterState {
 
 class RoomListNotifier extends StateNotifier<AsyncValue<List<RoomModel>>> {
   final RoomRepository _repository;
+  Timer? _pollingTimer;
 
   RoomListNotifier(this._repository) : super(const AsyncValue.loading()) {
     loadRooms();
+    _startPolling();
+  }
+
+  void _startPolling() {
+    _pollingTimer?.cancel();
+    _pollingTimer = Timer.periodic(_kStatusPollingInterval, (_) => _pollStatus());
+  }
+
+  /// Polling ringan GET /rooms/status untuk update status grid tanpa full reload
+  Future<void> _pollStatus() async {
+    try {
+      final snapshots = await _repository.getRoomStatusOnly();
+      if (!mounted) return;
+      state.whenData((rooms) {
+        final statusMap = {for (final s in snapshots) s.id: s.status};
+        final updated = rooms.map((r) {
+          final newStatus = statusMap[r.id];
+          return newStatus != null && newStatus != r.status
+              ? r.copyWith(status: newStatus)
+              : r;
+        }).toList();
+        state = AsyncValue.data(updated);
+      });
+    } catch (_) {
+      // Polling gagal — abaikan, tidak mengganggu state
+    }
+  }
+
+  @override
+  void dispose() {
+    _pollingTimer?.cancel();
+    super.dispose();
   }
 
   Future<void> loadRooms() async {
+    state = const AsyncValue.loading();
     try {
       final rooms = await _repository.getRooms();
-      InvoiceSequenceService.instance.seedFromInvoices(
-        rooms.map((r) => r.invoiceNumber),
-      );
       state = AsyncValue.data(rooms);
     } catch (e, st) {
       state = AsyncValue.error(e, st);
@@ -57,108 +91,90 @@ class RoomListNotifier extends StateNotifier<AsyncValue<List<RoomModel>>> {
   }
 
   Future<void> markRoomCleaned(String roomId) async {
-    final currentList = state.value;
-    if (currentList == null) return;
-
-    final room = currentList.firstWhere((r) => r.id == roomId);
-    final updated = room.copyWith(
-      status: RoomStatusType.available,
-      clearActiveReservation: true,
-    );
-
-    await _repository.updateRoom(updated);
+    // Operasi tulis: tidak ada fallback lokal; lempar error jika gagal
+    await _repository.markRoomClean(roomId);
     await loadRooms();
   }
 
   Future<void> toggleMaintenance(String roomId) async {
     final currentList = state.value;
-    if (currentList == null) return;
+    if (currentList == null) throw StateError('Data kamar belum dimuat');
 
     final room = currentList.firstWhere((r) => r.id == roomId);
     if (room.isOccupied) {
-      throw Exception('Kamar sedang ditempati, tidak bisa diubah ke mode maintenance');
+      throw ApiException('Kamar sedang ditempati, tidak bisa diubah ke mode maintenance');
     }
 
-    final newStatus = room.isMaintenance
-        ? RoomStatusType.available
-        : RoomStatusType.maintenance;
-
-    final updated = room.copyWith(status: newStatus);
-    await _repository.updateRoom(updated);
+    final newStatus = room.isMaintenance ? 'AVAILABLE' : 'MAINTENANCE';
+    await _repository.updateRoom(id: roomId, status: newStatus);
     await loadRooms();
   }
 
-  Future<RoomModel?> checkIn({
+  /// Check-in: kirim ke backend DULU, baru reload state dari server
+  Future<Map<String, dynamic>> checkIn({
     required String roomId,
-    required String guestName,
-    String? guestNik,
+    required String guestFullName,
+    required String idType,
+    required String idNumber,
+    String? guestAddress,
+    String? guestNationality,
     required String guestPhone,
+    String? idImageUrl,
     required String bookingSource,
-    required String? reddoorzBookingCode,
+    String? reddoorzBookingCode,
     required int totalNights,
-    required double basePrice,
+    required double roomRate,
     required String paymentMethod,
-    String? invoiceNumber,
   }) async {
-    final currentList = state.value;
-    if (currentList == null) return null;
-
-    final room = currentList.firstWhere((r) => r.id == roomId);
     final now = DateTime.now();
     final expectedCheckout = DateTime(
       now.year,
       now.month,
       now.day + totalNights,
-      12, // Standar check-out jam 12:00 WIB
-      0,
+      12, // standar checkout 12:00 WIB
     );
 
-    // Sesuai alur baru: Invoice diterbitkan langsung di awal saat check-in
-    final generatedInvoice = invoiceNumber ??
-        InvoiceSequenceService.instance.generateNextInvoiceNumber(
-          transactionDate: now,
-        );
-
-    final updated = room.copyWith(
-      status: RoomStatusType.occupied,
-      activeGuestName: guestName,
-      guestNik: guestNik,
-      activeGuestPhone: guestPhone,
+    // Kirim ke backend — jika gagal (409, 400, dll), exception dilempar ke UI
+    final result = await _repository.createReservation(
+      roomId: roomId,
       bookingSource: bookingSource,
       reddoorzBookingCode: reddoorzBookingCode,
-      checkInTime: now,
-      expectedCheckOutTime: expectedCheckout,
-      invoiceNumber: generatedInvoice,
-      waReminderStatus: 'SENT',
+      idType: idType,
+      idNumber: idNumber,
+      guestFullName: guestFullName,
+      guestAddress: guestAddress,
+      guestNationality: guestNationality,
+      guestPhone: guestPhone,
+      idImageUrl: idImageUrl,
+      checkInTime: now.toIso8601String(),
+      expectedCheckOutTime: expectedCheckout.toIso8601String(),
+      totalNights: totalNights,
+      roomRate: roomRate,
+      paymentMethod: paymentMethod,
     );
 
-    await _repository.updateRoom(updated);
+    // Reload dari server agar state sinkron dengan backend
     await loadRooms();
-    return updated;
+    return result;
   }
 
-  Future<RoomModel?> checkOut({
-    required String roomId,
-    required double additionalCharges,
+  /// Check-out: kirim ke backend DULU, baru reload state dari server
+  Future<Map<String, dynamic>> checkOut({
+    required String reservationId,
+    required List<Map<String, dynamic>> additionalCharges,
     DateTime? checkOutTime,
   }) async {
-    final currentList = state.value;
-    if (currentList == null) return null;
+    final actualTime = (checkOutTime ?? DateTime.now()).toIso8601String();
 
-    final room = currentList.firstWhere((r) => r.id == roomId);
-
-    // Sesuai alur baru:
-    // Invoice utama sudah diterbitkan saat check-in.
-    // Saat check-out, TIDAK ada nomor invoice baru yang dibuat.
-    // Jika ada biaya tambahan, cukup dicatat di additionalCharges pada data reservasi yang sama.
-    final updated = room.copyWith(
-      status: RoomStatusType.dirty, // Setelah checkout menjadi dirty untuk dibersihkan
-      additionalCharges: additionalCharges > 0 ? additionalCharges : null,
+    // Kirim ke backend — path sudah benar: POST /reservations/:id/checkout
+    final result = await _repository.processCheckout(
+      reservationId: reservationId,
+      actualCheckOutTime: actualTime,
+      additionalCharges: additionalCharges,
     );
 
-    await _repository.updateRoom(updated);
     await loadRooms();
-    return updated;
+    return result;
   }
 
   Future<void> addRoom({
@@ -168,17 +184,13 @@ class RoomListNotifier extends StateNotifier<AsyncValue<List<RoomModel>>> {
     required double basePrice,
     required List<String> facilities,
   }) async {
-    final newRoom = RoomModel(
-      id: 'rm-${DateTime.now().millisecondsSinceEpoch}',
+    await _repository.addRoom(
       roomNumber: roomNumber,
       roomType: roomType,
       floor: floor,
       basePricePerNight: basePrice,
       facilities: facilities,
-      status: RoomStatusType.available,
     );
-
-    await _repository.addRoom(newRoom);
     await loadRooms();
   }
 
@@ -190,19 +202,13 @@ class RoomListNotifier extends StateNotifier<AsyncValue<List<RoomModel>>> {
     required double basePrice,
     required List<String> facilities,
   }) async {
-    final currentList = state.value;
-    if (currentList == null) return;
-
-    final room = currentList.firstWhere((r) => r.id == roomId);
-    final updated = room.copyWith(
-      roomNumber: roomNumber,
+    await _repository.updateRoom(
+      id: roomId,
       roomType: roomType,
       floor: floor,
       basePricePerNight: basePrice,
       facilities: facilities,
     );
-
-    await _repository.updateRoom(updated);
     await loadRooms();
   }
 
@@ -212,46 +218,35 @@ class RoomListNotifier extends StateNotifier<AsyncValue<List<RoomModel>>> {
   }
 }
 
-final roomListProvider = StateNotifierProvider<RoomListNotifier, AsyncValue<List<RoomModel>>>((ref) {
+final roomListProvider =
+    StateNotifierProvider<RoomListNotifier, AsyncValue<List<RoomModel>>>((ref) {
   final repo = ref.watch(roomRepositoryProvider);
   return RoomListNotifier(repo);
 });
 
-final roomFilterProvider = StateProvider<RoomFilterState>((ref) {
-  return const RoomFilterState();
-});
+final roomFilterProvider = StateProvider<RoomFilterState>((ref) => const RoomFilterState());
 
 final filteredRoomsProvider = Provider<List<RoomModel>>((ref) {
   final roomsAsync = ref.watch(roomListProvider);
   final filter = ref.watch(roomFilterProvider);
 
   return roomsAsync.when(
-    data: (rooms) {
-      return rooms.where((room) {
-        if (filter.searchQuery.trim().isNotEmpty) {
-          final query = filter.searchQuery.trim().toLowerCase();
-          final matchesNumber = room.roomNumber.toLowerCase().contains(query);
-          final matchesGuest = (room.activeGuestName ?? '').toLowerCase().contains(query);
-          final matchesPhone = (room.activeGuestPhone ?? '').toLowerCase().contains(query);
-          final matchesInvoice = (room.invoiceNumber ?? '').toLowerCase().contains(query);
-          if (!matchesNumber && !matchesGuest && !matchesPhone && !matchesInvoice) {
-            return false;
-          }
-        }
-        if (filter.roomType != 'ALL' && room.roomType != filter.roomType) {
-          return false;
-        }
-        if (filter.floor != 0 && room.floor != filter.floor) {
-          return false;
-        }
-        if (filter.status != null && room.status != filter.status) {
-          return false;
-        }
-        return true;
-      }).toList();
-    },
+    data: (rooms) => rooms.where((room) {
+      if (filter.searchQuery.trim().isNotEmpty) {
+        final q = filter.searchQuery.trim().toLowerCase();
+        final match = room.roomNumber.toLowerCase().contains(q) ||
+            (room.activeGuestName ?? '').toLowerCase().contains(q) ||
+            (room.activeGuestPhone ?? '').toLowerCase().contains(q) ||
+            (room.invoiceNumber ?? '').toLowerCase().contains(q);
+        if (!match) return false;
+      }
+      if (filter.roomType != 'ALL' && room.roomType != filter.roomType) return false;
+      if (filter.floor != 0 && room.floor != filter.floor) return false;
+      if (filter.status != null && room.status != filter.status) return false;
+      return true;
+    }).toList(),
     loading: () => [],
-    error: (err, stack) => [],
+    error: (_, _) => [],
   );
 });
 
@@ -263,12 +258,13 @@ final roomStatsProvider = Provider<Map<RoomStatusType, int>>((ref) {
     RoomStatusType.dirty: 0,
     RoomStatusType.maintenance: 0,
   };
-
   roomsAsync.whenData((rooms) {
     for (final r in rooms) {
       map[r.status] = (map[r.status] ?? 0) + 1;
     }
   });
-
   return map;
 });
+
+/// Banner "DATA CONTOH" — hanya tampil di debug build dengan USE_MOCK=true
+bool get showMockBanner => AppConfig.useMock && kDebugMode;

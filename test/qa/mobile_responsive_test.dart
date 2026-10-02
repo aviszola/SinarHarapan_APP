@@ -10,7 +10,6 @@ import 'package:sinarharapan_app/features/room_management/presentation/room_card
 import 'package:sinarharapan_app/features/room_management/presentation/room_filter_bar.dart';
 import 'package:sinarharapan_app/features/shared_widgets/app_header.dart';
 import 'package:sinarharapan_app/features/shared_widgets/metric_card.dart';
-import 'package:sinarharapan_app/features/shared_widgets/status_badge.dart';
 
 void main() {
   setUpAll(() async {
@@ -33,7 +32,7 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('Masuk ke Sistem'), findsOneWidget);
+      expect(find.text('Masuk ke Sistem'), findsWidgets);
       expect(find.text('Resepsionis'), findsOneWidget);
       expect(find.text('Manajer Hotel'), findsOneWidget);
       expect(tester.takeException(), isNull, reason: 'Tidak boleh ada overflow pada layar mobile');

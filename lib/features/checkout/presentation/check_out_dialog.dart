@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../../app/theme.dart';
+import '../../../core/network/api_client.dart';
 import '../../room_management/domain/room_model.dart';
 import '../../room_management/presentation/room_controller.dart';
 import '../../shared_widgets/app_button.dart';
@@ -80,35 +81,62 @@ class _CheckOutDialogState extends ConsumerState<CheckOutDialog> {
   void _handleConfirmCheckOut() async {
     // Update room status to DIRTY (needs cleaning per FR-OUT-04)
     final additional = _additionalTotal;
-    final updatedRoom = await ref.read(roomListProvider.notifier).checkOut(
-          roomId: widget.room.id,
-          additionalCharges: additional,
-        );
+    final chargesList = <Map<String, dynamic>>[];
+    if (_lateFee > 0) chargesList.add({'label': 'Denda Late Check-out', 'amount': _lateFee});
+    if (_minibarFee > 0) chargesList.add({'label': 'Minibar / Laundry', 'amount': _minibarFee});
+    if (_damageFee > 0) chargesList.add({'label': 'Ganti Rugi Kerusakan', 'amount': _damageFee});
 
-    if (mounted) {
-      Navigator.of(context).pop();
+    final resId = widget.room.activeReservationId ?? widget.room.id;
 
-      // Sesuai alur baru:
-      // - Jika TIDAK ada biaya tambahan (additionalCharges == 0):
-      //   Langsung selesai, status kamar berubah ke Kuning (Dirty), TANPA dokumen/invoice baru.
-      // - Jika ADA biaya tambahan:
-      //   Tercatat di reservasi yang sama, tampilkan dialog struk sederhana tanda terima biaya tambahan (bukan invoice baru ber-nomor baru).
-      if (additional > 0) {
-        _showAdditionalChargesReceiptDialog(updatedRoom ?? widget.room, additional);
-      } else {
+    try {
+      await ref.read(roomListProvider.notifier).checkOut(
+            reservationId: resId,
+            additionalCharges: chargesList,
+          );
+
+      if (mounted) {
+        Navigator.of(context).pop();
+
+        // Sesuai alur baru:
+        // - Jika TIDAK ada biaya tambahan (additionalCharges == 0):
+        //   Langsung selesai, status kamar berubah ke Kuning (Dirty), TANPA dokumen/invoice baru.
+        // - Jika ADA biaya tambahan:
+        //   Tercatat di reservasi yang sama, tampilkan dialog struk sederhana tanda terima biaya tambahan (bukan invoice baru ber-nomor baru).
+        if (additional > 0) {
+          _showAdditionalChargesReceiptDialog(widget.room, additional);
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              backgroundColor: AppColors.statusDirty,
+              content: Row(
+                children: [
+                  const Icon(Icons.cleaning_services_rounded, color: Colors.white),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Check-Out Kamar ${widget.room.roomNumber} selesai tanpa biaya tambahan. Status kamar beralih ke Dirty.',
+                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+      }
+    } on ApiException catch (e) {
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            backgroundColor: AppColors.statusDirty,
-            content: Row(
-              children: [
-                const Icon(Icons.cleaning_services_rounded, color: Colors.white),
-                const SizedBox(width: 8),
-                Text(
-                  'Check-Out Kamar ${widget.room.roomNumber} selesai tanpa biaya tambahan. Status kamar beralih ke Dirty.',
-                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
-                ),
-              ],
-            ),
+            backgroundColor: AppColors.statusOccupied,
+            content: Text(e.message),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            backgroundColor: AppColors.statusOccupied,
+            content: Text(e.toString().replaceAll('Exception: ', '')),
           ),
         );
       }
