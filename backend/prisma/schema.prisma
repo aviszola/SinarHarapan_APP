@@ -67,6 +67,7 @@ model Room {
   basePricePerNight Decimal       @map("base_price_per_night") @db.Decimal(12, 2)
   facilities        Json          @default("[]")
   status            RoomStatus    @default(AVAILABLE)
+  deletedAt         DateTime?     @map("deleted_at")
   createdAt         DateTime      @default(now()) @map("created_at")
   updatedAt         DateTime      @updatedAt @map("updated_at")
 
@@ -75,6 +76,7 @@ model Room {
   @@map("rooms")
   @@index([status])
   @@index([roomType, floor])
+  @@index([deletedAt])
 }
 
 // 3. TABEL DATA INDUK TAMU (UU PDP COMPLIANT)
@@ -147,4 +149,28 @@ model ActivityLog {
   @@index([userId])
   @@index([actionType])
   @@index([createdAt])
+}
+
+// 6. TABEL TOKEN DICABUT (REVOKED TOKENS / DENYLIST UNTUK LOGOUT - BUG-BE-01)
+model RevokedToken {
+  id        String   @id @default(uuid())
+  tokenJti  String   @unique @map("token_jti") @db.VarChar(255)
+  userId    String?  @map("user_id")
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("revoked_tokens")
+  @@index([tokenJti])
+  @@index([expiresAt])
+}
+
+// 7. TABEL COUNTER SEQUENCE INVOICE HARIAN ATOMIK PERSISTEN (BUG-BE-02)
+model InvoiceCounter {
+  id           String   @id @default(uuid())
+  dateStr      String   @unique @map("date_str") @db.VarChar(8) // YYYYMMDD
+  lastSequence Int      @default(0) @map("last_sequence")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@map("invoice_counters")
+  @@index([dateStr])
 }
