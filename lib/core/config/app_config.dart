@@ -2,17 +2,12 @@ import 'package:flutter/foundation.dart';
 
 class AppConfig {
   // Base URL dari --dart-define=BASE_URL=...
-  // Jika tidak disetel:
-  // - Pada Debug mode: default ke http://localhost:3000/api (BUKAN URL produksi!)
-  // - Pada Release mode: default ke backend produksi
+  // Default langsung terhubung ke backend server produksi di Railway
   static const String _envBaseUrl = String.fromEnvironment('BASE_URL');
 
   static String get baseUrl {
     if (_envBaseUrl.isNotEmpty) {
       return _cleanUrl(_envBaseUrl);
-    }
-    if (kDebugMode) {
-      return 'http://localhost:3000/api';
     }
     return 'https://sinar-harapan-backend-production.up.railway.app/api';
   }
