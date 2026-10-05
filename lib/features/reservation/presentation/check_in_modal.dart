@@ -52,7 +52,9 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
   @override
   void initState() {
     super.initState();
-    _customNightsController = TextEditingController(text: _totalNights.toString());
+    _customNightsController = TextEditingController(
+      text: _totalNights.toString(),
+    );
     _priceController = TextEditingController(
       text: (widget.room.basePricePerNight * _totalNights).toInt().toString(),
     );
@@ -81,7 +83,9 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
         _customNightsController.text = nights.toString();
       }
       if (!_isManualPrice) {
-        _priceController.text = (widget.room.basePricePerNight * _totalNights).toInt().toString();
+        _priceController.text = (widget.room.basePricePerNight * _totalNights)
+            .toInt()
+            .toString();
       }
     });
   }
@@ -89,12 +93,16 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
   void _resetPriceToStandard() {
     setState(() {
       _isManualPrice = false;
-      _priceController.text = (widget.room.basePricePerNight * _totalNights).toInt().toString();
+      _priceController.text = (widget.room.basePricePerNight * _totalNights)
+          .toInt()
+          .toString();
     });
   }
 
   double get _currentEffectiveTotal {
-    final parsed = double.tryParse(_priceController.text.replaceAll(RegExp(r'[^0-9]'), ''));
+    final parsed = double.tryParse(
+      _priceController.text.replaceAll(RegExp(r'[^0-9]'), ''),
+    );
     if (parsed != null && parsed > 0) {
       return parsed;
     }
@@ -130,7 +138,8 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
             'confidence': 1.0,
           },
         ];
-        final picked = sampleGuests[DateTime.now().second % sampleGuests.length];
+        final picked =
+            sampleGuests[DateTime.now().second % sampleGuests.length];
         setState(() {
           _isOcrLoading = false;
           _isOcrExtracted = true;
@@ -149,7 +158,18 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
       // OCR Live dari Backend API
       final repo = ReportingRepository();
       // Dummy 1x1 image bytes jika belum ada kamera/file picker fisik aktif
-      final dummyBytes = [0xFF, 0xD8, 0xFF, 0xE0, 0x00, 0x10, 0x4A, 0x46, 0x49, 0x46];
+      final dummyBytes = [
+        0xFF,
+        0xD8,
+        0xFF,
+        0xE0,
+        0x00,
+        0x10,
+        0x4A,
+        0x46,
+        0x49,
+        0x46,
+      ];
       final ocrResult = await repo.extractIdentity(
         imageBytes: dummyBytes,
         filename: 'document_${_idType.toLowerCase()}.jpg',
@@ -173,7 +193,8 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
     } on ApiException catch (e) {
       setState(() {
         _isOcrLoading = false;
-        _errorMessage = 'OCR Gagal (${e.message}). Silakan isi form secara manual.';
+        _errorMessage =
+            'OCR Gagal (${e.message}). Silakan isi form secara manual.';
       });
     } catch (e) {
       setState(() {
@@ -194,7 +215,10 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
     }
 
     // Validasi nomor identitas sesuai jenis dokumen
-    final idError = FlutterValidation.validateIdNumber(_nikController.text, _idType);
+    final idError = FlutterValidation.validateIdNumber(
+      _nikController.text,
+      _idType,
+    );
     if (idError != null) {
       setState(() => _errorMessage = idError);
       return;
@@ -203,14 +227,17 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
     // Validate anti-duplicate NIK in active rooms (FR-RES-07)
     final allRooms = ref.read(roomListProvider).value ?? [];
     final cleanNik = _nikController.text.trim();
-    final duplicate = allRooms.any((r) =>
-        r.isOccupied &&
-        r.id != widget.room.id &&
-        (r.guestNik != null && r.guestNik == cleanNik));
+    final duplicate = allRooms.any(
+      (r) =>
+          r.isOccupied &&
+          r.id != widget.room.id &&
+          (r.guestNik != null && r.guestNik == cleanNik),
+    );
 
     if (duplicate) {
       setState(() {
-        _errorMessage = 'Tamu dengan Nomor Identitas $cleanNik sedang aktif menginap di kamar lain!';
+        _errorMessage =
+            'Tamu dengan Nomor Identitas $cleanNik sedang aktif menginap di kamar lain!';
       });
       return;
     }
@@ -220,15 +247,17 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
     final authState = ref.read(authStateProvider);
     final receptionistName = authState.user?.fullName ?? 'Siti Rahmawati';
 
-    final previewInvoiceNumber =
-        InvoiceSequenceService.instance.generateNextInvoiceNumber(transactionDate: DateTime.now());
+    final previewInvoiceNumber = InvoiceSequenceService.instance
+        .generateNextInvoiceNumber(transactionDate: DateTime.now());
 
     final dummyRoomForPreview = widget.room.copyWith(
       activeGuestName: _nameController.text.trim(),
       guestNik: cleanNik,
       activeGuestPhone: _phoneController.text.trim(),
       bookingSource: _bookingSource,
-      reddoorzBookingCode: _bookingSource == 'REDDOORZ' ? _bookingCodeController.text.trim() : null,
+      reddoorzBookingCode: _bookingSource == 'REDDOORZ'
+          ? _bookingCodeController.text.trim()
+          : null,
       checkInTime: DateTime.now(),
       expectedCheckOutTime: DateTime.now().add(Duration(days: _totalNights)),
       invoiceNumber: previewInvoiceNumber,
@@ -244,19 +273,25 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
         grandTotal: effectiveTotal,
         receptionistName: receptionistName,
         customTitle: 'Pratinjau Faktur Pembayaran (Check-In)',
-        onConfirmCheckIn: () => _executeFinalCheckIn(previewInvoiceNumber, calculatedBasePrice),
+        onConfirmCheckIn: () =>
+            _executeFinalCheckIn(previewInvoiceNumber, calculatedBasePrice),
       ),
     );
   }
 
-  void _executeFinalCheckIn(String invoiceNumber, double calculatedBasePrice) async {
+  void _executeFinalCheckIn(
+    String invoiceNumber,
+    double calculatedBasePrice,
+  ) async {
     final cleanNik = _nikController.text.trim();
     setState(() => _errorMessage = null);
 
     try {
       // Panggil checkIn yang mengirim ke POST /reservations di backend
       // Backend akan menolak (409) jika kamar sudah occupied atau NIK aktif
-      final result = await ref.read(roomListProvider.notifier).checkIn(
+      final result = await ref
+          .read(roomListProvider.notifier)
+          .checkIn(
             roomId: widget.room.id,
             guestFullName: _nameController.text.trim(),
             idType: _idType,
@@ -272,7 +307,8 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
             paymentMethod: _paymentMethod,
           );
 
-      final returnedInvoice = result['invoiceNumber']?.toString() ?? invoiceNumber;
+      final returnedInvoice =
+          result['invoiceNumber']?.toString() ?? invoiceNumber;
 
       if (mounted) {
         Navigator.of(context).pop(); // Tutup CheckInModal
@@ -352,8 +388,14 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
   Widget build(BuildContext context) {
     final mediaQuery = MediaQuery.of(context);
     final isMobile = mediaQuery.size.width < 600;
-    final dialogWidth = math.min(720.0, mediaQuery.size.width - (isMobile ? 20 : 48));
-    final dialogHeight = math.min(780.0, mediaQuery.size.height * (isMobile ? 0.95 : 0.90));
+    final dialogWidth = math.min(
+      720.0,
+      mediaQuery.size.width - (isMobile ? 20 : 48),
+    );
+    final dialogHeight = math.min(
+      780.0,
+      mediaQuery.size.height * (isMobile ? 0.95 : 0.90),
+    );
 
     final currencyFormatter = NumberFormat.currency(
       locale: 'id_ID',
@@ -369,7 +411,10 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
       shape: RoundedRectangleBorder(borderRadius: AppRadius.roundedLg),
       backgroundColor: AppColors.surface,
       child: ConstrainedBox(
-        constraints: BoxConstraints(maxWidth: dialogWidth, maxHeight: dialogHeight),
+        constraints: BoxConstraints(
+          maxWidth: dialogWidth,
+          maxHeight: dialogHeight,
+        ),
         child: Padding(
           padding: EdgeInsets.all(isMobile ? AppSpacing.md : AppSpacing.xl),
           child: Form(
@@ -385,7 +430,10 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
                       child: Row(
                         children: [
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 4,
+                            ),
                             decoration: BoxDecoration(
                               color: AppColors.navy100,
                               borderRadius: AppRadius.roundedSm,
@@ -402,7 +450,11 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
                           Expanded(
                             child: Text(
                               'Formulir Check-In Tamu',
-                              style: (isMobile ? AppTypography.h3 : AppTypography.h2).copyWith(color: AppColors.navy900),
+                              style:
+                                  (isMobile
+                                          ? AppTypography.h3
+                                          : AppTypography.h2)
+                                      .copyWith(color: AppColors.navy900),
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
@@ -410,7 +462,10 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
                       ),
                     ),
                     IconButton(
-                      icon: const Icon(Icons.close, color: AppColors.textSecondary),
+                      icon: const Icon(
+                        Icons.close,
+                        color: AppColors.textSecondary,
+                      ),
                       onPressed: () => Navigator.of(context).pop(),
                     ),
                   ],
@@ -444,7 +499,9 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
                         // 1. Channel Selector
                         Text(
                           'Kanal Reservasi Pemesanan',
-                          style: AppTypography.bodySm.copyWith(fontWeight: FontWeight.w600),
+                          style: AppTypography.bodySm.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                         const SizedBox(height: AppSpacing.xs),
                         Builder(
@@ -484,16 +541,20 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
                                     const SizedBox(width: 8),
                                     Expanded(
                                       child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
                                         children: [
                                           Text(
                                             'Walk-in (Offline)',
-                                            style: AppTypography.bodySm.copyWith(
-                                              fontWeight: FontWeight.w600,
-                                              color: _bookingSource == 'WALK_IN'
-                                                  ? AppColors.navy900
-                                                  : AppColors.textPrimary,
-                                            ),
+                                            style: AppTypography.bodySm
+                                                .copyWith(
+                                                  fontWeight: FontWeight.w600,
+                                                  color:
+                                                      _bookingSource ==
+                                                          'WALK_IN'
+                                                      ? AppColors.navy900
+                                                      : AppColors.textPrimary,
+                                                ),
                                           ),
                                           Text(
                                             'Tarif Standar Hotel',
@@ -540,16 +601,20 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
                                     const SizedBox(width: 8),
                                     Expanded(
                                       child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
                                         children: [
                                           Text(
                                             'RedDoorz (Online)',
-                                            style: AppTypography.bodySm.copyWith(
-                                              fontWeight: FontWeight.w600,
-                                              color: _bookingSource == 'REDDOORZ'
-                                                  ? Colors.red.shade900
-                                                  : AppColors.textPrimary,
-                                            ),
+                                            style: AppTypography.bodySm
+                                                .copyWith(
+                                                  fontWeight: FontWeight.w600,
+                                                  color:
+                                                      _bookingSource ==
+                                                          'REDDOORZ'
+                                                      ? Colors.red.shade900
+                                                      : AppColors.textPrimary,
+                                                ),
                                           ),
                                           Text(
                                             'Wajib Booking Code OTA',
@@ -590,7 +655,8 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
                             hint: 'Contoh: RD-89421',
                             controller: _bookingCodeController,
                             prefixIcon: Icons.confirmation_number_outlined,
-                            validator: (v) => (_bookingSource == 'REDDOORZ' &&
+                            validator: (v) =>
+                                (_bookingSource == 'REDDOORZ' &&
                                     (v == null || v.trim().isEmpty))
                                 ? 'Kode Booking RedDoorz wajib diisi'
                                 : null,
@@ -611,7 +677,8 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
                                 children: [
                                   Row(
                                     children: [
@@ -662,7 +729,9 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
                                 runSpacing: AppSpacing.xs,
                                 children: [
                                   AppButton(
-                                    label: _isOcrExtracted ? 'Scan Ulang KTP' : 'Scan KTP Sekarang',
+                                    label: _isOcrExtracted
+                                        ? 'Scan Ulang KTP'
+                                        : 'Scan KTP Sekarang',
                                     variant: AppButtonVariant.secondary,
                                     icon: Icons.camera_alt_outlined,
                                     isLoading: _isOcrLoading,
@@ -683,21 +752,29 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
                         // Document Type Selection (KTP / PASSPORT / SIM)
                         Text(
                           'Jenis Dokumen Identitas Tamu',
-                          style: AppTypography.bodySm.copyWith(fontWeight: FontWeight.w600),
+                          style: AppTypography.bodySm.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                         const SizedBox(height: AppSpacing.xs),
                         Wrap(
                           spacing: AppSpacing.sm,
                           runSpacing: AppSpacing.xs,
-                          children: ['KTP', 'PASSPORT', 'SIM', 'OTHER'].map((type) {
+                          children: ['KTP', 'PASSPORT', 'SIM', 'OTHER'].map((
+                            type,
+                          ) {
                             final isSelected = _idType == type;
                             return ChoiceChip(
                               label: Text(type == 'OTHER' ? 'Lainnya' : type),
                               selected: isSelected,
                               selectedColor: AppColors.navy100,
                               labelStyle: TextStyle(
-                                color: isSelected ? AppColors.navy900 : AppColors.textSecondary,
-                                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                                color: isSelected
+                                    ? AppColors.navy900
+                                    : AppColors.textSecondary,
+                                fontWeight: isSelected
+                                    ? FontWeight.w700
+                                    : FontWeight.w500,
                               ),
                               onSelected: (selected) {
                                 if (selected) setState(() => _idType = type);
@@ -713,14 +790,17 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
                             label: 'Nomor Identitas ($_idType)',
                             hint: _idType == 'KTP'
                                 ? '16 digit NIK'
-                                : (_idType == 'PASSPORT' ? 'Nomor Paspor' : 'Nomor SIM'),
+                                : (_idType == 'PASSPORT'
+                                      ? 'Nomor Paspor'
+                                      : 'Nomor SIM'),
                             controller: _nikController,
                             isAutoFilled: _isOcrExtracted,
                             prefixIcon: Icons.badge_outlined,
                             keyboardType: _idType == 'KTP' || _idType == 'SIM'
                                 ? TextInputType.number
                                 : TextInputType.text,
-                            validator: (v) => FlutterValidation.validateIdNumber(v, _idType),
+                            validator: (v) =>
+                                FlutterValidation.validateIdNumber(v, _idType),
                           ),
                           const SizedBox(height: AppSpacing.sm),
                           AppTextField(
@@ -729,13 +809,15 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
                             controller: _nameController,
                             isAutoFilled: _isOcrExtracted,
                             prefixIcon: Icons.person_outline,
-                            validator: (v) =>
-                                (v == null || v.trim().isEmpty) ? 'Nama wajib diisi' : null,
+                            validator: (v) => (v == null || v.trim().isEmpty)
+                                ? 'Nama wajib diisi'
+                                : null,
                           ),
                           const SizedBox(height: AppSpacing.sm),
                           AppTextField(
                             label: 'Nomor WhatsApp Tamu',
-                            hint: '08... atau +62... (untuk pengingat check-out)',
+                            hint:
+                                '08... atau +62... (untuk pengingat check-out)',
                             controller: _phoneController,
                             prefixIcon: Icons.chat_bubble_outline,
                             keyboardType: TextInputType.phone,
@@ -757,14 +839,21 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
                                   label: 'Nomor Identitas ($_idType)',
                                   hint: _idType == 'KTP'
                                       ? '16 digit NIK'
-                                      : (_idType == 'PASSPORT' ? 'Nomor Paspor' : 'Nomor SIM'),
+                                      : (_idType == 'PASSPORT'
+                                            ? 'Nomor Paspor'
+                                            : 'Nomor SIM'),
                                   controller: _nikController,
                                   isAutoFilled: _isOcrExtracted,
                                   prefixIcon: Icons.badge_outlined,
-                                  keyboardType: _idType == 'KTP' || _idType == 'SIM'
+                                  keyboardType:
+                                      _idType == 'KTP' || _idType == 'SIM'
                                       ? TextInputType.number
                                       : TextInputType.text,
-                                  validator: (v) => FlutterValidation.validateIdNumber(v, _idType),
+                                  validator: (v) =>
+                                      FlutterValidation.validateIdNumber(
+                                        v,
+                                        _idType,
+                                      ),
                                 ),
                               ),
                               const SizedBox(width: AppSpacing.md),
@@ -776,7 +865,9 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
                                   isAutoFilled: _isOcrExtracted,
                                   prefixIcon: Icons.person_outline,
                                   validator: (v) =>
-                                      (v == null || v.trim().isEmpty) ? 'Nama wajib diisi' : null,
+                                      (v == null || v.trim().isEmpty)
+                                      ? 'Nama wajib diisi'
+                                      : null,
                                 ),
                               ),
                             ],
@@ -787,11 +878,13 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
                               Expanded(
                                 child: AppTextField(
                                   label: 'Nomor WhatsApp Tamu',
-                                  hint: '08... atau +62... (pengingat check-out)',
+                                  hint:
+                                      '08... atau +62... (pengingat check-out)',
                                   controller: _phoneController,
                                   prefixIcon: Icons.chat_bubble_outline,
                                   keyboardType: TextInputType.phone,
-                                  validator: (v) => FlutterValidation.validateWa(v),
+                                  validator: (v) =>
+                                      FlutterValidation.validateWa(v),
                                 ),
                               ),
                               const SizedBox(width: AppSpacing.md),
@@ -816,7 +909,8 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
                                 children: [
                                   Text(
                                     'Durasi Menginap',
@@ -851,7 +945,8 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
                                       children: [
                                         Text(
                                           'Durasi Menginap',
@@ -895,10 +990,14 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
                         Container(
                           padding: const EdgeInsets.all(AppSpacing.md),
                           decoration: BoxDecoration(
-                            color: _isManualPrice ? const Color(0xFFFFFBEB) : AppColors.navy50,
+                            color: _isManualPrice
+                                ? const Color(0xFFFFFBEB)
+                                : AppColors.navy50,
                             borderRadius: AppRadius.roundedMd,
                             border: Border.all(
-                              color: _isManualPrice ? const Color(0xFFF59E0B) : AppColors.border,
+                              color: _isManualPrice
+                                  ? const Color(0xFFF59E0B)
+                                  : AppColors.border,
                               width: _isManualPrice ? 1.5 : 1,
                             ),
                           ),
@@ -906,7 +1005,8 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
                               Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
                                 children: [
                                   Flexible(
                                     child: Row(
@@ -915,20 +1015,25 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
                                         Flexible(
                                           child: Text(
                                             'Total Biaya Menginap',
-                                            style: AppTypography.bodySm.copyWith(
-                                              fontWeight: FontWeight.w700,
-                                              color: AppColors.navy900,
-                                            ),
+                                            style: AppTypography.bodySm
+                                                .copyWith(
+                                                  fontWeight: FontWeight.w700,
+                                                  color: AppColors.navy900,
+                                                ),
                                             overflow: TextOverflow.ellipsis,
                                           ),
                                         ),
                                         const SizedBox(width: 8),
                                         if (_isManualPrice)
                                           Container(
-                                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 6,
+                                              vertical: 2,
+                                            ),
                                             decoration: BoxDecoration(
                                               color: const Color(0xFFFDE68A),
-                                              borderRadius: BorderRadius.circular(4),
+                                              borderRadius:
+                                                  BorderRadius.circular(4),
                                             ),
                                             child: const Text(
                                               'Tarif Manual / Khusus',
@@ -941,10 +1046,14 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
                                           )
                                         else
                                           Container(
-                                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 6,
+                                              vertical: 2,
+                                            ),
                                             decoration: BoxDecoration(
                                               color: AppColors.navy100,
-                                              borderRadius: BorderRadius.circular(4),
+                                              borderRadius:
+                                                  BorderRadius.circular(4),
                                             ),
                                             child: const Text(
                                               'Standar Otomatis',
@@ -961,11 +1070,20 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
                                   if (_isManualPrice)
                                     TextButton.icon(
                                       style: TextButton.styleFrom(
-                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 8,
+                                          vertical: 4,
+                                        ),
                                         visualDensity: VisualDensity.compact,
                                       ),
-                                      icon: const Icon(Icons.restart_alt_rounded, size: 14),
-                                      label: const Text('Reset ke Standar', style: TextStyle(fontSize: 11)),
+                                      icon: const Icon(
+                                        Icons.restart_alt_rounded,
+                                        size: 14,
+                                      ),
+                                      label: const Text(
+                                        'Reset ke Standar',
+                                        style: TextStyle(fontSize: 11),
+                                      ),
                                       onPressed: _resetPriceToStandard,
                                     ),
                                 ],
@@ -975,10 +1093,14 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
                                 TextField(
                                   controller: _priceController,
                                   keyboardType: TextInputType.number,
-                                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                                  inputFormatters: [
+                                    FilteringTextInputFormatter.digitsOnly,
+                                  ],
                                   style: AppTypography.h2.copyWith(
                                     fontWeight: FontWeight.w800,
-                                    color: _isManualPrice ? const Color(0xFFB45309) : AppColors.navy900,
+                                    color: _isManualPrice
+                                        ? const Color(0xFFB45309)
+                                        : AppColors.navy900,
                                   ),
                                   onChanged: (val) {
                                     setState(() {
@@ -989,35 +1111,50 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
                                     prefixText: 'Rp ',
                                     prefixStyle: AppTypography.h2.copyWith(
                                       fontWeight: FontWeight.w800,
-                                      color: _isManualPrice ? const Color(0xFFB45309) : AppColors.navy900,
+                                      color: _isManualPrice
+                                          ? const Color(0xFFB45309)
+                                          : AppColors.navy900,
                                     ),
                                     filled: true,
                                     fillColor: Colors.white,
                                     isDense: true,
-                                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                                    contentPadding: const EdgeInsets.symmetric(
+                                      horizontal: 12,
+                                      vertical: 10,
+                                    ),
                                     border: OutlineInputBorder(
                                       borderRadius: BorderRadius.circular(8),
-                                      borderSide: BorderSide(color: AppColors.border),
+                                      borderSide: BorderSide(
+                                        color: AppColors.border,
+                                      ),
                                     ),
                                     enabledBorder: OutlineInputBorder(
                                       borderRadius: BorderRadius.circular(8),
                                       borderSide: BorderSide(
-                                        color: _isManualPrice ? const Color(0xFFF59E0B) : AppColors.border,
+                                        color: _isManualPrice
+                                            ? const Color(0xFFF59E0B)
+                                            : AppColors.border,
                                       ),
                                     ),
                                     focusedBorder: OutlineInputBorder(
                                       borderRadius: BorderRadius.circular(8),
-                                      borderSide: const BorderSide(color: AppColors.navy900, width: 1.5),
+                                      borderSide: const BorderSide(
+                                        color: AppColors.navy900,
+                                        width: 1.5,
+                                      ),
                                     ),
                                   ),
                                 ),
                                 const SizedBox(height: AppSpacing.sm),
                                 Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
                                   children: [
                                     Text(
                                       'Standar: ${currencyFormatter.format(widget.room.basePricePerNight)}/malam',
-                                      style: AppTypography.caption.copyWith(color: AppColors.textSecondary),
+                                      style: AppTypography.caption.copyWith(
+                                        color: AppColors.textSecondary,
+                                      ),
                                     ),
                                     Text(
                                       'Total: ${currencyFormatter.format(widget.room.basePricePerNight * _totalNights)}',
@@ -1036,10 +1173,15 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
                                       child: TextField(
                                         controller: _priceController,
                                         keyboardType: TextInputType.number,
-                                        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                                        inputFormatters: [
+                                          FilteringTextInputFormatter
+                                              .digitsOnly,
+                                        ],
                                         style: AppTypography.h2.copyWith(
                                           fontWeight: FontWeight.w800,
-                                          color: _isManualPrice ? const Color(0xFFB45309) : AppColors.navy900,
+                                          color: _isManualPrice
+                                              ? const Color(0xFFB45309)
+                                              : AppColors.navy900,
                                         ),
                                         onChanged: (val) {
                                           setState(() {
@@ -1048,27 +1190,47 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
                                         },
                                         decoration: InputDecoration(
                                           prefixText: 'Rp ',
-                                          prefixStyle: AppTypography.h2.copyWith(
-                                            fontWeight: FontWeight.w800,
-                                            color: _isManualPrice ? const Color(0xFFB45309) : AppColors.navy900,
-                                          ),
+                                          prefixStyle: AppTypography.h2
+                                              .copyWith(
+                                                fontWeight: FontWeight.w800,
+                                                color: _isManualPrice
+                                                    ? const Color(0xFFB45309)
+                                                    : AppColors.navy900,
+                                              ),
                                           filled: true,
                                           fillColor: Colors.white,
                                           isDense: true,
-                                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                                          contentPadding:
+                                              const EdgeInsets.symmetric(
+                                                horizontal: 12,
+                                                vertical: 10,
+                                              ),
                                           border: OutlineInputBorder(
-                                            borderRadius: BorderRadius.circular(8),
-                                            borderSide: BorderSide(color: AppColors.border),
+                                            borderRadius: BorderRadius.circular(
+                                              8,
+                                            ),
+                                            borderSide: BorderSide(
+                                              color: AppColors.border,
+                                            ),
                                           ),
                                           enabledBorder: OutlineInputBorder(
-                                            borderRadius: BorderRadius.circular(8),
+                                            borderRadius: BorderRadius.circular(
+                                              8,
+                                            ),
                                             borderSide: BorderSide(
-                                              color: _isManualPrice ? const Color(0xFFF59E0B) : AppColors.border,
+                                              color: _isManualPrice
+                                                  ? const Color(0xFFF59E0B)
+                                                  : AppColors.border,
                                             ),
                                           ),
                                           focusedBorder: OutlineInputBorder(
-                                            borderRadius: BorderRadius.circular(8),
-                                            borderSide: const BorderSide(color: AppColors.navy900, width: 1.5),
+                                            borderRadius: BorderRadius.circular(
+                                              8,
+                                            ),
+                                            borderSide: const BorderSide(
+                                              color: AppColors.navy900,
+                                              width: 1.5,
+                                            ),
                                           ),
                                         ),
                                       ),
@@ -1077,19 +1239,31 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
                                     Expanded(
                                       flex: 2,
                                       child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
                                         children: [
                                           Text(
                                             'Tarif Standar Unit:',
-                                            style: AppTypography.caption.copyWith(color: AppColors.textSecondary),
+                                            style: AppTypography.caption
+                                                .copyWith(
+                                                  color:
+                                                      AppColors.textSecondary,
+                                                ),
                                           ),
                                           Text(
                                             '${currencyFormatter.format(widget.room.basePricePerNight)} / malam',
-                                            style: AppTypography.bodySm.copyWith(fontWeight: FontWeight.w600),
+                                            style: AppTypography.bodySm
+                                                .copyWith(
+                                                  fontWeight: FontWeight.w600,
+                                                ),
                                           ),
                                           Text(
                                             'Total Standar: ${currencyFormatter.format(widget.room.basePricePerNight * _totalNights)}',
-                                            style: AppTypography.caption.copyWith(color: AppColors.textSecondary),
+                                            style: AppTypography.caption
+                                                .copyWith(
+                                                  color:
+                                                      AppColors.textSecondary,
+                                                ),
                                           ),
                                         ],
                                       ),
@@ -1102,7 +1276,9 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
                                 style: TextStyle(
                                   fontSize: 11,
                                   fontStyle: FontStyle.italic,
-                                  color: _isManualPrice ? const Color(0xFF92400E) : AppColors.textSecondary,
+                                  color: _isManualPrice
+                                      ? const Color(0xFF92400E)
+                                      : AppColors.textSecondary,
                                 ),
                               ),
                             ],
@@ -1155,7 +1331,11 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.event_available_rounded, size: 12, color: AppColors.navy700),
+          const Icon(
+            Icons.event_available_rounded,
+            size: 12,
+            color: AppColors.navy700,
+          ),
           const SizedBox(width: 4),
           Text(
             'Out: ${DateFormat('EEE, d MMM', 'id').format(DateTime.now().add(Duration(days: _totalNights)))} pk 12:00 WIB',
@@ -1187,7 +1367,11 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
             padding: const EdgeInsets.symmetric(horizontal: 10),
             child: Row(
               children: [
-                const Icon(Icons.edit_calendar_outlined, size: 16, color: AppColors.navy700),
+                const Icon(
+                  Icons.edit_calendar_outlined,
+                  size: 16,
+                  color: AppColors.navy700,
+                ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: TextField(
@@ -1222,9 +1406,16 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
                 ),
                 const SizedBox(width: 6),
                 IconButton(
-                  icon: const Icon(Icons.remove_circle_outline, size: 16, color: AppColors.navy700),
+                  icon: const Icon(
+                    Icons.remove_circle_outline,
+                    size: 16,
+                    color: AppColors.navy700,
+                  ),
                   padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
+                  constraints: const BoxConstraints(
+                    minWidth: 24,
+                    minHeight: 24,
+                  ),
                   onPressed: _totalNights > 1
                       ? () {
                           final newN = _totalNights - 1;
@@ -1234,9 +1425,16 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
                       : null,
                 ),
                 IconButton(
-                  icon: const Icon(Icons.add_circle_outline, size: 16, color: AppColors.navy700),
+                  icon: const Icon(
+                    Icons.add_circle_outline,
+                    size: 16,
+                    color: AppColors.navy700,
+                  ),
                   padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
+                  constraints: const BoxConstraints(
+                    minWidth: 24,
+                    minHeight: 24,
+                  ),
                   onPressed: () {
                     final newN = _totalNights + 1;
                     _customNightsController.text = newN.toString();
@@ -1255,8 +1453,8 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
     final int selectedValue = _isCustomNights
         ? -1
         : (_totalNights == 1 || _totalNights == 3 || _totalNights == 5
-            ? _totalNights
-            : -1);
+              ? _totalNights
+              : -1);
 
     return Container(
       height: 48,
@@ -1273,7 +1471,11 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
         child: DropdownButton<int>(
           value: selectedValue,
           isExpanded: true,
-          icon: const Icon(Icons.keyboard_arrow_down_rounded, color: AppColors.navy700, size: 20),
+          icon: const Icon(
+            Icons.keyboard_arrow_down_rounded,
+            color: AppColors.navy700,
+            size: 20,
+          ),
           dropdownColor: AppColors.surface,
           borderRadius: BorderRadius.circular(8),
           items: [
@@ -1281,12 +1483,18 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
               value: 1,
               child: Row(
                 children: [
-                  const Icon(Icons.bed_outlined, size: 18, color: AppColors.navy700),
+                  const Icon(
+                    Icons.bed_outlined,
+                    size: 18,
+                    color: AppColors.navy700,
+                  ),
                   const SizedBox(width: 8),
                   Text(
                     '1 Hari (1 Malam)',
                     style: AppTypography.bodySm.copyWith(
-                      fontWeight: selectedValue == 1 ? FontWeight.w700 : FontWeight.w500,
+                      fontWeight: selectedValue == 1
+                          ? FontWeight.w700
+                          : FontWeight.w500,
                       color: AppColors.navy900,
                     ),
                   ),
@@ -1297,12 +1505,18 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
               value: 3,
               child: Row(
                 children: [
-                  const Icon(Icons.bed_outlined, size: 18, color: AppColors.navy700),
+                  const Icon(
+                    Icons.bed_outlined,
+                    size: 18,
+                    color: AppColors.navy700,
+                  ),
                   const SizedBox(width: 8),
                   Text(
                     '3 Hari (3 Malam)',
                     style: AppTypography.bodySm.copyWith(
-                      fontWeight: selectedValue == 3 ? FontWeight.w700 : FontWeight.w500,
+                      fontWeight: selectedValue == 3
+                          ? FontWeight.w700
+                          : FontWeight.w500,
                       color: AppColors.navy900,
                     ),
                   ),
@@ -1313,12 +1527,18 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
               value: 5,
               child: Row(
                 children: [
-                  const Icon(Icons.bed_outlined, size: 18, color: AppColors.navy700),
+                  const Icon(
+                    Icons.bed_outlined,
+                    size: 18,
+                    color: AppColors.navy700,
+                  ),
                   const SizedBox(width: 8),
                   Text(
                     '5 Hari (5 Malam)',
                     style: AppTypography.bodySm.copyWith(
-                      fontWeight: selectedValue == 5 ? FontWeight.w700 : FontWeight.w500,
+                      fontWeight: selectedValue == 5
+                          ? FontWeight.w700
+                          : FontWeight.w500,
                       color: AppColors.navy900,
                     ),
                   ),
@@ -1329,15 +1549,23 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
               value: -1,
               child: Row(
                 children: [
-                  const Icon(Icons.edit_calendar_outlined, size: 18, color: AppColors.orange600),
+                  const Icon(
+                    Icons.edit_calendar_outlined,
+                    size: 18,
+                    color: AppColors.orange600,
+                  ),
                   const SizedBox(width: 8),
                   Text(
                     _isCustomNights
                         ? 'Isi Sendiri ($_totalNights Hari)'
                         : 'Isi Sendiri (Manual)...',
                     style: AppTypography.bodySm.copyWith(
-                      fontWeight: selectedValue == -1 ? FontWeight.w700 : FontWeight.w600,
-                      color: _isCustomNights ? AppColors.navy900 : AppColors.orange600,
+                      fontWeight: selectedValue == -1
+                          ? FontWeight.w700
+                          : FontWeight.w600,
+                      color: _isCustomNights
+                          ? AppColors.navy900
+                          : AppColors.orange600,
                     ),
                   ),
                 ],
@@ -1393,7 +1621,9 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
     ];
 
     final validIds = options.map((e) => e['id'] as String).toList();
-    final effectiveValue = validIds.contains(_paymentMethod) ? _paymentMethod : 'CASH';
+    final effectiveValue = validIds.contains(_paymentMethod)
+        ? _paymentMethod
+        : 'CASH';
 
     return Container(
       height: 48,
@@ -1407,7 +1637,11 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
         child: DropdownButton<String>(
           value: effectiveValue,
           isExpanded: true,
-          icon: const Icon(Icons.keyboard_arrow_down_rounded, color: AppColors.navy700, size: 20),
+          icon: const Icon(
+            Icons.keyboard_arrow_down_rounded,
+            color: AppColors.navy700,
+            size: 20,
+          ),
           dropdownColor: AppColors.surface,
           borderRadius: BorderRadius.circular(8),
           items: options.map((opt) {
@@ -1423,7 +1657,9 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
                     child: Text(
                       opt['label'] as String,
                       style: AppTypography.bodySm.copyWith(
-                        fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                        fontWeight: isSelected
+                            ? FontWeight.w700
+                            : FontWeight.w500,
                         color: AppColors.navy900,
                       ),
                       overflow: TextOverflow.ellipsis,
