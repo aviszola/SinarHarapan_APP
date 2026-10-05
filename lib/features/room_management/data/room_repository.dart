@@ -135,6 +135,7 @@ class RoomRepository {
   /// PATCH /rooms/:id — Manager only, hanya field yang diubah (whitelist DTO)
   Future<RoomModel> updateRoom({
     required String id,
+    String? roomNumber,
     String? roomType,
     int? floor,
     double? basePricePerNight,
@@ -142,12 +143,12 @@ class RoomRepository {
     String? status, // 'AVAILABLE' | 'MAINTENANCE' | dll
   }) async {
     final body = <String, dynamic>{};
+    if (roomNumber != null) body['roomNumber'] = roomNumber;
     if (roomType != null) body['roomType'] = roomType;
     if (floor != null) body['floor'] = floor;
     if (basePricePerNight != null) body['basePricePerNight'] = basePricePerNight;
     if (facilities != null) body['facilities'] = facilities;
     if (status != null) body['status'] = status;
-    // TIDAK kirim id, roomNumber, atau field lain yang tidak ada di UpdateRoomDto
     final res = await _api.patch('/rooms/$id', body: body);
     if (res is Map<String, dynamic>) return RoomModel.fromJson(res);
     throw ApiException('Respons update kamar tidak valid');

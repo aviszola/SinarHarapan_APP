@@ -82,12 +82,22 @@ class RoomModel {
     final activeRes = json['activeReservation'] as Map<String, dynamic>?;
     final guestObj = activeRes?['guest'] as Map<String, dynamic>?;
 
+    final rawPrice = json['basePricePerNight'] ?? json['base_price_per_night'] ?? 0;
+    final double parsedBasePrice = rawPrice is num
+        ? rawPrice.toDouble()
+        : double.tryParse(rawPrice.toString()) ?? 0.0;
+
+    final rawCharges = json['additionalCharges'] ?? activeRes?['additionalCharges'];
+    final double? parsedCharges = rawCharges == null
+        ? null
+        : (rawCharges is num ? rawCharges.toDouble() : double.tryParse(rawCharges.toString()));
+
     return RoomModel(
       id: json['id']?.toString() ?? '',
       roomNumber: json['roomNumber']?.toString() ?? json['room_number']?.toString() ?? '',
       roomType: json['roomType']?.toString() ?? json['room_type']?.toString() ?? 'Standard',
       floor: json['floor'] is int ? json['floor'] : int.tryParse(json['floor']?.toString() ?? '1') ?? 1,
-      basePricePerNight: (json['basePricePerNight'] ?? json['base_price_per_night'] ?? 0).toDouble(),
+      basePricePerNight: parsedBasePrice,
       facilities: json['facilities'] is List
           ? (json['facilities'] as List).map((e) => e.toString()).toList()
           : [],
@@ -105,7 +115,7 @@ class RoomModel {
           ? DateTime.tryParse(json['expectedCheckOutTime'].toString())
           : (activeRes?['expectedCheckOutTime'] != null ? DateTime.tryParse(activeRes!['expectedCheckOutTime'].toString()) : null),
       invoiceNumber: json['invoiceNumber'] ?? activeRes?['invoiceNumber'] ?? json['invoice_number'],
-      additionalCharges: (json['additionalCharges'] ?? activeRes?['additionalCharges'])?.toDouble(),
+      additionalCharges: parsedCharges,
       waReminderStatus: json['waReminderStatus'] ?? json['wa_reminder_status'],
     );
   }

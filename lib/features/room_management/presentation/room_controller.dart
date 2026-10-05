@@ -204,6 +204,7 @@ class RoomListNotifier extends StateNotifier<AsyncValue<List<RoomModel>>> {
   }) async {
     await _repository.updateRoom(
       id: roomId,
+      roomNumber: roomNumber,
       roomType: roomType,
       floor: floor,
       basePricePerNight: basePrice,

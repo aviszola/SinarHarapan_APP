@@ -32,8 +32,9 @@ class AuthRepository {
   }
 
   Future<UserModel> quickLogin(UserRole role) async {
-    final username = role == UserRole.receptionist ? 'receptionist' : 'manager';
-    return login(username: username, password: 'password123');
+    final username = role == UserRole.receptionist ? 'resepsionis01' : 'manager01';
+    final password = role == UserRole.receptionist ? 'Resepsionis123!' : 'Manager123!';
+    return login(username: username, password: password);
   }
 
   /// Logout: hapus token lokal terlebih dahulu,

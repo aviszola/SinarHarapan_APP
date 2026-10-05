@@ -17,8 +17,8 @@ class LoginScreen extends ConsumerStatefulWidget {
 class _LoginScreenState extends ConsumerState<LoginScreen>
     with SingleTickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
-  final _usernameController = TextEditingController(text: 'receptionist');
-  final _passwordController = TextEditingController(text: 'password123');
+  final _usernameController = TextEditingController(text: 'resepsionis01');
+  final _passwordController = TextEditingController(text: 'Resepsionis123!');
 
   late final AnimationController _animCtrl;
   late final Animation<double> _fadeIn;

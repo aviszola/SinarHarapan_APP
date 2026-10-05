@@ -652,14 +652,22 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
     final occRateVal = summary?['occupancyRate'] != null
         ? '${summary!['occupancyRate']}%'
         : (occupancyRate > 0 ? '${occupancyRate.toStringAsFixed(1)}%' : 'Data tidak tersedia');
-    final totalNetRevenue = summary?['totalNetRevenue'] != null
-        ? currencyFormatter.format(summary!['totalNetRevenue'])
+    final rawRevenue = summary?['totalNetRevenue'];
+    final num? parsedRevenue = rawRevenue == null
+        ? null
+        : (rawRevenue is num ? rawRevenue : num.tryParse(rawRevenue.toString()));
+    final totalNetRevenue = parsedRevenue != null
+        ? currencyFormatter.format(parsedRevenue)
         : 'Data tidak tersedia';
 
     // Channel composition dari summary (endpoint.md §8.1)
     final channels = summary?['channelComposition'] as Map<String, dynamic>?;
-    final reddoorzCount = channels?['reddoorz'] as int?;
-    final walkInCount = channels?['walkIn'] as int?;
+    final reddoorzCount = (channels?['reddoorz'] is num)
+        ? (channels!['reddoorz'] as num).toInt()
+        : int.tryParse(channels?['reddoorz']?.toString() ?? '0');
+    final walkInCount = (channels?['walkIn'] is num)
+        ? (channels!['walkIn'] as num).toInt()
+        : int.tryParse(channels?['walkIn']?.toString() ?? '0');
     final totalChannels = (reddoorzCount ?? 0) + (walkInCount ?? 0);
     final reddoorzPct = totalChannels > 0 ? ((reddoorzCount ?? 0) / totalChannels * 100).round() : 50;
     final walkInPct = totalChannels > 0 ? (100 - reddoorzPct) : 50;

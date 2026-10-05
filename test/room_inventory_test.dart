@@ -59,6 +59,7 @@ class TestRoomRepository extends RoomRepository {
   @override
   Future<RoomModel> updateRoom({
     required String id,
+    String? roomNumber,
     String? roomType,
     int? floor,
     double? basePricePerNight,
@@ -69,6 +70,7 @@ class TestRoomRepository extends RoomRepository {
     if (idx == -1) throw Exception('Kamar tidak ditemukan');
     final cur = _rooms[idx];
     final updated = cur.copyWith(
+      roomNumber: roomNumber ?? cur.roomNumber,
       roomType: roomType ?? cur.roomType,
       floor: floor ?? cur.floor,
       basePricePerNight: basePricePerNight ?? cur.basePricePerNight,
