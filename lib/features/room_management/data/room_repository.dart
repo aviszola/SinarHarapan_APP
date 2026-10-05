@@ -83,9 +83,32 @@ class RoomRepository {
 
     final res = await _api.get('/rooms', queryParams: params.isEmpty ? null : params);
     if (res is List) {
-      return res
+      final rooms = res
           .map((item) => RoomModel.fromJson(item as Map<String, dynamic>))
           .toList();
+
+      // Backend GET /rooms tidak mengembalikan activeReservation (hanya di GET /rooms/:id).
+      // Sinkronkan data kamar OCCUPIED dengan memuat detailnya secara paralel agar activeReservationId
+      // tersedia saat proses check-out.
+      final occupiedIndices = <int>[];
+      for (int i = 0; i < rooms.length; i++) {
+        if (rooms[i].isOccupied && rooms[i].activeReservationId == null) {
+          occupiedIndices.add(i);
+        }
+      }
+
+      if (occupiedIndices.isNotEmpty) {
+        await Future.wait(occupiedIndices.map((idx) async {
+          try {
+            final detail = await getRoomById(rooms[idx].id);
+            if (detail != null) {
+              rooms[idx] = detail;
+            }
+          } catch (_) {}
+        }));
+      }
+
+      return rooms;
     }
     return [];
   }

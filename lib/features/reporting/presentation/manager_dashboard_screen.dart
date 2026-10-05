@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -184,7 +185,7 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           backgroundColor: const Color(0xFF16A34A),
-          duration: const Duration(seconds: 4),
+          duration: const Duration(seconds: 3),
           content: Row(
             children: [
               const Icon(Icons.check_circle_outline, color: Colors.white),
@@ -268,7 +269,7 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           backgroundColor: AppColors.navy700,
-          duration: const Duration(seconds: 4),
+          duration: const Duration(seconds: 3),
           content: Row(
             children: [
               const Icon(Icons.picture_as_pdf_outlined, color: Colors.white),
@@ -309,104 +310,135 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
   }) {
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: isExcel ? const Color(0xFFDCFCE7) : const Color(0xFFFEE2E2),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                isExcel ? Icons.table_chart : Icons.picture_as_pdf,
-                color: isExcel ? const Color(0xFF16A34A) : AppColors.orange600,
-                size: 24,
-              ),
+      builder: (ctx) {
+        // Auto-dismiss alert dialog setelah 3 detik
+        Timer? autoCloseTimer;
+        autoCloseTimer = Timer(const Duration(seconds: 3), () {
+          if (ctx.mounted && Navigator.of(ctx).canPop()) {
+            Navigator.of(ctx).pop();
+          }
+        });
+
+        return PopScope(
+          onPopInvokedWithResult: (didPop, _) {
+            autoCloseTimer?.cancel();
+          },
+          child: AlertDialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            title: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: isExcel ? const Color(0xFFDCFCE7) : const Color(0xFFFEE2E2),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    isExcel ? Icons.table_chart : Icons.picture_as_pdf,
+                    color: isExcel ? const Color(0xFF16A34A) : AppColors.orange600,
+                    size: 24,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    title,
+                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.navy700),
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                title,
-                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.navy700),
-              ),
-            ),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Berkas laporan telah berhasil diunduh dan tersimpan ke perangkat Anda:',
-              style: TextStyle(fontSize: 13, color: AppColors.navy500),
-            ),
-            const SizedBox(height: 12),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: AppColors.navy50,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: AppColors.border),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Berkas laporan telah berhasil diunduh dan tersimpan ke perangkat Anda:',
+                  style: TextStyle(fontSize: 13, color: AppColors.navy500),
+                ),
+                const SizedBox(height: 12),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: AppColors.navy50,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: AppColors.border),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Icon(
-                        isExcel ? Icons.file_present_outlined : Icons.description_outlined,
-                        size: 16,
-                        color: AppColors.navy700,
+                      Row(
+                        children: [
+                          Icon(
+                            isExcel ? Icons.file_present_outlined : Icons.description_outlined,
+                            size: 16,
+                            color: AppColors.navy700,
+                          ),
+                          const SizedBox(width: 6),
+                          Expanded(
+                            child: Text(
+                              fileName,
+                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                            ),
+                          ),
+                        ],
                       ),
-                      const SizedBox(width: 6),
-                      Expanded(
-                        child: Text(
-                          fileName,
-                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-                        ),
+                      const SizedBox(height: 6),
+                      Text(
+                        filePath,
+                        style: const TextStyle(fontSize: 11, color: AppColors.navy500),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 6),
-                  Text(
-                    filePath,
-                    style: const TextStyle(fontSize: 11, color: AppColors.navy500),
-                  ),
-                ],
+                ),
+                const SizedBox(height: 8),
+                const Row(
+                  children: [
+                    Icon(Icons.timer_outlined, size: 14, color: AppColors.textDisabled),
+                    SizedBox(width: 4),
+                    Text(
+                      'Pemberitahuan ini otomatis tertutup dalam 3 detik...',
+                      style: TextStyle(fontSize: 11, color: AppColors.textDisabled, fontStyle: FontStyle.italic),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  autoCloseTimer?.cancel();
+                  Navigator.of(ctx).pop();
+                },
+                child: const Text('Tutup'),
               ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('Tutup'),
+              OutlinedButton.icon(
+                icon: const Icon(Icons.folder_open, size: 18),
+                label: const Text('Buka Folder'),
+                onPressed: () {
+                  autoCloseTimer?.cancel();
+                  ReportExportService.openFolder(filePath);
+                  Navigator.of(ctx).pop();
+                },
+              ),
+              ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: isExcel ? const Color(0xFF16A34A) : AppColors.orange600,
+                  foregroundColor: Colors.white,
+                ),
+                icon: const Icon(Icons.open_in_new, size: 18),
+                label: Text(isExcel ? 'Buka Excel Sekarang' : 'Buka PDF Sekarang'),
+                onPressed: () {
+                  autoCloseTimer?.cancel();
+                  ReportExportService.openFile(filePath);
+                  Navigator.of(ctx).pop();
+                },
+              ),
+            ],
           ),
-          OutlinedButton.icon(
-            icon: const Icon(Icons.folder_open, size: 18),
-            label: const Text('Buka Folder'),
-            onPressed: () {
-              ReportExportService.openFolder(filePath);
-              Navigator.of(ctx).pop();
-            },
-          ),
-          ElevatedButton.icon(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: isExcel ? const Color(0xFF16A34A) : AppColors.orange600,
-              foregroundColor: Colors.white,
-            ),
-            icon: const Icon(Icons.open_in_new, size: 18),
-            label: Text(isExcel ? 'Buka Excel Sekarang' : 'Buka PDF Sekarang'),
-            onPressed: () {
-              ReportExportService.openFile(filePath);
-              Navigator.of(ctx).pop();
-            },
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 
