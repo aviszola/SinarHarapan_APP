@@ -2,7 +2,9 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
+import 'package:permission_handler/permission_handler.dart';
 import '../../../app/theme.dart';
 import '../../../core/config/app_config.dart';
 import '../../../core/network/api_client.dart';
@@ -109,15 +111,88 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
     return widget.room.basePricePerNight * _totalNights;
   }
 
-  // Ekstraksi OCR identitas via backend POST /ocr/extract-identity (endpoint.md §4.1)
-  Future<void> _simulateOcrScan() async {
+  // Request camera permission and capture/pick image for OCR
+  Future<void> _requestCameraPermissionAndScan() async {
+    final cameraStatus = await Permission.camera.request();
+
+    if (!cameraStatus.isGranted) {
+      setState(() {
+        _errorMessage = 'Izin kamera ditolak. Silakan aktifkan di pengaturan aplikasi.';
+      });
+      return;
+    }
+
+    if (!mounted) return;
+
+    // Show option to take photo or pick from gallery
+    showModalBottomSheet(
+      context: context,
+      builder: (ctx) => Container(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'Ambil Foto KTP',
+              style: AppTypography.bodySm.copyWith(fontWeight: FontWeight.w700),
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton.icon(
+                    icon: const Icon(Icons.camera_alt),
+                    label: const Text('Buka Kamera'),
+                    onPressed: () {
+                      Navigator.pop(ctx);
+                      _captureOcrImage(ImageSource.camera);
+                    },
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton.icon(
+                    icon: const Icon(Icons.photo_library),
+                    label: const Text('Pilih Galeri'),
+                    onPressed: () {
+                      Navigator.pop(ctx);
+                      _captureOcrImage(ImageSource.gallery);
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Capture image dan kirim ke OCR backend
+  Future<void> _captureOcrImage(ImageSource source) async {
     setState(() {
       _isOcrLoading = true;
       _errorMessage = null;
     });
 
     try {
-      // Jika mode mock diaktifkan di debug build (--dart-define=USE_MOCK=true)
+      final picker = ImagePicker();
+      final pickedFile = await picker.pickImage(
+        source: source,
+        maxWidth: 1920,
+        maxHeight: 1920,
+        imageQuality: 85,
+      );
+
+      if (pickedFile == null) {
+        setState(() => _isOcrLoading = false);
+        return;
+      }
+
+      // Baca file bytes
+      final imageBytes = await pickedFile.readAsBytes();
+
+      // Mock mode untuk testing
       if (AppConfig.useMock) {
         await Future.delayed(const Duration(milliseconds: 600));
         final sampleGuests = [
@@ -155,24 +230,11 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
         return;
       }
 
-      // OCR Live dari Backend API
+      // Call backend OCR API dengan image bytes asli
       final repo = ReportingRepository();
-      // Dummy 1x1 image bytes jika belum ada kamera/file picker fisik aktif
-      final dummyBytes = [
-        0xFF,
-        0xD8,
-        0xFF,
-        0xE0,
-        0x00,
-        0x10,
-        0x4A,
-        0x46,
-        0x49,
-        0x46,
-      ];
       final ocrResult = await repo.extractIdentity(
-        imageBytes: dummyBytes,
-        filename: 'document_${_idType.toLowerCase()}.jpg',
+        imageBytes: imageBytes,
+        filename: 'ktp_${_idType.toLowerCase()}_${DateTime.now().millisecondsSinceEpoch}.jpg',
         documentType: _idType,
       );
 
@@ -199,7 +261,7 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
     } catch (e) {
       setState(() {
         _isOcrLoading = false;
-        _errorMessage = 'Layanan OCR tidak merespons, gunakan input manual.';
+        _errorMessage = 'Gagal memproses gambar: ${e.toString()}';
       });
     }
   }
@@ -735,7 +797,7 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
                                     variant: AppButtonVariant.secondary,
                                     icon: Icons.camera_alt_outlined,
                                     isLoading: _isOcrLoading,
-                                    onPressed: _simulateOcrScan,
+                                    onPressed: _requestCameraPermissionAndScan,
                                   ),
                                   Text(
                                     'Atau ketik langsung formulir di bawah',
@@ -1321,8 +1383,12 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
   }
 
   Widget _buildCheckOutBadge() {
+    final checkoutDate = DateTime.now().add(Duration(days: _totalNights));
+    final formattedDate = DateFormat('d MMM', 'id').format(checkoutDate);
+    final dayName = DateFormat('EEE', 'id').format(checkoutDate);
+
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
         color: AppColors.navy50,
         borderRadius: BorderRadius.circular(6),
@@ -1336,13 +1402,16 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
             size: 12,
             color: AppColors.navy700,
           ),
-          const SizedBox(width: 4),
-          Text(
-            'Out: ${DateFormat('EEE, d MMM', 'id').format(DateTime.now().add(Duration(days: _totalNights)))} pk 12:00 WIB',
-            style: const TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w700,
-              color: AppColors.navy900,
+          const SizedBox(width: 3),
+          Flexible(
+            child: Text(
+              '$dayName, $formattedDate',
+              style: const TextStyle(
+                fontSize: 10,
+                fontWeight: FontWeight.w700,
+                color: AppColors.navy900,
+              ),
+              overflow: TextOverflow.ellipsis,
             ),
           ),
         ],

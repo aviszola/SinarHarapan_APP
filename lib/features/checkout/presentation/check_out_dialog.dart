@@ -5,7 +5,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../../app/theme.dart';
 import '../../../core/network/api_client.dart';
-import '../../room_management/data/room_repository.dart';
 import '../../room_management/domain/room_model.dart';
 import '../../room_management/presentation/room_controller.dart';
 import '../../shared_widgets/app_button.dart';
@@ -22,7 +21,6 @@ class CheckOutDialog extends ConsumerStatefulWidget {
 
 class _CheckOutDialogState extends ConsumerState<CheckOutDialog> {
   late RoomModel _currentRoom;
-  bool _isLoadingDetail = false;
 
   final _lateFeeController = TextEditingController(text: '0');
   final _minibarFeeController = TextEditingController(text: '0');
@@ -49,7 +47,6 @@ class _CheckOutDialogState extends ConsumerState<CheckOutDialog> {
   }
 
   Future<void> _loadRoomDetail() async {
-    setState(() => _isLoadingDetail = true);
     try {
       final detail = await ref.read(roomRepositoryProvider).getRoomById(widget.room.id);
       if (detail != null && mounted) {
@@ -59,7 +56,6 @@ class _CheckOutDialogState extends ConsumerState<CheckOutDialog> {
         });
       }
     } catch (_) {}
-    if (mounted) setState(() => _isLoadingDetail = false);
   }
 
   void _calculateInitial() {
