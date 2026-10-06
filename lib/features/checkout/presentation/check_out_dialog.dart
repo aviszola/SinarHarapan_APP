@@ -286,7 +286,8 @@ class _CheckOutDialogState extends ConsumerState<CheckOutDialog> {
     final mediaQuery = MediaQuery.of(context);
     final isMobile = mediaQuery.size.width < 600;
     final dialogWidth = math.min(620.0, mediaQuery.size.width - (isMobile ? 20 : 48));
-    final dialogHeight = math.min(740.0, mediaQuery.size.height * (isMobile ? 0.95 : 0.90));
+    final availableHeight = mediaQuery.size.height - mediaQuery.viewInsets.bottom;
+    final dialogHeight = math.min(740.0, availableHeight * (isMobile ? 0.96 : 0.90));
 
     final currencyFormatter = NumberFormat.currency(
       locale: 'id_ID',
@@ -295,9 +296,11 @@ class _CheckOutDialogState extends ConsumerState<CheckOutDialog> {
     );
 
     return Dialog(
+      insetAnimationDuration: Duration.zero,
+      insetAnimationCurve: Curves.linear,
       insetPadding: EdgeInsets.symmetric(
         horizontal: isMobile ? 10 : 24,
-        vertical: isMobile ? 12 : 24,
+        vertical: isMobile ? 10 : 24,
       ),
       shape: RoundedRectangleBorder(borderRadius: AppRadius.roundedLg),
       backgroundColor: AppColors.surface,
@@ -351,6 +354,8 @@ class _CheckOutDialogState extends ConsumerState<CheckOutDialog> {
 
               Expanded(
                 child: SingleChildScrollView(
+                  physics: const ClampingScrollPhysics(),
+                  keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
@@ -985,6 +990,8 @@ class _CheckOutDialogState extends ConsumerState<CheckOutDialog> {
               controller: controller,
               autofocus: true,
               keyboardType: TextInputType.number,
+              scrollPadding: const EdgeInsets.only(bottom: 120, top: 20),
+              scrollPhysics: const ClampingScrollPhysics(),
               inputFormatters: [FilteringTextInputFormatter.digitsOnly],
               decoration: InputDecoration(
                 hintText: hint,

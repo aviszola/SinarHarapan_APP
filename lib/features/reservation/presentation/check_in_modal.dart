@@ -580,9 +580,10 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
       720.0,
       mediaQuery.size.width - (isMobile ? 20 : 48),
     );
+    final availableHeight = mediaQuery.size.height - mediaQuery.viewInsets.bottom;
     final dialogHeight = math.min(
       780.0,
-      mediaQuery.size.height * (isMobile ? 0.95 : 0.90),
+      availableHeight * (isMobile ? 0.96 : 0.90),
     );
 
     final currencyFormatter = NumberFormat.currency(
@@ -592,9 +593,11 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
     );
 
     return Dialog(
+      insetAnimationDuration: Duration.zero,
+      insetAnimationCurve: Curves.linear,
       insetPadding: EdgeInsets.symmetric(
         horizontal: isMobile ? 10 : 24,
-        vertical: isMobile ? 12 : 24,
+        vertical: isMobile ? 10 : 24,
       ),
       shape: RoundedRectangleBorder(borderRadius: AppRadius.roundedLg),
       backgroundColor: AppColors.surface,
@@ -663,6 +666,9 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
 
                 Expanded(
                   child: SingleChildScrollView(
+                    physics: const ClampingScrollPhysics(),
+                    keyboardDismissBehavior:
+                        ScrollViewKeyboardDismissBehavior.onDrag,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
@@ -1281,6 +1287,8 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
                                 TextField(
                                   controller: _priceController,
                                   keyboardType: TextInputType.number,
+                                  scrollPadding: const EdgeInsets.only(bottom: 120, top: 20),
+                                  scrollPhysics: const ClampingScrollPhysics(),
                                   inputFormatters: [
                                     FilteringTextInputFormatter.digitsOnly,
                                   ],
@@ -1361,6 +1369,8 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
                                       child: TextField(
                                         controller: _priceController,
                                         keyboardType: TextInputType.number,
+                                        scrollPadding: const EdgeInsets.only(bottom: 120, top: 20),
+                                        scrollPhysics: const ClampingScrollPhysics(),
                                         inputFormatters: [
                                           FilteringTextInputFormatter
                                               .digitsOnly,
@@ -1573,6 +1583,8 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
                     controller: _customNightsController,
                     autofocus: true,
                     keyboardType: TextInputType.number,
+                    scrollPadding: const EdgeInsets.only(bottom: 120, top: 20),
+                    scrollPhysics: const ClampingScrollPhysics(),
                     inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                     decoration: const InputDecoration(
                       hintText: 'Ketik jumlah hari...',

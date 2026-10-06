@@ -88,6 +88,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
 
     return Scaffold(
       backgroundColor: AppColors.navy900,
+      resizeToAvoidBottomInset: true,
       body: Row(
         children: [
           // ── Left Panel: Brand Identity ──────────────────────────
@@ -110,6 +111,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                     child: SlideTransition(
                       position: _slideUp,
                       child: SingleChildScrollView(
+                        physics: const ClampingScrollPhysics(),
+                        keyboardDismissBehavior:
+                            ScrollViewKeyboardDismissBehavior.onDrag,
                         padding: EdgeInsets.symmetric(
                           horizontal: size.width > 900 ? 48 : (size.width < 400 ? 20 : 28),
                           vertical: size.width < 600 ? 20 : 40,
