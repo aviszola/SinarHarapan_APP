@@ -250,15 +250,20 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
         _ocrConfidence = (ocrResult['confidence'] as num?)?.toDouble() ?? 0.9;
       });
     } on ApiException catch (e) {
+      String msg = e.message;
+      if (msg.contains('Unexpected file field')) {
+        msg = 'Format field upload tidak sesuai server.';
+      } else if (msg.contains('Application failed to respond') || e.statusCode == 502) {
+        msg = 'Layanan OCR server sedang tidak tersedia (502). Silakan isi data tamu secara manual.';
+      }
       setState(() {
         _isOcrLoading = false;
-        _errorMessage =
-            'OCR Gagal (${e.message}). Silakan isi form secara manual.';
+        _errorMessage = 'OCR: $msg';
       });
     } catch (e) {
       setState(() {
         _isOcrLoading = false;
-        _errorMessage = 'Gagal memproses gambar: ${e.toString()}';
+        _errorMessage = 'Gagal memproses gambar: ${e.toString().replaceAll("Exception: ", "")}';
       });
     }
   }

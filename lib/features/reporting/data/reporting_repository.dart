@@ -122,6 +122,7 @@ class ReportingRepository {
       fileBytes: imageBytes,
       filename: filename,
       fields: {'documentType': documentType},
+      fileFieldName: 'image',
     );
     if (res is Map<String, dynamic>) return res;
     throw ApiException('Respons OCR tidak valid');

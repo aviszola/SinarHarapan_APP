@@ -23,33 +23,16 @@ class RoomGridScreen extends ConsumerStatefulWidget {
 }
 
 class _RoomGridScreenState extends ConsumerState<RoomGridScreen> {
-  Timer? _pollTimer;
-  int _pollCountdown = 15;
+  bool _isRefreshing = false;
 
-  @override
-  void initState() {
-    super.initState();
-    _startPollTicker();
-  }
-
-  void _startPollTicker() {
-    _pollTimer = Timer.periodic(const Duration(seconds: 1), (_) {
-      if (!mounted) return;
-      setState(() {
-        if (_pollCountdown <= 1) {
-          _pollCountdown = 15;
-          ref.read(roomListProvider.notifier).loadRooms();
-        } else {
-          _pollCountdown--;
-        }
-      });
-    });
-  }
-
-  @override
-  void dispose() {
-    _pollTimer?.cancel();
-    super.dispose();
+  Future<void> _handleRefresh() async {
+    if (_isRefreshing) return;
+    setState(() => _isRefreshing = true);
+    try {
+      await ref.read(roomListProvider.notifier).loadRooms();
+    } finally {
+      if (mounted) setState(() => _isRefreshing = false);
+    }
   }
 
   void _handleRoomTap(RoomModel room) {
@@ -179,7 +162,8 @@ class _RoomGridScreenState extends ConsumerState<RoomGridScreen> {
           _StatsRibbon(
             stats: stats,
             totalRooms: totalRooms,
-            pollCountdown: _pollCountdown,
+            onRefresh: _handleRefresh,
+            isRefreshing: _isRefreshing,
           ),
 
           // ── Filter Bar ────────────────────────────────────────────
@@ -187,9 +171,13 @@ class _RoomGridScreenState extends ConsumerState<RoomGridScreen> {
 
           // ── Room Grid ─────────────────────────────────────────────
           Expanded(
-            child: filteredRooms.isEmpty
-                ? _EmptyState()
-                : _RoomGrid(rooms: filteredRooms, onTap: _handleRoomTap),
+            child: RefreshIndicator(
+              onRefresh: _handleRefresh,
+              color: AppColors.navy700,
+              child: filteredRooms.isEmpty
+                  ? _EmptyState()
+                  : _RoomGrid(rooms: filteredRooms, onTap: _handleRoomTap),
+            ),
           ),
         ],
       ),
@@ -201,12 +189,14 @@ class _RoomGridScreenState extends ConsumerState<RoomGridScreen> {
 class _StatsRibbon extends StatelessWidget {
   final Map<RoomStatusType, int> stats;
   final int totalRooms;
-  final int pollCountdown;
+  final VoidCallback onRefresh;
+  final bool isRefreshing;
 
   const _StatsRibbon({
     required this.stats,
     required this.totalRooms,
-    required this.pollCountdown,
+    required this.onRefresh,
+    required this.isRefreshing,
   });
 
   @override
@@ -235,37 +225,39 @@ class _StatsRibbon extends StatelessWidget {
         physics: const BouncingScrollPhysics(),
         child: Row(
           children: [
-            // Occupancy pill
+            // Occupancy pill - airy, modern, lightweight
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
               decoration: BoxDecoration(
-                color: AppColors.navy900,
+                color: const Color(0xFFF1F5F9),
                 borderRadius: AppRadius.roundedMd,
+                border: Border.all(color: const Color(0xFFE2E8F0)),
               ),
               child: Row(
                 children: [
                   Text(
                     'Hunian',
                     style: AppTypography.caption.copyWith(
-                      color: AppColors.navy100.withAlpha(160),
-                      fontSize: 12.5,
+                      color: AppColors.textSecondary,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 6),
                   Text(
                     '$occupancyRate%',
-                    style: AppTypography.h3.copyWith(
-                      color: Colors.white,
-                      fontSize: 17,
-                      fontWeight: FontWeight.w700,
+                    style: AppTypography.caption.copyWith(
+                      color: AppColors.navy900,
+                      fontSize: 13.5,
+                      fontWeight: FontWeight.w800,
                     ),
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 5),
                   Text(
                     '($occupied/$totalRooms)',
                     style: AppTypography.caption.copyWith(
-                      color: AppColors.navy100.withAlpha(120),
-                      fontSize: 12.5,
+                      color: AppColors.textDisabled,
+                      fontSize: 11.5,
                     ),
                   ),
                 ],
@@ -285,29 +277,47 @@ class _StatsRibbon extends StatelessWidget {
 
             const SizedBox(width: AppSpacing.lg),
 
-            // Live sync indicator
-            Row(
-              children: [
-                AnimatedContainer(
-                  duration: const Duration(milliseconds: 500),
-                  width: 8,
-                  height: 8,
-                  decoration: BoxDecoration(
-                    color: pollCountdown <= 3
-                        ? AppColors.orange600
-                        : const Color(0xFF16A34A),
-                    shape: BoxShape.circle,
-                  ),
+            // Manual Refresh button — replaces heavy auto-sync timer
+            InkWell(
+              onTap: isRefreshing ? null : onRefresh,
+              borderRadius: BorderRadius.circular(8),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: AppColors.border),
                 ),
-                const SizedBox(width: 6),
-                Text(
-                  'Sinkron ${pollCountdown}s',
-                  style: AppTypography.caption.copyWith(
-                    color: AppColors.textDisabled,
-                    fontSize: 12,
-                  ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (isRefreshing)
+                      const SizedBox(
+                        width: 12,
+                        height: 12,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: AppColors.navy700,
+                        ),
+                      )
+                    else
+                      const Icon(
+                        Icons.refresh_rounded,
+                        size: 14,
+                        color: AppColors.textSecondary,
+                      ),
+                    const SizedBox(width: 5),
+                    Text(
+                      isRefreshing ? 'Memuat...' : 'Segarkan',
+                      style: AppTypography.caption.copyWith(
+                        color: AppColors.navy900,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
           ],
         ),
