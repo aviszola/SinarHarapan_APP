@@ -151,4 +151,21 @@ void main() {
       expect(AppConfig.receiveTimeout.inSeconds, 20);
     });
   });
+
+  group('TAHAP 6 — Multipart OCR Content-Type & MIME Detection', () {
+    test('ApiClient assigns valid image MediaType (image/jpeg, image/png) instead of application/octet-stream', () {
+      final client = ApiClient();
+      // Test JPEG magic bytes
+      final jpegBytes = [0xFF, 0xD8, 0xFF, 0xE0];
+      final mtJpeg = client.resolveMediaTypeForTesting('scan.jpg', jpegBytes);
+      expect(mtJpeg.type, 'image');
+      expect(mtJpeg.subtype, 'jpeg');
+
+      // Test PNG magic bytes
+      final pngBytes = [0x89, 0x50, 0x4E, 0x47];
+      final mtPng = client.resolveMediaTypeForTesting('scan.png', pngBytes);
+      expect(mtPng.type, 'image');
+      expect(mtPng.subtype, 'png');
+    });
+  });
 }

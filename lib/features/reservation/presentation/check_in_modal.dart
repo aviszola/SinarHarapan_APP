@@ -223,9 +223,20 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
 
       // Call backend OCR API dengan image bytes asli
       final repo = ReportingRepository();
+      final lowerName = pickedFile.name.toLowerCase();
+      String ext = '.jpg';
+      if (lowerName.endsWith('.png')) {
+        ext = '.png';
+      } else if (lowerName.endsWith('.webp')) {
+        ext = '.webp';
+      } else if (lowerName.endsWith('.jpeg')) {
+        ext = '.jpeg';
+      }
+      final uploadFilename = 'id_${_idType.toLowerCase()}_${DateTime.now().millisecondsSinceEpoch}$ext';
+
       final ocrResult = await repo.extractIdentity(
         imageBytes: imageBytes,
-        filename: 'ktp_${_idType.toLowerCase()}_${DateTime.now().millisecondsSinceEpoch}.jpg',
+        filename: uploadFilename,
         documentType: _idType,
       );
 
