@@ -4,7 +4,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
-import 'package:permission_handler/permission_handler.dart';
 import '../../../app/theme.dart';
 import '../../../core/config/app_config.dart';
 import '../../../core/network/api_client.dart';
@@ -111,19 +110,9 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
     return widget.room.basePricePerNight * _totalNights;
   }
 
-  // Request camera permission and capture/pick image for OCR
+  // Capture image dari kamera atau galeri untuk OCR
+  // image_picker menangani permissions secara otomatis
   Future<void> _requestCameraPermissionAndScan() async {
-    final cameraStatus = await Permission.camera.request();
-
-    if (!cameraStatus.isGranted) {
-      setState(() {
-        _errorMessage = 'Izin kamera ditolak. Silakan aktifkan di pengaturan aplikasi.';
-      });
-      return;
-    }
-
-    if (!mounted) return;
-
     // Show option to take photo or pick from gallery
     showModalBottomSheet(
       context: context,
