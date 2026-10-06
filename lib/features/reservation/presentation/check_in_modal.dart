@@ -390,35 +390,6 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
     };
   }
 
-  void _applyPresetGuestData({
-    required String idType,
-    required String idNumber,
-    required String name,
-    required String address,
-    required String phone,
-    String nationality = 'Indonesia',
-  }) {
-    setState(() {
-      _idType = idType;
-      _nikController.text = idNumber;
-      _nameController.text = name;
-      _addressController.text = address;
-      _phoneController.text = phone;
-      _nationality = nationality;
-      _isOcrExtracted = true;
-      _errorMessage = null;
-      _ocrConfidence = 1.0;
-    });
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        backgroundColor: AppColors.navy900,
-        duration: const Duration(seconds: 3),
-        content: Text('✨ Data identitas $name ($idType) siap digunakan.'),
-      ),
-    );
-  }
-
   void _handleReviewInvoice() {
     if (!_formKey.currentState!.validate()) return;
 
@@ -955,76 +926,8 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
                                     onPressed: _requestCameraPermissionAndScan,
                                   ),
                                   Text(
-                                    'Atau pilih sampel data cepat di bawah:',
+                                    'Atau ketik langsung formulir di bawah',
                                     style: AppTypography.caption,
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: AppSpacing.sm),
-                              // Preset Data Tamu Cepat
-                              Wrap(
-                                spacing: 8,
-                                runSpacing: 6,
-                                children: [
-                                  ActionChip(
-                                    avatar: const Icon(Icons.badge_outlined, size: 15, color: AppColors.navy700),
-                                    label: const Text('Contoh KTP: Budi Santoso', style: TextStyle(fontSize: 12)),
-                                    onPressed: () {
-                                      final now = DateTime.now().millisecondsSinceEpoch;
-                                      final rand = ((now % 899999) + 100000).toString();
-                                      _applyPresetGuestData(
-                                        idType: 'KTP',
-                                        idNumber: '357801$rand${(now % 9000 + 1000)}',
-                                        name: 'BUDI SANTOSO',
-                                        address: 'JL. MERDEKA NO. 10, KLOJEN, MALANG',
-                                        phone: '081234567890',
-                                      );
-                                    },
-                                  ),
-                                  ActionChip(
-                                    avatar: const Icon(Icons.badge_outlined, size: 15, color: AppColors.navy700),
-                                    label: const Text('Contoh KTP: Bambang', style: TextStyle(fontSize: 12)),
-                                    onPressed: () {
-                                      final now = DateTime.now().millisecondsSinceEpoch;
-                                      final rand = ((now % 899999) + 100000).toString();
-                                      _applyPresetGuestData(
-                                        idType: 'KTP',
-                                        idNumber: '357801$rand${(now % 9000 + 1000)}',
-                                        name: 'BAMBANG PRASETYO',
-                                        address: 'JL. DIPONEGORO NO. 45, SURABAYA',
-                                        phone: '081298765432',
-                                      );
-                                    },
-                                  ),
-                                  ActionChip(
-                                    avatar: const Icon(Icons.flight_takeoff_rounded, size: 15, color: AppColors.navy700),
-                                    label: const Text('Contoh Paspor: John Smith', style: TextStyle(fontSize: 12)),
-                                    onPressed: () {
-                                      final now = DateTime.now().millisecondsSinceEpoch;
-                                      _applyPresetGuestData(
-                                        idType: 'PASSPORT',
-                                        idNumber: 'C${((now % 8999999) + 1000000)}',
-                                        name: 'JOHN SMITH',
-                                        address: '-',
-                                        phone: '6285612349876',
-                                        nationality: 'GBR',
-                                      );
-                                    },
-                                  ),
-                                  ActionChip(
-                                    avatar: const Icon(Icons.directions_car_outlined, size: 15, color: AppColors.navy700),
-                                    label: const Text('Contoh SIM: Budi Santoso', style: TextStyle(fontSize: 12)),
-                                    onPressed: () {
-                                      final now = DateTime.now().millisecondsSinceEpoch;
-                                      final rand = ((now % 899999) + 100000).toString();
-                                      _applyPresetGuestData(
-                                        idType: 'SIM',
-                                        idNumber: '901234$rand',
-                                        name: 'BUDI SANTOSO',
-                                        address: 'JL. DIPONEGORO NO. 45, SURABAYA',
-                                        phone: '081234567890',
-                                      );
-                                    },
                                   ),
                                 ],
                               ),
