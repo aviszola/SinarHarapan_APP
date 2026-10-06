@@ -60,8 +60,18 @@ class AuthNotifier extends StateNotifier<AuthState> {
   }
 
   Future<bool> quickLogin(UserRole role) async {
-    final username = role == UserRole.receptionist ? 'receptionist' : 'manager';
-    return login(username, 'password123');
+    state = state.copyWith(isLoading: true, errorMessage: null);
+    try {
+      final user = await _repo.quickLogin(role);
+      state = state.copyWith(user: user, isLoading: false);
+      return true;
+    } catch (e) {
+      state = state.copyWith(
+        isLoading: false,
+        errorMessage: e.toString().replaceAll('Exception: ', ''),
+      );
+      return false;
+    }
   }
 
   void logout() {

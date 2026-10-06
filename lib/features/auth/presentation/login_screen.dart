@@ -150,7 +150,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                                 // Username
                                 AppTextField(
                                   label: 'Nama Pengguna',
-                                  hint: 'receptionist atau manager',
+                                  hint: 'resepsionis01 atau manager01',
                                   controller: _usernameController,
                                   prefixIcon: Icons.person_outline_rounded,
                                   validator: (v) => (v == null || v.trim().isEmpty)
