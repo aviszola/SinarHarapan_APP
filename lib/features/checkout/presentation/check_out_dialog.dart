@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../../app/theme.dart';
+import '../../../core/network/api_client.dart';
 import '../../room_management/domain/room_model.dart';
 import '../../room_management/presentation/room_controller.dart';
 import '../../shared_widgets/app_button.dart';
@@ -19,6 +20,8 @@ class CheckOutDialog extends ConsumerStatefulWidget {
 }
 
 class _CheckOutDialogState extends ConsumerState<CheckOutDialog> {
+  late RoomModel _currentRoom;
+
   final _lateFeeController = TextEditingController(text: '0');
   final _minibarFeeController = TextEditingController(text: '0');
   final _damageFeeController = TextEditingController(text: '0');
@@ -36,17 +39,33 @@ class _CheckOutDialogState extends ConsumerState<CheckOutDialog> {
   @override
   void initState() {
     super.initState();
+    _currentRoom = widget.room;
     _calculateInitial();
+    if (_currentRoom.activeReservationId == null) {
+      _loadRoomDetail();
+    }
+  }
+
+  Future<void> _loadRoomDetail() async {
+    try {
+      final detail = await ref.read(roomRepositoryProvider).getRoomById(widget.room.id);
+      if (detail != null && mounted) {
+        setState(() {
+          _currentRoom = detail;
+          _calculateInitial();
+        });
+      }
+    } catch (_) {}
   }
 
   void _calculateInitial() {
     // Default 1 night if checkInTime is missing
-    final checkIn = widget.room.checkInTime ?? DateTime.now().subtract(const Duration(hours: 20));
-    final expectedOut = widget.room.expectedCheckOutTime ?? DateTime.now().add(const Duration(hours: 2));
+    final checkIn = _currentRoom.checkInTime ?? DateTime.now().subtract(const Duration(hours: 20));
+    final expectedOut = _currentRoom.expectedCheckOutTime ?? DateTime.now().add(const Duration(hours: 2));
 
     final diffDays = expectedOut.difference(checkIn).inDays;
     final nights = diffDays > 0 ? diffDays : 1;
-    _roomSubtotal = nights * widget.room.basePricePerNight;
+    _roomSubtotal = nights * _currentRoom.basePricePerNight;
 
     // Check if late checkout (FR-OUT-05)
     final now = DateTime.now();
@@ -78,37 +97,82 @@ class _CheckOutDialogState extends ConsumerState<CheckOutDialog> {
   double get _grandTotal => _roomSubtotal + _additionalTotal;
 
   void _handleConfirmCheckOut() async {
-    // Update room status to DIRTY (needs cleaning per FR-OUT-04)
-    final additional = _additionalTotal;
-    final updatedRoom = await ref.read(roomListProvider.notifier).checkOut(
-          roomId: widget.room.id,
-          additionalCharges: additional,
+    // Pastikan reservasi ID aktif tersedia dari backend
+    String? resId = _currentRoom.activeReservationId;
+    if (resId == null || resId.isEmpty) {
+      try {
+        final detail = await ref.read(roomRepositoryProvider).getRoomById(_currentRoom.id);
+        resId = detail?.activeReservationId;
+        if (detail != null && mounted) {
+          setState(() {
+            _currentRoom = detail;
+          });
+        }
+      } catch (_) {}
+    }
+
+    if (resId == null || resId.isEmpty) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            backgroundColor: AppColors.statusOccupied,
+            content: Text('Gagal checkout: data reservasi aktif tidak ditemukan untuk kamar ini.'),
+          ),
         );
+      }
+      return;
+    }
 
-    if (mounted) {
-      Navigator.of(context).pop();
+    final additional = _additionalTotal;
+    final chargesList = <Map<String, dynamic>>[];
+    if (_lateFee > 0) chargesList.add({'label': 'Denda Late Check-out', 'amount': _lateFee});
+    if (_minibarFee > 0) chargesList.add({'label': 'Minibar / Laundry', 'amount': _minibarFee});
+    if (_damageFee > 0) chargesList.add({'label': 'Ganti Rugi Kerusakan', 'amount': _damageFee});
 
-      // Sesuai alur baru:
-      // - Jika TIDAK ada biaya tambahan (additionalCharges == 0):
-      //   Langsung selesai, status kamar berubah ke Kuning (Dirty), TANPA dokumen/invoice baru.
-      // - Jika ADA biaya tambahan:
-      //   Tercatat di reservasi yang sama, tampilkan dialog struk sederhana tanda terima biaya tambahan (bukan invoice baru ber-nomor baru).
-      if (additional > 0) {
-        _showAdditionalChargesReceiptDialog(updatedRoom ?? widget.room, additional);
-      } else {
+    try {
+      await ref.read(roomListProvider.notifier).checkOut(
+            reservationId: resId,
+            additionalCharges: chargesList,
+          );
+
+      if (mounted) {
+        Navigator.of(context).pop();
+
+        if (additional > 0) {
+          _showAdditionalChargesReceiptDialog(_currentRoom, additional);
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              backgroundColor: AppColors.statusDirty,
+              content: Row(
+                children: [
+                  const Icon(Icons.cleaning_services_rounded, color: Colors.white),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Check-Out Kamar ${_currentRoom.roomNumber} selesai tanpa biaya tambahan. Status kamar beralih ke Dirty.',
+                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+      }
+    } on ApiException catch (e) {
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            backgroundColor: AppColors.statusDirty,
-            content: Row(
-              children: [
-                const Icon(Icons.cleaning_services_rounded, color: Colors.white),
-                const SizedBox(width: 8),
-                Text(
-                  'Check-Out Kamar ${widget.room.roomNumber} selesai tanpa biaya tambahan. Status kamar beralih ke Dirty.',
-                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
-                ),
-              ],
-            ),
+            backgroundColor: AppColors.statusOccupied,
+            content: Text(e.message),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            backgroundColor: AppColors.statusOccupied,
+            content: Text(e.toString().replaceAll('Exception: ', '')),
           ),
         );
       }
@@ -258,7 +322,7 @@ class _CheckOutDialogState extends ConsumerState<CheckOutDialog> {
                             borderRadius: AppRadius.roundedSm,
                           ),
                           child: Text(
-                            'Kamar ${widget.room.roomNumber}',
+                            'Kamar ${_currentRoom.roomNumber}',
                             style: AppTypography.h3.copyWith(
                               color: AppColors.statusOccupied,
                               fontWeight: FontWeight.w700,
@@ -305,21 +369,21 @@ class _CheckOutDialogState extends ConsumerState<CheckOutDialog> {
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 Text(
-                                  widget.room.activeGuestName ?? 'Tamu Walk-in',
+                                  _currentRoom.activeGuestName ?? 'Tamu Walk-in',
                                   style: AppTypography.h3.copyWith(fontWeight: FontWeight.w700),
                                 ),
                                 Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                                   decoration: BoxDecoration(
-                                    color: widget.room.bookingSource == 'REDDOORZ'
+                                    color: _currentRoom.bookingSource == 'REDDOORZ'
                                         ? Colors.red.shade100
                                         : AppColors.navy100,
                                     borderRadius: AppRadius.roundedSm,
                                   ),
                                   child: Text(
-                                    widget.room.bookingSource ?? 'WALK_IN',
+                                    _currentRoom.bookingSource ?? 'WALK_IN',
                                     style: AppTypography.overline.copyWith(
-                                      color: widget.room.bookingSource == 'REDDOORZ'
+                                      color: _currentRoom.bookingSource == 'REDDOORZ'
                                           ? Colors.red.shade800
                                           : AppColors.navy700,
                                     ),
@@ -329,12 +393,12 @@ class _CheckOutDialogState extends ConsumerState<CheckOutDialog> {
                             ),
                             const SizedBox(height: 6),
                             Text(
-                              'WhatsApp: ${widget.room.activeGuestPhone ?? "-"} • Tipe: ${widget.room.roomType} (Lt. ${widget.room.floor})',
+                              'WhatsApp: ${_currentRoom.activeGuestPhone ?? "-"} • Tipe: ${_currentRoom.roomType} (Lt. ${_currentRoom.floor})',
                               style: AppTypography.caption,
                             ),
-                            if (widget.room.checkInTime != null)
+                            if (_currentRoom.checkInTime != null)
                               Text(
-                                'Check-in: ${DateFormat('dd MMM yyyy, HH:mm').format(widget.room.checkInTime!)} WIB',
+                                'Check-in: ${DateFormat('dd MMM yyyy, HH:mm').format(_currentRoom.checkInTime!)} WIB',
                                 style: AppTypography.caption,
                               ),
                           ],
@@ -447,16 +511,20 @@ class _CheckOutDialogState extends ConsumerState<CheckOutDialog> {
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Text(
-                                  'Total Tagihan Pelunasan:',
-                                  style: AppTypography.h3.copyWith(
-                                    fontWeight: FontWeight.w700,
-                                    color: AppColors.navy900,
+                                Expanded(
+                                  child: Text(
+                                    'Total Tagihan Pelunasan:',
+                                    style: (isMobile ? AppTypography.bodySm : AppTypography.h3).copyWith(
+                                      fontWeight: FontWeight.w700,
+                                      color: AppColors.navy900,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
                                   ),
                                 ),
+                                const SizedBox(width: 8),
                                 Text(
                                   currencyFormatter.format(_grandTotal),
-                                  style: AppTypography.h2.copyWith(
+                                  style: (isMobile ? AppTypography.h3 : AppTypography.h2).copyWith(
                                     fontWeight: FontWeight.w800,
                                     color: AppColors.navy900,
                                   ),
@@ -488,7 +556,7 @@ class _CheckOutDialogState extends ConsumerState<CheckOutDialog> {
                             ),
                             Expanded(
                               child: Text(
-                                'Kirim struk pelunasan otomatis ke WhatsApp tamu (${widget.room.activeGuestPhone ?? "No. WA terdaftar"}) saat check-out selesai',
+                                'Kirim struk pelunasan otomatis ke WhatsApp tamu (${_currentRoom.activeGuestPhone ?? "No. WA terdaftar"}) saat check-out selesai',
                                 style: AppTypography.bodySm.copyWith(
                                   fontWeight: FontWeight.w600,
                                   color: AppColors.navy900,

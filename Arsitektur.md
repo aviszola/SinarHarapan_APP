@@ -318,13 +318,19 @@ CREATE TABLE rooms (
     base_price_per_night DECIMAL(12, 2) NOT NULL,
     facilities JSONB DEFAULT '[]',
     status VARCHAR(20) CHECK (status IN ('AVAILABLE', 'OCCUPIED', 'DIRTY', 'MAINTENANCE')) DEFAULT 'AVAILABLE',
+    deleted_at TIMESTAMP WITH TIME ZONE DEFAULT NULL, -- Soft-delete timestamp (BUG-BE-05)
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 CREATE INDEX idx_rooms_status ON rooms(status);
 CREATE INDEX idx_rooms_type_floor ON rooms(room_type, floor);
+CREATE INDEX idx_rooms_deleted_at ON rooms(deleted_at);
 
 -- 3. TABEL DATA INDUK TAMU (mendukung KTP/Paspor/SIM — lihat database.md §2.3 untuk detail)
+-- DDL & Hubungan Relasi: 1 Tamu dapat memiliki BANYAK Reservasi dari waktu ke waktu (1-to-many).
+-- Constraint UNIQUE (id_type, id_number) / UNIQUE(nik) tetap dipertahankan untuk mencegah duplikasi baris identitas tamu yang sama.
+-- Alur Check-in menerapkan logika 'Find-or-Update before Insert':
+-- Jika identitas tamu sudah ada di sistem (Repeat Guest), sistem menggunakan guest_id yang sudah ada dan memperbarui profilnya jika perlu.
 CREATE TABLE guests (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     id_type VARCHAR(20) CHECK (id_type IN ('KTP', 'PASSPORT', 'SIM', 'OTHER')) NOT NULL,
@@ -385,13 +391,40 @@ CREATE TABLE activity_logs (
 CREATE INDEX idx_activity_logs_user ON activity_logs(user_id);
 CREATE INDEX idx_activity_logs_action ON activity_logs(action_type);
 CREATE INDEX idx_activity_logs_created ON activity_logs(created_at);
+
+-- 6. TABEL TOKEN DICABUT (REVOKED TOKENS / JWT DENYLIST) — BUG-BE-01
+-- Diisi saat pengguna melakukan POST /auth/logout.
+-- Middleware auth memverifikasi setiap request ke denylist ini.
+-- Baris yang expiresAt sudah lewat dapat dibersihkan secara berkala via cron.
+CREATE TABLE revoked_tokens (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    token_jti VARCHAR(255) UNIQUE NOT NULL,
+    user_id UUID REFERENCES users(id),
+    expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+CREATE INDEX idx_revoked_tokens_jti ON revoked_tokens(token_jti);
+CREATE INDEX idx_revoked_tokens_expires ON revoked_tokens(expires_at);
+
+-- 7. TABEL COUNTER NOMOR INVOICE HARIAN (ATOMIK PERSISTEN) — BUG-BE-02
+-- Menggantikan in-memory dailySequence di invoice.service.ts yang hilang saat restart.
+-- Menggunakan upsert atomik: setiap request check-in melakukan upsert dan increment.
+-- Menjamin nomor invoice tetap berlanjut (tidak reset ke /0001) walau backend restart.
+CREATE TABLE invoice_counters (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    date_str VARCHAR(8) UNIQUE NOT NULL, -- Format YYYYMMDD
+    last_sequence INTEGER DEFAULT 0 NOT NULL,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+CREATE INDEX idx_invoice_counters_date ON invoice_counters(date_str);
 ```
 
 ### 4.3 Aturan Integritas Data Tambahan
 
 - `rooms.status` tidak dapat diubah menjadi `MAINTENANCE` oleh sistem jika terdapat reservasi aktif (`actual_check_out_time IS NULL`) pada kamar tersebut — divalidasi di business logic layer sebelum query UPDATE.
-- Penghapusan `rooms` (FR-ROOM-06) menggunakan validasi aplikasi: cek `NOT EXISTS (SELECT 1 FROM reservations WHERE room_id = ? AND actual_check_out_time IS NULL)` sebelum eksekusi `DELETE`.
-- `invoice_number` digenerate melalui fungsi service (`invoice.service.ts`) dengan format `INV/SH/YYYYMMDD/XXXX`, `XXXX` adalah sequence harian yang direset setiap tanggal berganti.
+- **Penghapusan `rooms` (FR-ROOM-06) dilakukan secara SOFT-DELETE** dengan mengisi kolom `deleted_at = NOW()`. Kamar tidak benar-benar dihapus dari database untuk menjaga integritas referensial historis reservasi. `GET /rooms` dan `GET /rooms/status` selalu memfilter `WHERE deleted_at IS NULL`. Penghapusan hard-delete (`DELETE FROM rooms`) DILARANG karena akan memicu PostgreSQL Foreign Key Constraint Violation (P2003) jika kamar tersebut memiliki riwayat reservasi lama.
+- `invoice_number` digenerate menggunakan tabel `invoice_counters` dengan upsert atomik pada PostgreSQL — menjamin angka sequence nomor invoice tidak reset atau duplikat walau proses backend restart kapan saja.
+- **Tamu lama (Repeat Guest)** yang check-in ulang menggunakan NIK atau identitas yang sama TIDAK membuat baris baru di tabel `guests`. Sistem menemukan baris yang sudah ada (`findUnique` oleh `id_type + id_number` / `nik`), memperbarui data profil yang berubah, dan menggunakan `guest_id` yang sama untuk reservasi baru. Constraint `UNIQUE(id_type, id_number)` tetap dipertahankan untuk mencegah dua baris tamu berbeda dengan identitas sama.
 
 ---
 

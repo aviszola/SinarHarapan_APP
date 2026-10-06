@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'app/router.dart';
 import 'app/theme.dart';
+import 'core/network/api_client.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -39,6 +40,8 @@ void main() async {
   GoogleFonts.config.allowRuntimeFetching = true;
   // Initialize locale data for Bahasa Indonesia date formatting
   await initializeDateFormatting('id', null);
+  // Inisialisasi token tersimpan dari secure vault
+  await ApiClient().init();
   runApp(
     const ProviderScope(
       child: SinarHarapanPmsApp(),

@@ -12,7 +12,55 @@ import 'package:sinarharapan_app/features/room_management/domain/room_model.dart
 import 'package:sinarharapan_app/features/room_management/presentation/room_card.dart';
 import 'package:sinarharapan_app/features/shared_widgets/app_button.dart';
 import 'package:sinarharapan_app/features/shared_widgets/app_header.dart';
-import 'package:sinarharapan_app/features/shared_widgets/status_badge.dart';
+import 'package:sinarharapan_app/features/auth/data/auth_repository.dart';
+import 'package:sinarharapan_app/features/room_management/data/room_repository.dart';
+import 'package:sinarharapan_app/features/room_management/presentation/room_controller.dart';
+
+class _TestAuthRepository extends AuthRepository {
+  @override
+  Future<UserModel> login({required String username, required String password}) async {
+    final role = username == 'manager' ? UserRole.manager : UserRole.receptionist;
+    return UserModel(
+      id: 'usr-$username',
+      username: username,
+      fullName: username == 'manager' ? 'Hendra Wijaya' : 'Siti Rahmawati',
+      role: role,
+      token: 'mock-jwt-token-qa',
+    );
+  }
+
+  @override
+  Future<UserModel> quickLogin(UserRole role) async {
+    final username = role == UserRole.receptionist ? 'receptionist' : 'manager';
+    return login(username: username, password: 'password123');
+  }
+}
+
+class _TestRoomRepository extends RoomRepository {
+  final List<RoomModel> _rooms = [
+    const RoomModel(
+      id: 'rm-101',
+      roomNumber: '101',
+      roomType: 'Standard',
+      floor: 1,
+      basePricePerNight: 250000,
+      facilities: ['AC', 'WiFi'],
+      status: RoomStatusType.available,
+    ),
+  ];
+
+  @override
+  Future<List<RoomModel>> getRooms({String? roomType, int? floor, String? status}) async {
+    return List.from(_rooms);
+  }
+
+  @override
+  Future<List<RoomStatusSnapshot>> getRoomStatusOnly() async {
+    return [
+      const RoomStatusSnapshot(id: 'rm-101', roomNumber: '101', status: RoomStatusType.available),
+    ];
+  }
+}
 
 void main() {
   setUpAll(() async {
@@ -158,10 +206,14 @@ void main() {
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.resetPhysicalSize);
 
-      final container = ProviderContainer();
-      addTearDown(container.dispose);
+      final container = ProviderContainer(
+        overrides: [
+          authRepositoryProvider.overrideWithValue(_TestAuthRepository()),
+          roomRepositoryProvider.overrideWithValue(_TestRoomRepository()),
+        ],
+      );
 
-      // Login sebagai role RECEPTIONIST via tester.runAsync agar Future.delayed auth berjalan
+      // Login sebagai role RECEPTIONIST via tester.runAsync
       await tester.runAsync(() async {
         await container
             .read(authStateProvider.notifier)
@@ -198,15 +250,16 @@ void main() {
 
       FlutterError.onError = originalOnError;
 
-      // BUKTI EKSEKUSI BUG QA-RBAC-01:
-      // Router tidak memblokir dan justru menampilkan Dashboard Manajer ke resepsionis!
-      expect(find.text('Executive Analytics & Performance'), findsOneWidget,
-          reason: 'Celah Broken Access Control terbukti: Resepsionis dapat membuka Dashboard Manajer!');
-      expect(find.byType(ManagerDashboardScreen), findsOneWidget);
+      // VERIFIKASI PERBAIKAN RBAC:
+      // Router memblokir dan menahan resepsionis tetap di halaman denah kamar!
+      expect(find.byType(ManagerDashboardScreen), findsNothing,
+          reason: 'Akses ke Dashboard Manajer sukses diblokir untuk resepsionis');
+      expect(find.byType(ReceptionistTopBar), findsOneWidget);
 
       FlutterError.onError = (details) {};
       await tester.pumpWidget(const SizedBox());
       await tester.pump();
+      container.dispose();
       FlutterError.onError = originalOnError;
     });
 
@@ -216,8 +269,12 @@ void main() {
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.resetPhysicalSize);
 
-      final container = ProviderContainer();
-      addTearDown(container.dispose);
+      final container = ProviderContainer(
+        overrides: [
+          authRepositoryProvider.overrideWithValue(_TestAuthRepository()),
+          roomRepositoryProvider.overrideWithValue(_TestRoomRepository()),
+        ],
+      );
 
       // Login sebagai role MANAGER via tester.runAsync
       await tester.runAsync(() async {
@@ -270,6 +327,7 @@ void main() {
       // Unmount widget tree
       await tester.pumpWidget(const SizedBox());
       await tester.pump();
+      container.dispose();
       FlutterError.onError = originalOnError;
     });
   });

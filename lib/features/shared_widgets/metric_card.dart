@@ -19,8 +19,11 @@ class MetricCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isCompact = screenWidth < 600;
+
     return Container(
-      padding: const EdgeInsets.all(AppSpacing.lg),
+      padding: EdgeInsets.all(isCompact ? AppSpacing.md : AppSpacing.lg),
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: AppRadius.roundedLg,
@@ -33,21 +36,30 @@ class MetricCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                title.toUpperCase(),
-                style: AppTypography.overline.copyWith(
-                  color: AppColors.textSecondary,
-                  letterSpacing: 0.8,
+              Expanded(
+                child: Text(
+                  title.toUpperCase(),
+                  style: AppTypography.overline.copyWith(
+                    color: AppColors.textSecondary,
+                    letterSpacing: 0.8,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
               ?trailing,
             ],
           ),
           const SizedBox(height: AppSpacing.sm),
-          Text(
-            value,
-            style: AppTypography.display.copyWith(
-              color: AppColors.navy900,
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Text(
+              value,
+              style: AppTypography.display.copyWith(
+                color: AppColors.navy900,
+                fontSize: isCompact ? 28 : 34,
+              ),
             ),
           ),
           if (trendText != null) ...[
@@ -60,11 +72,15 @@ class MetricCard extends StatelessWidget {
                   color: isTrendPositive ? AppColors.orange600 : AppColors.statusOccupied,
                 ),
                 const SizedBox(width: 5),
-                Text(
-                  trendText!,
-                  style: AppTypography.caption.copyWith(
-                    color: isTrendPositive ? AppColors.orange600 : AppColors.statusOccupied,
-                    fontWeight: FontWeight.w600,
+                Expanded(
+                  child: Text(
+                    trendText!,
+                    style: AppTypography.caption.copyWith(
+                      color: isTrendPositive ? AppColors.orange600 : AppColors.statusOccupied,
+                      fontWeight: FontWeight.w600,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
               ],

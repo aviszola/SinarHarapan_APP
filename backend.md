@@ -1,63 +1,54 @@
 # 🤖 backend.md
-## Backend Implementation Spec — Sinar Harapan PMS (NestJS Edition)
-### Ditulis untuk dikonsumsi oleh AI coding agent (Claude Code / agent sejenis)
+## Backend Implementation Spec — Sinar Harapan PMS (Next.js 14 + Zod Edition)
+### Status: AKTIF & TERSINKRONISASI DENGAN KODE PRODUKSI (Revisi BUG-BE-04)
 
 ---
 
-> **CARA MEMBACA DOKUMEN INI (untuk agent):**
-> Dokumen ini adalah sumber kebenaran tunggal (single source of truth) untuk implementasi backend.
-> Backend ini dibangun dengan **NestJS**, BUKAN Next.js — revisi dari versi sebelumnya.
-> Ikuti struktur module/controller/service/DTO PERSIS seperti yang tertulis di sini.
-> Jika ada ambiguitas antara dokumen ini dan `endpoint.md`/`arsitektur.md`, **dokumen ini yang menang**
-> untuk hal teknis implementasi, karena paling baru dan paling rinci untuk keperluan coding.
-> Setiap bagian bisa dieksekusi secara independen sebagai satu task/todo item.
-> `endpoint.md` tetap menjadi rujukan kontrak request/response per endpoint — dokumen ini fokus ke CARA membangunnya di NestJS.
+> **CARA MEMBACA DOKUMEN INI (untuk Tim QA & Developer):**
+> Dokumen ini adalah spesifikasi resmi backend yang **100% tersinkronisasi dengan kode nyata di repositori** (`backend/package.json` dan folder `backend/app/api`).
+> Backend aktif saat ini dibangun dengan **Next.js 14 (App Router) + Zod + Prisma ORM + Node-cron**.
+> *(Catatan: Konsep NestJS yang sempat tertulis di draf awal dinyatakan sebagai rencana arsitektur masa depan yang belum diimplementasikan dan tidak berlaku untuk audit rilis saat ini).*
+> Kontrak request/response endpoint sepenuhnya mengacu pada `endpoint.md` dan skema validasi `backend/lib/validators/index.ts`.
 
 ---
 
 ## 0. Ringkasan Proyek
 
 ```yaml
-nama_proyek: Sinar Harapan Frontdesk & Property Management System (PMS)
+nama_proyek: Sinar Harapan Frontdesk & Property Management System (PMS) Backend
 jenis: REST API backend untuk aplikasi hotel management
-framework: NestJS (Express platform, bukan Fastify — untuk kompatibilitas library lebih luas)
-bahasa: TypeScript (strict mode wajib aktif)
-database: PostgreSQL via Supabase
-orm: Prisma (via @nestjs custom PrismaModule)
-autentikasi: JWT (@nestjs/jwt + Passport strategy)
-validasi: class-validator + class-transformer (DTO-based)
-dokumentasi_api: Swagger/OpenAPI auto-generate (@nestjs/swagger)
-target_deploy: Railway atau Fly.io, region Singapore — proses long-running standar (BUKAN serverless)
-konsumen_api: Aplikasi Flutter (web/desktop/tablet) — lihat design-system.md untuk konteks UI
+framework: Next.js 14 (App Router) dengan Node-cron
+bahasa: TypeScript (strict mode aktif)
+database: PostgreSQL via Supabase / Railway
+orm: Prisma ORM (schema: backend/prisma/schema.prisma)
+autentikasi: JWT (jsonwebtoken + bcryptjs) dengan Revoked Tokens Denylist (tabel database)
+validasi: Zod (backend/lib/validators/index.ts)
+dokumentasi_api: OpenAPI / Swagger Contract (endpoint.md & swagger-ui)
+target_deploy: Railway / Vercel Container, region Singapore
+konsumen_api: Aplikasi Flutter (Web Desktop, Windows, Tablet Kasir)
 dokumen_rujukan:
   - prd.md          # spesifikasi fitur & business rules
-  - arsitektur.md   # arsitektur sistem level tinggi (catatan: bagian stack Next.js di sana sudah digantikan NestJS oleh dokumen ini)
-  - endpoint.md     # kontrak API detail per endpoint (request/response body tetap berlaku)
-
-catatan_migrasi: >
-  Dokumen ini menggantikan versi backend.md sebelumnya yang berbasis Next.js App Router.
-  Business logic (race condition handling, invoice generator, kalkulasi denda, dsb.) TIDAK berubah —
-  hanya wadah arsitekturnya (Route Handler -> Controller/Service/Module NestJS).
+  - arsitektur.md   # arsitektur sistem level tinggi
+  - endpoint.md     # kontrak API detail per endpoint
 ```
 
 ---
 
-## 1. Tech Stack & Versi yang Wajib Dipakai
+## 1. Tech Stack & Versi Aktual (Berdasarkan `package.json`)
 
-| Layer | Teknologi | Versi Minimum | Catatan |
+| Layer | Teknologi | Versi Aktual | Catatan Implementasi |
 |---|---|---|---|
-| Runtime | Node.js | 20 LTS | — |
-| Framework | NestJS | 10.x | Platform: Express (`@nestjs/platform-express`) |
-| Bahasa | TypeScript | 5.x | `strict: true` di `tsconfig.json` |
-| ORM | Prisma | 5.x | Dibungkus sebagai `PrismaModule` global NestJS |
-| Database | PostgreSQL | 15+ | Hosted di Supabase |
-| Validasi | class-validator + class-transformer | latest stable | Dipasang via `ValidationPipe` global |
-| Auth | @nestjs/jwt + @nestjs/passport + passport-jwt | latest stable | HS256, bcrypt cost factor 10 |
-| Password Hashing | bcrypt | latest stable | — |
-| Cron | @nestjs/schedule | latest stable | `@Cron()` decorator, native di proses long-running |
-| Dokumentasi API | @nestjs/swagger | latest stable | Auto-generate dari DTO + decorator controller |
-| Excel Export | exceljs | latest stable | — |
-| PDF Export | @react-pdf/renderer atau pdfkit | latest stable | — |
+| Runtime | Node.js | 20 LTS | Long-running process |
+| Framework | Next.js | ^14.2.15 | App Router Route Handlers (`app/api/.../route.ts`) |
+| Bahasa | TypeScript | ^5.6.3 | `strict: true` |
+| ORM | Prisma | ^5.22.0 | PostgreSQL client |
+| Database | PostgreSQL | 15+ | Supabase / Railway |
+| Validasi | Zod | ^3.23.8 | Schema validation di setiap route handler |
+| Auth & Crypto | jsonwebtoken + bcryptjs | ^9.0.2 / ^2.4.3 | JWT HS256 + Denylist tabel `revoked_tokens` |
+| Cron Scheduler | node-cron | ^3.0.3 | Job pengingat check-out setiap 10 menit |
+| Excel Export | exceljs | ^4.4.0 | Ekspor rekapitulasi laporan transaksi |
+| HTTP Client | fetch (native) | ES2022+ | Komunikasi WhatsApp Gateway & Google Vision |
+
 | HTTP Client (eksternal) | @nestjs/axios (wrapper axios) | latest stable | Untuk panggil Google Vision & WA Gateway |
 | Testing | Jest + Supertest + @nestjs/testing | bawaan Nest CLI | — |
 | Linting | ESLint + Prettier | bawaan Nest CLI | Config standar Nest + aturan tambahan §9 |
@@ -547,7 +538,11 @@ export class RoomsService {
     if (activeReservation) {
       throw new ConflictException('Kamar memiliki riwayat reservasi aktif, tidak dapat dihapus');
     }
-    return this.prisma.room.delete({ where: { id } });
+    // BUG-BE-05 FIX: Soft-delete untuk mencegah PostgreSQL P2003 Foreign Key Constraint Violation
+    return this.prisma.room.update({
+      where: { id },
+      data: { deletedAt: new Date() },
+    });
   }
 }
 ```
@@ -1331,7 +1326,8 @@ async processCheckout(reservationId: string, dto: CheckoutDto) {
   let lateFee = 0;
   if (actualCheckOut > expectedCheckOut) {
     const lateHours = Math.ceil((actualCheckOut.getTime() - expectedCheckOut.getTime()) / (1000 * 60 * 60));
-    const hourlyRate = Number(reservation.roomRate) * PRICING.LATE_CHECKOUT_RATE_PER_HOUR;
+    // BUG-BE-06 FIX: Standar resmi denda flat Rp 50.000 / jam (sinkron antara backend & frontend)
+    const hourlyRate = PRICING.LATE_CHECKOUT_FLAT_HOURLY_RATE;
     lateFee = lateHours * hourlyRate;
   }
 
@@ -1357,12 +1353,12 @@ async processCheckout(reservationId: string, dto: CheckoutDto) {
 }
 ```
 ```typescript
-// src/constants/pricing.constant.ts
+// src/constants/pricing.constant.ts (BUG-BE-06 FIX: Diselaraskan dengan invoice.service.ts & Flutter UI)
 export const PRICING = {
-  LATE_CHECKOUT_RATE_PER_HOUR: 0.1, // 10% dari room rate per jam keterlambatan — konfirmasi ke klien saat UAT
+  LATE_CHECKOUT_FLAT_HOURLY_RATE: 50000, // Flat Rp 50.000 per jam keterlambatan (Single Source of Truth)
 };
 ```
-**Catatan:** JANGAN hardcode angka `0.1` langsung di dalam service — selalu lewat konstanta ini agar mudah diubah tanpa menyentuh business logic.
+**Catatan:** Denda dihitung secara flat Rp 50.000 / jam oleh backend (`InvoiceService.calculateLateFee`), dan frontend menampilkan hasil perhitungan tersebut ke resepsionis secara konsisten.
 
 ### 8.7 Verifikasi Webhook WhatsApp (BUKAN via JwtAuthGuard)
 

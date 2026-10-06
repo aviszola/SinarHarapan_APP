@@ -1,14 +1,15 @@
 import 'dart:async';
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../app/theme.dart';
+import '../../../core/config/app_config.dart';
 import '../../auth/presentation/auth_controller.dart';
 import '../../checkout/presentation/check_out_dialog.dart';
 import '../../reservation/presentation/active_guests_modal.dart';
 import '../../reservation/presentation/check_in_modal.dart';
 import '../../shared_widgets/app_header.dart';
-import '../../shared_widgets/status_badge.dart';
 import '../domain/room_model.dart';
 import 'room_card.dart';
 import 'room_controller.dart';
@@ -147,6 +148,20 @@ class _RoomGridScreenState extends ConsumerState<RoomGridScreen> {
       backgroundColor: AppColors.bg,
       body: Column(
         children: [
+          // Banner DATA CONTOH jika mode mock aktif
+          if (AppConfig.useMock)
+            Container(
+              width: double.infinity,
+              color: Colors.amber.shade800,
+              padding: const EdgeInsets.symmetric(vertical: 4),
+              child: const Center(
+                child: Text(
+                  '⚠️ DATA CONTOH (MOCK MODE AKTIF) - JANGAN GUNAKAN UNTUK TRANSAKSI ASLI',
+                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 11),
+                ),
+              ),
+            ),
+
           // ── Top Bar ─────────────────────────────────────────────
           ReceptionistTopBar(
             userName: userName,
@@ -154,7 +169,10 @@ class _RoomGridScreenState extends ConsumerState<RoomGridScreen> {
             activeWaCount: occupiedCount,
             onLogout: _handleLogout,
             onOpenActiveGuests: _handleOpenActiveGuests,
-            onOpenManagerPortal: () => context.go('/manager/dashboard'),
+            // Sembunyikan portal Manajer jika login sebagai Resepsionis
+            onOpenManagerPortal: authState.user?.isManager == true
+                ? () => context.go('/manager/dashboard')
+                : null,
           ),
 
           // ── Stats Ribbon ─────────────────────────────────────────
@@ -202,15 +220,19 @@ class _StatsRibbon extends StatelessWidget {
         ? (occupied / totalRooms * 100).round()
         : 0;
 
+    final isMobile = MediaQuery.of(context).size.width < 600;
+
     return Container(
       decoration: const BoxDecoration(
         color: AppColors.surface,
         border: Border(bottom: BorderSide(color: AppColors.border)),
       ),
-      padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.md, vertical: AppSpacing.sm + 2),
+      padding: EdgeInsets.symmetric(
+          horizontal: isMobile ? AppSpacing.sm + 4 : AppSpacing.md,
+          vertical: AppSpacing.sm + 2),
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
+        physics: const BouncingScrollPhysics(),
         child: Row(
           children: [
             // Occupancy pill
@@ -358,12 +380,13 @@ class _RoomGrid extends StatelessWidget {
         final isCompact = constraints.maxWidth < 600;
 
         return GridView.builder(
-          padding: EdgeInsets.all(isCompact ? AppSpacing.md : AppSpacing.lg),
+          padding: EdgeInsets.all(isCompact ? AppSpacing.sm + 4 : AppSpacing.lg),
+          physics: const BouncingScrollPhysics(),
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: cols,
-            crossAxisSpacing: isCompact ? AppSpacing.sm : AppSpacing.md,
-            mainAxisSpacing: isCompact ? AppSpacing.sm : AppSpacing.md,
-            mainAxisExtent: 126,
+            crossAxisSpacing: isCompact ? 8 : AppSpacing.md,
+            mainAxisSpacing: isCompact ? 8 : AppSpacing.md,
+            mainAxisExtent: isCompact ? (cols == 1 ? 116 : 130) : 126,
           ),
           itemCount: rooms.length,
           itemBuilder: (context, index) {
@@ -441,11 +464,20 @@ class _SimpleDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 600;
+
     return Dialog(
+      insetPadding: EdgeInsets.symmetric(
+        horizontal: isMobile ? 16 : 24,
+        vertical: 24,
+      ),
       child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 440),
+        constraints: BoxConstraints(
+          maxWidth: math.min(440.0, screenWidth - 32),
+        ),
         child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.xl),
+          padding: EdgeInsets.all(isMobile ? AppSpacing.lg : AppSpacing.xl),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -455,7 +487,12 @@ class _SimpleDialog extends StatelessWidget {
                   Icon(icon, size: 22, color: iconColor),
                   const SizedBox(width: 10),
                   Expanded(
-                    child: Text(title, style: AppTypography.h3),
+                    child: Text(
+                      title,
+                      style: (isMobile ? AppTypography.bodyLg : AppTypography.h3).copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
                   ),
                 ],
               ),

@@ -3,7 +3,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:sinarharapan_app/features/checkout/domain/invoice_pdf_service.dart';
 import 'package:sinarharapan_app/features/room_management/domain/room_model.dart';
-import 'package:sinarharapan_app/features/shared_widgets/status_badge.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

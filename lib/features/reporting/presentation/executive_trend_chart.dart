@@ -31,75 +31,265 @@ class _ExecutiveTrendChartState extends State<ExecutiveTrendChart> {
 
   // ── 1. MONTH DATA (30 Days sampled every 2 days) ─────────────────────────
   static const List<double> _monthDays = [
-    2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30
+    2,
+    4,
+    6,
+    8,
+    10,
+    12,
+    14,
+    16,
+    18,
+    20,
+    22,
+    24,
+    26,
+    28,
+    30,
   ];
   static const List<double> _monthCurrentRevenue = [
-    1.2, 1.5, 1.8, 2.1, 1.9, 2.4, 3.1, 2.8, 3.2, 2.7, 3.5, 3.8, 3.2, 4.1, 3.9
+    1.2,
+    1.5,
+    1.8,
+    2.1,
+    1.9,
+    2.4,
+    3.1,
+    2.8,
+    3.2,
+    2.7,
+    3.5,
+    3.8,
+    3.2,
+    4.1,
+    3.9,
   ];
   static const List<double> _monthPastRevenue = [
-    1.0, 1.2, 1.4, 1.8, 1.6, 1.9, 2.2, 2.0, 2.5, 2.1, 2.7, 2.9, 2.5, 3.0, 3.1
+    1.0,
+    1.2,
+    1.4,
+    1.8,
+    1.6,
+    1.9,
+    2.2,
+    2.0,
+    2.5,
+    2.1,
+    2.7,
+    2.9,
+    2.5,
+    3.0,
+    3.1,
   ];
   static const List<double> _monthCurrentOccupancy = [
-    50, 57, 64, 71, 64, 78, 92, 85, 93, 78, 95, 100, 85, 100, 93
+    50,
+    57,
+    64,
+    71,
+    64,
+    78,
+    92,
+    85,
+    93,
+    78,
+    95,
+    100,
+    85,
+    100,
+    93,
   ];
   static const List<double> _monthPastOccupancy = [
-    42, 48, 50, 60, 55, 62, 70, 65, 75, 68, 80, 82, 72, 85, 82
+    42,
+    48,
+    50,
+    60,
+    55,
+    62,
+    70,
+    65,
+    75,
+    68,
+    80,
+    82,
+    72,
+    85,
+    82,
   ];
   static const List<double> _monthCurrentGuests = [
-    5, 6, 8, 9, 8, 10, 14, 12, 15, 11, 16, 17, 13, 18, 16
+    5,
+    6,
+    8,
+    9,
+    8,
+    10,
+    14,
+    12,
+    15,
+    11,
+    16,
+    17,
+    13,
+    18,
+    16,
   ];
   static const List<double> _monthPastGuests = [
-    4, 5, 6, 7, 6, 8, 10, 9, 11, 9, 12, 13, 10, 13, 14
+    4,
+    5,
+    6,
+    7,
+    6,
+    8,
+    10,
+    9,
+    11,
+    9,
+    12,
+    13,
+    10,
+    13,
+    14,
   ];
 
   // ── 2. WEEK DATA (7 Days: Senin - Minggu) ─────────────────────────────────
   static const List<double> _weekDays = [1, 2, 3, 4, 5, 6, 7];
   static const List<double> _weekCurrentRevenue = [
-    1.8, 2.4, 2.8, 3.2, 3.8, 4.1, 3.9
+    1.8,
+    2.4,
+    2.8,
+    3.2,
+    3.8,
+    4.1,
+    3.9,
   ];
   static const List<double> _weekPastRevenue = [
-    1.5, 2.0, 2.4, 2.7, 3.1, 3.5, 3.3
+    1.5,
+    2.0,
+    2.4,
+    2.7,
+    3.1,
+    3.5,
+    3.3,
   ];
   static const List<double> _weekCurrentOccupancy = [
-    64, 78, 85, 92, 95, 100, 93
+    64,
+    78,
+    85,
+    92,
+    95,
+    100,
+    93,
   ];
-  static const List<double> _weekPastOccupancy = [
-    55, 68, 72, 78, 82, 88, 80
-  ];
-  static const List<double> _weekCurrentGuests = [
-    8, 10, 12, 14, 16, 18, 16
-  ];
-  static const List<double> _weekPastGuests = [
-    6, 8, 10, 12, 13, 15, 14
-  ];
+  static const List<double> _weekPastOccupancy = [55, 68, 72, 78, 82, 88, 80];
+  static const List<double> _weekCurrentGuests = [8, 10, 12, 14, 16, 18, 16];
+  static const List<double> _weekPastGuests = [6, 8, 10, 12, 13, 15, 14];
 
   // ── 3. YEAR DATA (12 Months: Jan - Des) ──────────────────────────────────
   static const List<double> _yearMonths = [
-    1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
   ];
   static const List<double> _yearCurrentRevenue = [
-    38.0, 42.0, 45.0, 52.0, 48.0, 55.0, 58.0, 50.0, 48.75, 53.0, 56.0, 62.0
+    38.0,
+    42.0,
+    45.0,
+    52.0,
+    48.0,
+    55.0,
+    58.0,
+    50.0,
+    48.75,
+    53.0,
+    56.0,
+    62.0,
   ];
   static const List<double> _yearPastRevenue = [
-    32.0, 36.0, 39.0, 45.0, 41.0, 48.0, 50.0, 44.0, 41.25, 46.0, 49.0, 54.0
+    32.0,
+    36.0,
+    39.0,
+    45.0,
+    41.0,
+    48.0,
+    50.0,
+    44.0,
+    41.25,
+    46.0,
+    49.0,
+    54.0,
   ];
   static const List<double> _yearCurrentOccupancy = [
-    68, 72, 75, 82, 78, 88, 91, 80, 79.2, 84, 87, 94
+    68,
+    72,
+    75,
+    82,
+    78,
+    88,
+    91,
+    80,
+    79.2,
+    84,
+    87,
+    94,
   ];
   static const List<double> _yearPastOccupancy = [
-    60, 64, 66, 72, 69, 77, 80, 71, 65.4, 74, 76, 83
+    60,
+    64,
+    66,
+    72,
+    69,
+    77,
+    80,
+    71,
+    65.4,
+    74,
+    76,
+    83,
   ];
   static const List<double> _yearCurrentGuests = [
-    140, 155, 168, 195, 180, 210, 225, 190, 182, 200, 215, 240
+    140,
+    155,
+    168,
+    195,
+    180,
+    210,
+    225,
+    190,
+    182,
+    200,
+    215,
+    240,
   ];
   static const List<double> _yearPastGuests = [
-    120, 135, 145, 170, 155, 180, 195, 165, 151, 175, 185, 205
+    120,
+    135,
+    145,
+    170,
+    155,
+    180,
+    195,
+    165,
+    151,
+    175,
+    185,
+    205,
   ];
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 600;
+
     return Container(
-      padding: const EdgeInsets.all(AppSpacing.lg),
+      padding: EdgeInsets.all(isMobile ? AppSpacing.md : AppSpacing.lg),
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: AppRadius.roundedLg,
@@ -122,7 +312,10 @@ class _ExecutiveTrendChartState extends State<ExecutiveTrendChart> {
           const SizedBox(height: AppSpacing.lg),
 
           // The Interactive Line Chart
-          SizedBox(height: 320, child: LineChart(_buildChartData())),
+          SizedBox(
+            height: isMobile ? 260 : 320,
+            child: LineChart(_buildChartData(isMobile: isMobile)),
+          ),
           const SizedBox(height: AppSpacing.md),
 
           // Footer Legend & Insights
@@ -152,7 +345,10 @@ class _ExecutiveTrendChartState extends State<ExecutiveTrendChart> {
               crossAxisAlignment: WrapCrossAlignment.center,
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: AppColors.orange500.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(4),
@@ -169,7 +365,10 @@ class _ExecutiveTrendChartState extends State<ExecutiveTrendChart> {
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 2,
+                  ),
                   decoration: BoxDecoration(
                     color: const Color(0xFF16A34A).withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(4),
@@ -177,7 +376,11 @@ class _ExecutiveTrendChartState extends State<ExecutiveTrendChart> {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(Icons.trending_up, size: 14, color: Color(0xFF16A34A)),
+                      const Icon(
+                        Icons.trending_up,
+                        size: 14,
+                        color: Color(0xFF16A34A),
+                      ),
                       const SizedBox(width: 4),
                       Text(
                         badgeText,
@@ -203,7 +406,9 @@ class _ExecutiveTrendChartState extends State<ExecutiveTrendChart> {
             const SizedBox(height: 2),
             Text(
               'Analisis komparasi garis data berjalan (sekarang) versus data historis (masa lalu) untuk proyeksi bisnis hotel.',
-              style: AppTypography.bodySm.copyWith(color: AppColors.textSecondary),
+              style: AppTypography.bodySm.copyWith(
+                color: AppColors.textSecondary,
+              ),
             ),
           ],
         );
@@ -214,20 +419,32 @@ class _ExecutiveTrendChartState extends State<ExecutiveTrendChart> {
           crossAxisAlignment: WrapCrossAlignment.center,
           children: [
             // ── Timeframe Selector (Week / Month / Year) ───────────────
-            Container(
-              padding: const EdgeInsets.all(3),
-              decoration: BoxDecoration(
-                color: AppColors.navy50,
-                borderRadius: BorderRadius.circular(9),
-                border: Border.all(color: AppColors.border),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  _buildPeriodPill(ChartPeriod.week, Icons.view_week_outlined),
-                  _buildPeriodPill(ChartPeriod.month, Icons.calendar_view_month_outlined),
-                  _buildPeriodPill(ChartPeriod.year, Icons.calendar_today_outlined),
-                ],
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Container(
+                padding: const EdgeInsets.all(3),
+                decoration: BoxDecoration(
+                  color: AppColors.navy50,
+                  borderRadius: BorderRadius.circular(9),
+                  border: Border.all(color: AppColors.border),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _buildPeriodPill(
+                      ChartPeriod.week,
+                      Icons.view_week_outlined,
+                    ),
+                    _buildPeriodPill(
+                      ChartPeriod.month,
+                      Icons.calendar_view_month_outlined,
+                    ),
+                    _buildPeriodPill(
+                      ChartPeriod.year,
+                      Icons.calendar_today_outlined,
+                    ),
+                  ],
+                ),
               ),
             ),
 
@@ -296,7 +513,7 @@ class _ExecutiveTrendChartState extends State<ExecutiveTrendChart> {
                     color: AppColors.navy900.withValues(alpha: 0.15),
                     blurRadius: 4,
                     offset: const Offset(0, 1),
-                  )
+                  ),
                 ]
               : null,
         ),
@@ -484,9 +701,14 @@ class _ExecutiveTrendChartState extends State<ExecutiveTrendChart> {
                         ),
                       ),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF16A34A).withValues(alpha: 0.12),
+                          color: const Color(
+                            0xFF16A34A,
+                          ).withValues(alpha: 0.12),
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: Text(
@@ -549,7 +771,9 @@ class _ExecutiveTrendChartState extends State<ExecutiveTrendChart> {
           labelStyle: TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.w600,
-            color: _showPastPeriod ? AppColors.navy900 : AppColors.textSecondary,
+            color: _showPastPeriod
+                ? AppColors.navy900
+                : AppColors.textSecondary,
           ),
           selectedColor: AppColors.orange500.withValues(alpha: 0.15),
           checkmarkColor: AppColors.orange600,
@@ -722,9 +946,19 @@ class _ExecutiveTrendChartState extends State<ExecutiveTrendChart> {
             children: [
               card(avgTitle, avgValue, Icons.speed_outlined, AppColors.navy700),
               const SizedBox(height: 8),
-              card(growthTitle, growthValue, Icons.trending_up, const Color(0xFF16A34A)),
+              card(
+                growthTitle,
+                growthValue,
+                Icons.trending_up,
+                const Color(0xFF16A34A),
+              ),
               const SizedBox(height: 8),
-              card(statusTitle, statusValue, Icons.verified_outlined, AppColors.orange600),
+              card(
+                statusTitle,
+                statusValue,
+                Icons.verified_outlined,
+                AppColors.orange600,
+              ),
             ],
           );
         }
@@ -732,15 +966,30 @@ class _ExecutiveTrendChartState extends State<ExecutiveTrendChart> {
         return Row(
           children: [
             Expanded(
-              child: card(avgTitle, avgValue, Icons.speed_outlined, AppColors.navy700),
+              child: card(
+                avgTitle,
+                avgValue,
+                Icons.speed_outlined,
+                AppColors.navy700,
+              ),
             ),
             const SizedBox(width: 10),
             Expanded(
-              child: card(growthTitle, growthValue, Icons.trending_up, const Color(0xFF16A34A)),
+              child: card(
+                growthTitle,
+                growthValue,
+                Icons.trending_up,
+                const Color(0xFF16A34A),
+              ),
             ),
             const SizedBox(width: 10),
             Expanded(
-              child: card(statusTitle, statusValue, Icons.verified_outlined, AppColors.orange600),
+              child: card(
+                statusTitle,
+                statusValue,
+                Icons.verified_outlined,
+                AppColors.orange600,
+              ),
             ),
           ],
         );
@@ -748,7 +997,7 @@ class _ExecutiveTrendChartState extends State<ExecutiveTrendChart> {
     );
   }
 
-  LineChartData _buildChartData() {
+  LineChartData _buildChartData({bool isMobile = false}) {
     List<double> curData;
     List<double> pastData;
     List<double> xPoints;
@@ -853,7 +1102,9 @@ class _ExecutiveTrendChartState extends State<ExecutiveTrendChart> {
       ),
       titlesData: FlTitlesData(
         show: true,
-        rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+        rightTitles: const AxisTitles(
+          sideTitles: SideTitles(showTitles: false),
+        ),
         topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
         bottomTitles: AxisTitles(
           sideTitles: SideTitles(
@@ -864,7 +1115,15 @@ class _ExecutiveTrendChartState extends State<ExecutiveTrendChart> {
               final idx = value.toInt();
               switch (_selectedPeriod) {
                 case ChartPeriod.week:
-                  const daysOfWeek = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'];
+                  const daysOfWeek = [
+                    'Sen',
+                    'Sel',
+                    'Rab',
+                    'Kam',
+                    'Jum',
+                    'Sab',
+                    'Min',
+                  ];
                   if (idx >= 1 && idx <= 7) {
                     return Padding(
                       padding: const EdgeInsets.only(top: 8.0),
@@ -898,8 +1157,18 @@ class _ExecutiveTrendChartState extends State<ExecutiveTrendChart> {
 
                 case ChartPeriod.year:
                   const months = [
-                    'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun',
-                    'Jul', 'Ags', 'Sep', 'Okt', 'Nov', 'Des'
+                    'Jan',
+                    'Feb',
+                    'Mar',
+                    'Apr',
+                    'Mei',
+                    'Jun',
+                    'Jul',
+                    'Ags',
+                    'Sep',
+                    'Okt',
+                    'Nov',
+                    'Des',
                   ];
                   if (idx >= 1 && idx <= 12) {
                     return Padding(
@@ -923,7 +1192,9 @@ class _ExecutiveTrendChartState extends State<ExecutiveTrendChart> {
           sideTitles: SideTitles(
             showTitles: true,
             interval: maxY / 5,
-            reservedSize: _selectedMetric == ChartMetricType.revenue ? 68 : 45,
+            reservedSize: _selectedMetric == ChartMetricType.revenue
+                ? (isMobile ? 54 : 68)
+                : (isMobile ? 38 : 45),
             getTitlesWidget: (value, meta) {
               if (value < 0) return const SizedBox();
               String text;
@@ -984,21 +1255,43 @@ class _ExecutiveTrendChartState extends State<ExecutiveTrendChart> {
               switch (_selectedPeriod) {
                 case ChartPeriod.week:
                   const fullDays = [
-                    'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'
+                    'Senin',
+                    'Selasa',
+                    'Rabu',
+                    'Kamis',
+                    'Jumat',
+                    'Sabtu',
+                    'Minggu',
                   ];
-                  headerTime = (idx >= 1 && idx <= 7) ? fullDays[idx - 1] : 'Hari $idx';
+                  headerTime = (idx >= 1 && idx <= 7)
+                      ? fullDays[idx - 1]
+                      : 'Hari $idx';
                   periodName = isCurrent ? 'Minggu Ini' : 'Minggu Lalu';
                   break;
                 case ChartPeriod.month:
                   headerTime = 'Tgl $idx Sep';
-                  periodName = isCurrent ? 'September (Kini)' : 'Agustus (Lalu)';
+                  periodName = isCurrent
+                      ? 'September (Kini)'
+                      : 'Agustus (Lalu)';
                   break;
                 case ChartPeriod.year:
                   const fullMonths = [
-                    'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
-                    'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+                    'Januari',
+                    'Februari',
+                    'Maret',
+                    'April',
+                    'Mei',
+                    'Juni',
+                    'Juli',
+                    'Agustus',
+                    'September',
+                    'Oktober',
+                    'November',
+                    'Desember',
                   ];
-                  headerTime = (idx >= 1 && idx <= 12) ? fullMonths[idx - 1] : 'Bulan $idx';
+                  headerTime = (idx >= 1 && idx <= 12)
+                      ? fullMonths[idx - 1]
+                      : 'Bulan $idx';
                   periodName = isCurrent ? 'Tahun 2026' : 'Tahun 2025';
                   break;
               }
@@ -1143,77 +1436,25 @@ class _ExecutiveTrendChartState extends State<ExecutiveTrendChart> {
         break;
     }
 
-    return Wrap(
-      spacing: 16,
-      runSpacing: 10,
-      crossAxisAlignment: WrapCrossAlignment.center,
-      children: [
-        // Current Legend
-        Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 18,
-              height: 4,
-              decoration: BoxDecoration(
-                color: AppColors.orange500,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            const SizedBox(width: 8),
-            Text(
-              currentLegend,
-              style: AppTypography.caption.copyWith(
-                fontWeight: FontWeight.w600,
-                color: AppColors.navy900,
-              ),
-            ),
-          ],
-        ),
-
-        // Past Legend
-        if (_showPastPeriod)
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: [
+          // Current Legend
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               Container(
                 width: 18,
-                height: 3,
+                height: 4,
                 decoration: BoxDecoration(
-                  color: AppColors.navy700.withValues(alpha: 0.45),
+                  color: AppColors.orange500,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
               const SizedBox(width: 8),
               Text(
-                pastLegend,
-                style: AppTypography.caption.copyWith(
-                  fontWeight: FontWeight.w500,
-                  color: AppColors.textSecondary,
-                ),
-              ),
-            ],
-          ),
-
-        // High Peak Observation
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-          decoration: BoxDecoration(
-            color: AppColors.bg,
-            borderRadius: BorderRadius.circular(6),
-            border: Border.all(color: AppColors.border),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(
-                Icons.star_rounded,
-                size: 14,
-                color: AppColors.orange500,
-              ),
-              const SizedBox(width: 6),
-              Text(
-                peakInsight,
+                currentLegend,
                 style: AppTypography.caption.copyWith(
                   fontWeight: FontWeight.w600,
                   color: AppColors.navy900,
@@ -1221,8 +1462,63 @@ class _ExecutiveTrendChartState extends State<ExecutiveTrendChart> {
               ),
             ],
           ),
-        ),
-      ],
+          const SizedBox(width: 16),
+
+          // Past Legend
+          if (_showPastPeriod) ...[
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 18,
+                  height: 3,
+                  decoration: BoxDecoration(
+                    color: AppColors.navy700.withValues(alpha: 0.45),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  pastLegend,
+                  style: AppTypography.caption.copyWith(
+                    fontWeight: FontWeight.w500,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(width: 16),
+          ],
+
+          // High Peak Observation
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            decoration: BoxDecoration(
+              color: AppColors.bg,
+              borderRadius: BorderRadius.circular(6),
+              border: Border.all(color: AppColors.border),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(
+                  Icons.star_rounded,
+                  size: 14,
+                  color: AppColors.orange500,
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  peakInsight,
+                  style: AppTypography.caption.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.navy900,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

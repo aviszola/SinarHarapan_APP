@@ -100,7 +100,7 @@ class _RoomCrudDialogState extends ConsumerState<RoomCrudDialog> {
                 ],
               ),
               content: SizedBox(
-                width: 440,
+                width: math.min(440.0, MediaQuery.of(dialogCtx).size.width - 48),
                 child: SingleChildScrollView(
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
@@ -360,88 +360,155 @@ class _RoomCrudDialogState extends ConsumerState<RoomCrudDialog> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Row(
-                          children: [
-                            Expanded(
-                              child: AppTextField(
-                                label: 'Nomor Kamar',
-                                hint: 'Contoh: 305',
-                                controller: _roomNumberController,
-                                prefixIcon: Icons.meeting_room_outlined,
-                                validator: (v) =>
-                                    (v == null || v.trim().isEmpty) ? 'Nomor kamar wajib diisi' : null,
+                        if (isMobile) ...[
+                          AppTextField(
+                            label: 'Nomor Kamar',
+                            hint: 'Contoh: 305',
+                            controller: _roomNumberController,
+                            prefixIcon: Icons.meeting_room_outlined,
+                            validator: (v) =>
+                                (v == null || v.trim().isEmpty) ? 'Nomor kamar wajib diisi' : null,
+                          ),
+                          const SizedBox(height: AppSpacing.sm),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Lantai',
+                                style: AppTypography.bodySm.copyWith(fontWeight: FontWeight.w600),
                               ),
-                            ),
-                            const SizedBox(width: AppSpacing.md),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Lantai',
-                                    style: AppTypography.bodySm.copyWith(fontWeight: FontWeight.w600),
-                                  ),
-                                  const SizedBox(height: AppSpacing.xs),
-                                  DropdownButtonFormField<int>(
-                                    initialValue: _selectedFloor,
-                                    decoration: const InputDecoration(
-                                      contentPadding: EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                                    ),
-                                    items: const [
-                                      DropdownMenuItem(value: 1, child: Text('Lantai 1')),
-                                      DropdownMenuItem(value: 2, child: Text('Lantai 2')),
-                                      DropdownMenuItem(value: 3, child: Text('Lantai 3')),
-                                    ],
-                                    onChanged: (v) => setState(() => _selectedFloor = v ?? 1),
-                                  ),
+                              const SizedBox(height: AppSpacing.xs),
+                              DropdownButtonFormField<int>(
+                                initialValue: _selectedFloor,
+                                decoration: const InputDecoration(
+                                  contentPadding: EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                                ),
+                                items: const [
+                                  DropdownMenuItem(value: 1, child: Text('Lantai 1')),
+                                  DropdownMenuItem(value: 2, child: Text('Lantai 2')),
+                                  DropdownMenuItem(value: 3, child: Text('Lantai 3')),
                                 ],
+                                onChanged: (v) => setState(() => _selectedFloor = v ?? 1),
                               ),
-                            ),
-                          ],
-                        ),
-
-                        const SizedBox(height: AppSpacing.md),
-
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Tipe Kamar',
-                                    style: AppTypography.bodySm.copyWith(fontWeight: FontWeight.w600),
-                                  ),
-                                  const SizedBox(height: AppSpacing.xs),
-                                  DropdownButtonFormField<String>(
-                                    initialValue: _selectedType,
-                                    decoration: const InputDecoration(
-                                      contentPadding: EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                                    ),
-                                    items: const [
-                                      DropdownMenuItem(value: 'Standard', child: Text('Standard')),
-                                      DropdownMenuItem(value: 'Superior', child: Text('Superior')),
-                                      DropdownMenuItem(value: 'Deluxe', child: Text('Deluxe')),
-                                      DropdownMenuItem(value: 'Family', child: Text('Family')),
-                                    ],
-                                    onChanged: (v) => setState(() => _selectedType = v ?? 'Superior'),
-                                  ),
+                            ],
+                          ),
+                          const SizedBox(height: AppSpacing.sm),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Tipe Kamar',
+                                style: AppTypography.bodySm.copyWith(fontWeight: FontWeight.w600),
+                              ),
+                              const SizedBox(height: AppSpacing.xs),
+                              DropdownButtonFormField<String>(
+                                initialValue: _selectedType,
+                                decoration: const InputDecoration(
+                                  contentPadding: EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                                ),
+                                items: const [
+                                  DropdownMenuItem(value: 'Standard', child: Text('Standard')),
+                                  DropdownMenuItem(value: 'Superior', child: Text('Superior')),
+                                  DropdownMenuItem(value: 'Deluxe', child: Text('Deluxe')),
+                                  DropdownMenuItem(value: 'Family', child: Text('Family')),
                                 ],
+                                onChanged: (v) => setState(() => _selectedType = v ?? 'Superior'),
                               ),
-                            ),
-                            const SizedBox(width: AppSpacing.md),
-                            Expanded(
-                              child: AppTextField(
-                                label: 'Tarif Dasar / Malam (Rp)',
-                                controller: _basePriceController,
-                                keyboardType: TextInputType.number,
-                                prefixIcon: Icons.payments_outlined,
-                                validator: (v) =>
-                                    (v == null || v.trim().isEmpty) ? 'Tarif wajib diisi' : null,
+                            ],
+                          ),
+                          const SizedBox(height: AppSpacing.sm),
+                          AppTextField(
+                            label: 'Tarif Dasar / Malam (Rp)',
+                            controller: _basePriceController,
+                            keyboardType: TextInputType.number,
+                            prefixIcon: Icons.payments_outlined,
+                            validator: (v) =>
+                                (v == null || v.trim().isEmpty) ? 'Tarif wajib diisi' : null,
+                          ),
+                        ] else ...[
+                          Row(
+                            children: [
+                              Expanded(
+                                child: AppTextField(
+                                  label: 'Nomor Kamar',
+                                  hint: 'Contoh: 305',
+                                  controller: _roomNumberController,
+                                  prefixIcon: Icons.meeting_room_outlined,
+                                  validator: (v) =>
+                                      (v == null || v.trim().isEmpty) ? 'Nomor kamar wajib diisi' : null,
+                                ),
                               ),
-                            ),
-                          ],
-                        ),
+                              const SizedBox(width: AppSpacing.md),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Lantai',
+                                      style: AppTypography.bodySm.copyWith(fontWeight: FontWeight.w600),
+                                    ),
+                                    const SizedBox(height: AppSpacing.xs),
+                                    DropdownButtonFormField<int>(
+                                      initialValue: _selectedFloor,
+                                      decoration: const InputDecoration(
+                                        contentPadding: EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                                      ),
+                                      items: const [
+                                        DropdownMenuItem(value: 1, child: Text('Lantai 1')),
+                                        DropdownMenuItem(value: 2, child: Text('Lantai 2')),
+                                        DropdownMenuItem(value: 3, child: Text('Lantai 3')),
+                                      ],
+                                      onChanged: (v) => setState(() => _selectedFloor = v ?? 1),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+
+                          const SizedBox(height: AppSpacing.md),
+
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Tipe Kamar',
+                                      style: AppTypography.bodySm.copyWith(fontWeight: FontWeight.w600),
+                                    ),
+                                    const SizedBox(height: AppSpacing.xs),
+                                    DropdownButtonFormField<String>(
+                                      initialValue: _selectedType,
+                                      decoration: const InputDecoration(
+                                        contentPadding: EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                                      ),
+                                      items: const [
+                                        DropdownMenuItem(value: 'Standard', child: Text('Standard')),
+                                        DropdownMenuItem(value: 'Superior', child: Text('Superior')),
+                                        DropdownMenuItem(value: 'Deluxe', child: Text('Deluxe')),
+                                        DropdownMenuItem(value: 'Family', child: Text('Family')),
+                                      ],
+                                      onChanged: (v) => setState(() => _selectedType = v ?? 'Superior'),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(width: AppSpacing.md),
+                              Expanded(
+                                child: AppTextField(
+                                  label: 'Tarif Dasar / Malam (Rp)',
+                                  controller: _basePriceController,
+                                  keyboardType: TextInputType.number,
+                                  prefixIcon: Icons.payments_outlined,
+                                  validator: (v) =>
+                                      (v == null || v.trim().isEmpty) ? 'Tarif wajib diisi' : null,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
 
                         const SizedBox(height: AppSpacing.lg),
 
@@ -498,15 +565,17 @@ class _RoomCrudDialogState extends ConsumerState<RoomCrudDialog> {
 
                 const Divider(height: 24),
 
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
+                Wrap(
+                  alignment: WrapAlignment.end,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  spacing: AppSpacing.sm,
+                  runSpacing: AppSpacing.sm,
                   children: [
                     AppButton(
                       label: 'Batal',
                       variant: AppButtonVariant.outline,
                       onPressed: () => Navigator.of(context).pop(),
                     ),
-                    const SizedBox(width: AppSpacing.md),
                     AppButton(
                       label: widget.roomToEdit != null ? 'Simpan Perubahan' : 'Simpan Unit Kamar',
                       variant: AppButtonVariant.primary,

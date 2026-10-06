@@ -49,107 +49,140 @@ class _ReceptionistTopBarState extends State<ReceptionistTopBar> {
 
   @override
   Widget build(BuildContext context) {
-    final width     = MediaQuery.of(context).size.width;
-    final isMobile  = width < 600;
-    final isTablet  = width >= 600 && width < 900;
+    final width = MediaQuery.of(context).size.width;
+    final isMobile = width < 600;
+    final isTablet = width >= 600 && width < 900;
 
-    final timeStr   = DateFormat('HH:mm:ss').format(_now);
-    final dateStr   = DateFormat('EEE, d MMM yyyy', 'id').format(_now);
-    final initials  = _initials(widget.userName);
+    final timeStr = DateFormat('HH:mm:ss').format(_now);
+    final dateStr = DateFormat('EEE, d MMM yyyy', 'id').format(_now);
+    final initials = _initials(widget.userName);
 
-    return Container(
-      height: 64,
-      decoration: const BoxDecoration(
-        color: AppColors.navy900,
-        border: Border(bottom: BorderSide(color: Color(0xFF0A2A6E), width: 1)),
-      ),
-      padding: EdgeInsets.symmetric(horizontal: isMobile ? AppSpacing.md : AppSpacing.lg),
-      child: Row(
-        children: [
-          // ── Brand ──────────────────────────────────────────────
-          _BrandMark(compact: isMobile),
+    return SafeArea(
+      bottom: false,
+      child: Container(
+        height: 64,
+        decoration: const BoxDecoration(
+          color: AppColors.navy900,
+          border: Border(
+            bottom: BorderSide(color: Color(0xFF0A2A6E), width: 1),
+          ),
+        ),
+        padding: EdgeInsets.symmetric(
+          horizontal: isMobile ? AppSpacing.sm + 4 : AppSpacing.lg,
+        ),
+        child: Row(
+          children: [
+            // ── Brand ──────────────────────────────────────────────
+            _BrandMark(compact: isMobile),
 
-          if (!isMobile) ...[
-            SizedBox(width: isTablet ? AppSpacing.md : AppSpacing.lg),
-            _VDivider(),
-            SizedBox(width: isTablet ? AppSpacing.md : AppSpacing.lg),
+            if (!isMobile) ...[
+              SizedBox(width: isTablet ? AppSpacing.md : AppSpacing.lg),
+              _VDivider(),
+              SizedBox(width: isTablet ? AppSpacing.md : AppSpacing.lg),
 
-            // ── Live Date + Clock ──────────────────────────────────
-            Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  timeStr,
-                  style: TextStyle(
-                    fontFamily: 'monospace',
-                    color: Colors.white,
-                    fontSize: isTablet ? 16 : 19,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 1.5,
-                  ),
-                ),
-                if (!isTablet)
+              // ── Live Date + Clock ──────────────────────────────────
+              Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
                   Text(
-                    dateStr,
-                    style: AppTypography.caption.copyWith(
-                      color: AppColors.navy100.withAlpha(160),
-                      fontSize: 12,
+                    timeStr,
+                    style: TextStyle(
+                      fontFamily: 'monospace',
+                      color: Colors.white,
+                      fontSize: isTablet ? 16 : 19,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 1.5,
                     ),
                   ),
-              ],
-            ),
-          ],
-
-          const Spacer(),
-
-          // ── Active Guests Indicator ────────────────────────────
-          if (widget.onOpenActiveGuests != null)
-            _ActiveGuestsChip(
-              count: widget.activeWaCount,
-              onTap: widget.onOpenActiveGuests!,
-              compact: isMobile,
-            ),
-
-          if (widget.onOpenManagerPortal != null) ...[
-            SizedBox(width: isMobile ? AppSpacing.xs : AppSpacing.sm),
-            if (isMobile)
-              IconButton(
-                tooltip: 'Portal Manajer & Inventaris Kamar',
-                icon: const Icon(Icons.admin_panel_settings_outlined, color: Colors.white, size: 20),
-                onPressed: widget.onOpenManagerPortal,
-              )
-            else
-              TextButton.icon(
-                style: TextButton.styleFrom(
-                  backgroundColor: AppColors.navy700,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                  shape: RoundedRectangleBorder(borderRadius: AppRadius.roundedMd),
-                ),
-                icon: const Icon(Icons.admin_panel_settings_outlined, size: 16, color: AppColors.orange500),
-                label: Text(
-                  'Portal Manajer (Inventaris)',
-                  style: AppTypography.caption.copyWith(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                onPressed: widget.onOpenManagerPortal,
+                  if (!isTablet)
+                    Text(
+                      dateStr,
+                      style: AppTypography.caption.copyWith(
+                        color: AppColors.navy100.withAlpha(160),
+                        fontSize: 12,
+                      ),
+                    ),
+                ],
               ),
+            ] else ...[
+              const SizedBox(width: AppSpacing.xs),
+              // Compact mobile clock
+              Text(
+                DateFormat('HH:mm').format(_now),
+                style: const TextStyle(
+                  fontFamily: 'monospace',
+                  color: Colors.white70,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.5,
+                ),
+              ),
+            ],
+
+            const Spacer(),
+
+            // ── Active Guests Indicator ────────────────────────────
+            if (widget.onOpenActiveGuests != null)
+              _ActiveGuestsChip(
+                count: widget.activeWaCount,
+                onTap: widget.onOpenActiveGuests!,
+                compact: isMobile,
+              ),
+
+            if (widget.onOpenManagerPortal != null) ...[
+              SizedBox(width: isMobile ? AppSpacing.xs : AppSpacing.sm),
+              if (isMobile)
+                IconButton(
+                  tooltip: 'Portal Manajer & Inventaris Kamar',
+                  icon: const Icon(
+                    Icons.admin_panel_settings_outlined,
+                    color: Colors.white,
+                    size: 20,
+                  ),
+                  onPressed: widget.onOpenManagerPortal,
+                )
+              else
+                TextButton.icon(
+                  style: TextButton.styleFrom(
+                    backgroundColor: AppColors.navy700,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: AppRadius.roundedMd,
+                    ),
+                  ),
+                  icon: const Icon(
+                    Icons.admin_panel_settings_outlined,
+                    size: 16,
+                    color: AppColors.orange500,
+                  ),
+                  label: Text(
+                    'Portal Manajer (Inventaris)',
+                    style: AppTypography.caption.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  onPressed: widget.onOpenManagerPortal,
+                ),
+            ],
+
+            SizedBox(width: isMobile ? AppSpacing.xs : AppSpacing.md),
+
+            // ── User Info + Logout ─────────────────────────────────
+            _UserChip(
+              initials: initials,
+              name: widget.userName,
+              role: widget.userRole,
+              onLogout: widget.onLogout,
+              compact: isMobile || isTablet,
+            ),
           ],
-
-          SizedBox(width: isMobile ? AppSpacing.xs : AppSpacing.md),
-
-          // ── User Info + Logout ─────────────────────────────────
-          _UserChip(
-            initials: initials,
-            name: widget.userName,
-            role: widget.userRole,
-            onLogout: widget.onLogout,
-            compact: isMobile || isTablet,
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -209,7 +242,10 @@ class _BrandMark extends StatelessWidget {
               Row(
                 children: [
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 2,
+                    ),
                     decoration: BoxDecoration(
                       color: const Color(0xFFDC2626).withAlpha(50),
                       borderRadius: AppRadius.roundedSm,
@@ -246,11 +282,7 @@ class _BrandMark extends StatelessWidget {
 class _VDivider extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 28,
-      width: 1,
-      color: Colors.white.withAlpha(20),
-    );
+    return Container(height: 28, width: 1, color: Colors.white.withAlpha(20));
   }
 }
 
@@ -316,7 +348,9 @@ class _ActiveGuestsChipState extends State<_ActiveGuestsChip> {
         ];
       }
     } else {
-      bgColor = _hovered ? AppColors.navy700 : AppColors.navy700.withValues(alpha: 0.5);
+      bgColor = _hovered
+          ? AppColors.navy700
+          : AppColors.navy700.withValues(alpha: 0.5);
       borderColor = Colors.white.withValues(alpha: 0.15);
       iconColor = Colors.white70;
       textColor = Colors.white70;
@@ -327,7 +361,7 @@ class _ActiveGuestsChipState extends State<_ActiveGuestsChip> {
 
     return MouseRegion(
       onEnter: (_) => setState(() => _hovered = true),
-      onExit: (_)  => setState(() => _hovered = false),
+      onExit: (_) => setState(() => _hovered = false),
       cursor: SystemMouseCursors.click,
       child: GestureDetector(
         onTap: widget.onTap,
@@ -346,11 +380,7 @@ class _ActiveGuestsChipState extends State<_ActiveGuestsChip> {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(
-                Icons.people_alt_rounded,
-                size: 16,
-                color: iconColor,
-              ),
+              Icon(Icons.people_alt_rounded, size: 16, color: iconColor),
               if (!widget.compact) ...[
                 const SizedBox(width: 7),
                 Text(
@@ -366,7 +396,10 @@ class _ActiveGuestsChipState extends State<_ActiveGuestsChip> {
               if (hasGuests) ...[
                 const SizedBox(width: 8),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 7,
+                    vertical: 2,
+                  ),
                   decoration: BoxDecoration(
                     color: badgeBgColor,
                     borderRadius: AppRadius.roundedFull,
@@ -487,7 +520,7 @@ class _UserChipState extends State<_UserChip> {
         // Logout button
         MouseRegion(
           onEnter: (_) => setState(() => _hovered = true),
-          onExit: (_)  => setState(() => _hovered = false),
+          onExit: (_) => setState(() => _hovered = false),
           cursor: SystemMouseCursors.click,
           child: Tooltip(
             message: 'Keluar dari sistem',
@@ -537,183 +570,210 @@ class ManagerSidebar extends StatelessWidget {
   });
 
   static const _navItems = [
-    (Icons.dashboard_outlined,      Icons.dashboard_rounded,      'Ikhtisar'),
-    (Icons.meeting_room_outlined,   Icons.meeting_room_rounded,   'Inventaris Kamar'),
-    (Icons.bar_chart_outlined,      Icons.bar_chart_rounded,      'Laporan'),
-    (Icons.history_rounded,         Icons.history_rounded,        'Audit Trail'),
+    (Icons.dashboard_outlined, Icons.dashboard_rounded, 'Ikhtisar'),
+    (
+      Icons.meeting_room_outlined,
+      Icons.meeting_room_rounded,
+      'Inventaris Kamar',
+    ),
+    (Icons.bar_chart_outlined, Icons.bar_chart_rounded, 'Laporan'),
+    (Icons.history_rounded, Icons.history_rounded, 'Audit Trail'),
   ];
 
   @override
   Widget build(BuildContext context) {
     final initials = _initials(managerName);
 
-    return Container(
-      width: 240,
-      height: double.infinity,
-      decoration: const BoxDecoration(
-        color: AppColors.navy900,
-        border: Border(right: BorderSide(color: Color(0xFF0A2A6E), width: 1)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // ── Header ──────────────────────────────────────────────
-          Container(
-            height: 64,
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Row(
-              children: [
-                Container(
-                  width: 36,
-                  height: 36,
-                  decoration: BoxDecoration(
-                    color: AppColors.orange600,
-                    borderRadius: AppRadius.roundedMd,
-                  ),
-                  child: const Center(
-                    child: Text(
-                      'SH',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w800,
-                        fontSize: 15,
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Sinar Harapan',
-                      style: AppTypography.h3.copyWith(
-                        color: Colors.white,
-                        fontSize: 15.5,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    Text(
-                      'Manager Portal',
-                      style: AppTypography.caption.copyWith(
-                        color: AppColors.navy100.withAlpha(140),
-                        fontSize: 11,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-
-          const Divider(color: Color(0xFF0A2A6E), height: 1),
-
-          const SizedBox(height: AppSpacing.sm),
-
-          // ── Nav Items ────────────────────────────────────────────
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-                  child: Text(
-                    'NAVIGASI',
-                    style: AppTypography.overline.copyWith(
-                      color: AppColors.navy100.withAlpha(80),
-                      fontSize: 11,
-                    ),
-                  ),
-                ),
-                ...List.generate(_navItems.length, (i) {
-                  return _SidebarNavItem(
-                    inactiveIcon: _navItems[i].$1,
-                    activeIcon: _navItems[i].$2,
-                    label: _navItems[i].$3,
-                    isActive: activeIndex == i,
-                    onTap: () => onNavChanged(i),
-                  );
-                }),
-              ],
-            ),
-          ),
-
-          const Spacer(),
-
-          const Divider(color: Color(0xFF0A2A6E), height: 1),
-
-          // ── User Section ─────────────────────────────────────────
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              children: [
-                Container(
-                  width: 38,
-                  height: 38,
-                  decoration: BoxDecoration(
-                    color: AppColors.navy500,
-                    borderRadius: AppRadius.roundedFull,
-                  ),
-                  child: Center(
-                    child: Text(
-                      initials,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w700,
-                        fontSize: 14,
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
+    return SafeArea(
+      right: false,
+      child: Container(
+        width: 240,
+        height: double.infinity,
+        decoration: const BoxDecoration(
+          color: AppColors.navy900,
+          border: Border(right: BorderSide(color: Color(0xFF0A2A6E), width: 1)),
+        ),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            return SingleChildScrollView(
+              child: ConstrainedBox(
+                constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                child: IntrinsicHeight(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        managerName.length > 16
-                            ? '${managerName.substring(0, 14)}…'
-                            : managerName,
-                        style: AppTypography.bodySm.copyWith(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w600,
-                          fontSize: 13.5,
+                      // ── Header ──────────────────────────────────────────────
+                      Container(
+                        height: 64,
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 36,
+                              height: 36,
+                              decoration: BoxDecoration(
+                                color: AppColors.orange600,
+                                borderRadius: AppRadius.roundedMd,
+                              ),
+                              child: const Center(
+                                child: Text(
+                                  'SH',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w800,
+                                    fontSize: 15,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Sinar Harapan',
+                                  style: AppTypography.h3.copyWith(
+                                    color: Colors.white,
+                                    fontSize: 15.5,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                                Text(
+                                  'Manager Portal',
+                                  style: AppTypography.caption.copyWith(
+                                    color: AppColors.navy100.withAlpha(140),
+                                    fontSize: 11,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
                         ),
-                        maxLines: 1,
                       ),
-                      Text(
-                        'MANAGER',
-                        style: AppTypography.overline.copyWith(
-                          color: AppColors.orange500,
-                          fontSize: 11,
+
+                      const Divider(color: Color(0xFF0A2A6E), height: 1),
+
+                      const SizedBox(height: AppSpacing.sm),
+
+                      // ── Nav Items ────────────────────────────────────────────
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 6,
+                              ),
+                              child: Text(
+                                'NAVIGASI',
+                                style: AppTypography.overline.copyWith(
+                                  color: AppColors.navy100.withAlpha(80),
+                                  fontSize: 11,
+                                ),
+                              ),
+                            ),
+                            ...List.generate(_navItems.length, (i) {
+                              return _SidebarNavItem(
+                                inactiveIcon: _navItems[i].$1,
+                                activeIcon: _navItems[i].$2,
+                                label: _navItems[i].$3,
+                                isActive: activeIndex == i,
+                                onTap: () => onNavChanged(i),
+                              );
+                            }),
+                          ],
+                        ),
+                      ),
+
+                      const Spacer(),
+
+                      const Divider(color: Color(0xFF0A2A6E), height: 1),
+
+                      // ── User Section ─────────────────────────────────────────
+                      Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 38,
+                              height: 38,
+                              decoration: BoxDecoration(
+                                color: AppColors.navy500,
+                                borderRadius: AppRadius.roundedFull,
+                              ),
+                              child: Center(
+                                child: Text(
+                                  initials,
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    managerName.length > 16
+                                        ? '${managerName.substring(0, 14)}…'
+                                        : managerName,
+                                    style: AppTypography.bodySm.copyWith(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 13.5,
+                                    ),
+                                    maxLines: 1,
+                                  ),
+                                  Text(
+                                    'MANAGER',
+                                    style: AppTypography.overline.copyWith(
+                                      color: AppColors.orange500,
+                                      fontSize: 11,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            IconButton(
+                              icon: const Icon(
+                                Icons.logout_rounded,
+                                size: 19,
+                                color: Colors.white38,
+                              ),
+                              tooltip: 'Keluar',
+                              onPressed: onLogout,
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(
+                                minWidth: 32,
+                                minHeight: 32,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ],
                   ),
                 ),
-                IconButton(
-                  icon: const Icon(Icons.logout_rounded,
-                      size: 19, color: Colors.white38),
-                  tooltip: 'Keluar',
-                  onPressed: onLogout,
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-                ),
-              ],
-            ),
-          ),
-        ],
+              ),
+            );
+          },
+        ),
       ),
     );
   }
+}
 
-  String _initials(String name) {
-    final parts = name.trim().split(' ');
-    if (parts.length >= 2) return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
-    return name.isNotEmpty ? name[0].toUpperCase() : 'M';
-  }
+String _initials(String name) {
+  final parts = name.trim().split(' ');
+  if (parts.length >= 2) return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
+  return name.isNotEmpty ? name[0].toUpperCase() : 'M';
 }
 
 class _SidebarNavItem extends StatefulWidget {
@@ -744,7 +804,7 @@ class _SidebarNavItemState extends State<_SidebarNavItem> {
 
     return MouseRegion(
       onEnter: (_) => setState(() => _hovered = true),
-      onExit: (_)  => setState(() => _hovered = false),
+      onExit: (_) => setState(() => _hovered = false),
       cursor: SystemMouseCursors.click,
       child: GestureDetector(
         onTap: widget.onTap,
@@ -754,7 +814,9 @@ class _SidebarNavItemState extends State<_SidebarNavItem> {
           decoration: BoxDecoration(
             color: isActive
                 ? AppColors.navy700.withAlpha(180)
-                : (_hovered ? AppColors.navy700.withAlpha(80) : Colors.transparent),
+                : (_hovered
+                      ? AppColors.navy700.withAlpha(80)
+                      : Colors.transparent),
             borderRadius: AppRadius.roundedMd,
           ),
           child: Stack(
@@ -775,7 +837,10 @@ class _SidebarNavItemState extends State<_SidebarNavItem> {
                 ),
 
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 10,
+                ),
                 child: Row(
                   children: [
                     Icon(
@@ -792,7 +857,9 @@ class _SidebarNavItemState extends State<_SidebarNavItem> {
                         color: isActive
                             ? Colors.white
                             : (_hovered ? Colors.white70 : Colors.white54),
-                        fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
+                        fontWeight: isActive
+                            ? FontWeight.w600
+                            : FontWeight.w400,
                         fontSize: 15,
                       ),
                     ),
