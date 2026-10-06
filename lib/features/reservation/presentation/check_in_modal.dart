@@ -48,6 +48,8 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
   bool _isOcrLoading = false;
   bool _isOcrExtracted = false;
   double _ocrConfidence = 0.0;
+  String? _idImageUrl;
+  String? _nationality;
   String? _errorMessage;
 
   @override
@@ -239,6 +241,12 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
         if (ocrResult['alamat'] != null) {
           _addressController.text = ocrResult['alamat'].toString();
         }
+        if (ocrResult['tempImageUrl'] != null) {
+          _idImageUrl = ocrResult['tempImageUrl'].toString();
+        }
+        if (ocrResult['nationality'] != null) {
+          _nationality = ocrResult['nationality'].toString();
+        }
         _ocrConfidence = (ocrResult['confidence'] as num?)?.toDouble() ?? 0.9;
       });
     } on ApiException catch (e) {
@@ -348,7 +356,9 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
             idType: _idType,
             idNumber: cleanNik,
             guestAddress: _addressController.text.trim(),
+            guestNationality: _nationality,
             guestPhone: _phoneController.text.trim(),
+            idImageUrl: _idImageUrl,
             bookingSource: _bookingSource,
             reddoorzBookingCode: _bookingSource == 'REDDOORZ'
                 ? _bookingCodeController.text.trim()

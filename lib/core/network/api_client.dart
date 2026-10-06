@@ -257,19 +257,20 @@ class ApiClient {
     return _execute(() => _httpClient.delete(_buildUri(path), headers: _headers()));
   }
 
-  /// Upload multipart/form-data — untuk OCR extract-identity
+  /// Upload multipart/form-data — untuk OCR extract-identity (endpoint.md §4.1: field 'image')
   Future<dynamic> postMultipart(
     String path, {
     required List<int> fileBytes,
     required String filename,
     required Map<String, String> fields,
+    String fileFieldName = 'image',
   }) async {
     if (kDebugMode) debugPrint('[API] POST multipart $path');
     final uri = _buildUri(path);
     final request = http.MultipartRequest('POST', uri)
       ..headers.addAll(_headers(isMultipart: true))
       ..fields.addAll(fields)
-      ..files.add(http.MultipartFile.fromBytes('file', fileBytes, filename: filename));
+      ..files.add(http.MultipartFile.fromBytes(fileFieldName, fileBytes, filename: filename));
     try {
       final streamedResp = await request.send().timeout(AppConfig.connectTimeout);
       final resp = await http.Response.fromStream(streamedResp);
@@ -278,7 +279,7 @@ class ApiClient {
           final r2 = http.MultipartRequest('POST', uri)
             ..headers.addAll(_headers(isMultipart: true))
             ..fields.addAll(fields)
-            ..files.add(http.MultipartFile.fromBytes('file', fileBytes, filename: filename));
+            ..files.add(http.MultipartFile.fromBytes(fileFieldName, fileBytes, filename: filename));
           final s = await r2.send().timeout(AppConfig.connectTimeout);
           return http.Response.fromStream(s);
         });
