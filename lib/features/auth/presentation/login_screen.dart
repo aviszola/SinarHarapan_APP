@@ -17,8 +17,8 @@ class LoginScreen extends ConsumerStatefulWidget {
 class _LoginScreenState extends ConsumerState<LoginScreen>
     with SingleTickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
-  final _usernameController = TextEditingController(text: 'resepsionis01');
-  final _passwordController = TextEditingController(text: 'Resepsionis123!');
+  final _usernameController = TextEditingController();
+  final _passwordController = TextEditingController();
 
   late final AnimationController _animCtrl;
   late final Animation<double> _fadeIn;
@@ -27,6 +27,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        ref.read(authStateProvider.notifier).clearError();
+      }
+    });
     _animCtrl = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 600),

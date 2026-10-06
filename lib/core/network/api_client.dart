@@ -197,9 +197,15 @@ class ApiClient {
     return false;
   }
 
+  bool _isAuthPath(String path) {
+    final clean = path.startsWith('/') ? path : '/$path';
+    return clean.startsWith('/auth/');
+  }
+
   Future<dynamic> _execute(
     Future<http.Response> Function() call, {
     bool isGet = false,
+    bool allowRefresh = true,
   }) async {
     try {
       http.Response resp;
@@ -210,9 +216,11 @@ class ApiClient {
             code: ApiErrorCode.timeout);
       }
 
-      // Interceptor 401: refresh sekali, retry
-      if (resp.statusCode == 401) {
-        // Untuk GET, coba satu kali retry setelah refresh
+      // Interceptor 401: refresh sekali, retry (hanya untuk endpoint non-auth dengan token aktif)
+      if (resp.statusCode == 401 &&
+          allowRefresh &&
+          _tokenCache != null &&
+          _tokenCache!.isNotEmpty) {
         return _tryRefreshAndRetry(() => call());
       }
 
@@ -231,31 +239,43 @@ class ApiClient {
 
   Future<dynamic> get(String path, {Map<String, dynamic>? queryParams}) async {
     if (kDebugMode) debugPrint('[API] GET $path $queryParams');
-    return _execute(() => _httpClient.get(_buildUri(path, queryParams), headers: _headers()),
-        isGet: true);
+    return _execute(
+      () => _httpClient.get(_buildUri(path, queryParams), headers: _headers()),
+      isGet: true,
+      allowRefresh: !_isAuthPath(path),
+    );
   }
 
   Future<dynamic> post(String path, {dynamic body}) async {
     if (kDebugMode) debugPrint('[API] POST $path');
-    return _execute(() => _httpClient.post(
-          _buildUri(path),
-          headers: _headers(),
-          body: body != null ? jsonEncode(body) : null,
-        ));
+    return _execute(
+      () => _httpClient.post(
+        _buildUri(path),
+        headers: _headers(),
+        body: body != null ? jsonEncode(body) : null,
+      ),
+      allowRefresh: !_isAuthPath(path),
+    );
   }
 
   Future<dynamic> patch(String path, {dynamic body}) async {
     if (kDebugMode) debugPrint('[API] PATCH $path');
-    return _execute(() => _httpClient.patch(
-          _buildUri(path),
-          headers: _headers(),
-          body: body != null ? jsonEncode(body) : null,
-        ));
+    return _execute(
+      () => _httpClient.patch(
+        _buildUri(path),
+        headers: _headers(),
+        body: body != null ? jsonEncode(body) : null,
+      ),
+      allowRefresh: !_isAuthPath(path),
+    );
   }
 
   Future<dynamic> delete(String path) async {
     if (kDebugMode) debugPrint('[API] DELETE $path');
-    return _execute(() => _httpClient.delete(_buildUri(path), headers: _headers()));
+    return _execute(
+      () => _httpClient.delete(_buildUri(path), headers: _headers()),
+      allowRefresh: !_isAuthPath(path),
+    );
   }
 
   @visibleForTesting

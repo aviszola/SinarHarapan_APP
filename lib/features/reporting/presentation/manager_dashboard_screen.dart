@@ -59,9 +59,11 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
     if (mounted) setState(() => _isLoadingAuditLogs = false);
   }
 
-  void _handleLogout() {
-    ref.read(authStateProvider.notifier).logout();
-    context.go('/login');
+  void _handleLogout() async {
+    await ref.read(authStateProvider.notifier).logout();
+    if (mounted) {
+      context.go('/login');
+    }
   }
 
   Future<void> _handleToggleMaintenance(RoomModel room) async {
