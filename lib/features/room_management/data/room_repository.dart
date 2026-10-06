@@ -303,7 +303,9 @@ class RoomRepository {
   Future<String?> getInvoiceUrl(String reservationId) async {
     final res = await _api.get('/reservations/$reservationId/invoice');
     if (res is Map<String, dynamic>) {
-      return res['url']?.toString() ?? res['invoiceUrl']?.toString();
+      return res['invoicePdfUrl']?.toString() ??
+          res['invoiceUrl']?.toString() ??
+          res['url']?.toString();
     }
     return null;
   }

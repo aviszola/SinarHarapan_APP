@@ -160,6 +160,8 @@ class _RoomCrudDialogState extends ConsumerState<RoomCrudDialog> {
                           Expanded(
                             child: TextField(
                               controller: customController,
+                              scrollPadding: const EdgeInsets.only(bottom: 120, top: 20),
+                              scrollPhysics: const ClampingScrollPhysics(),
                               decoration: InputDecoration(
                                 hintText: 'Contoh: Hair Dryer, Mesin Kopi...',
                                 hintStyle: const TextStyle(fontSize: 13, color: AppColors.textDisabled),
@@ -311,18 +313,21 @@ class _RoomCrudDialogState extends ConsumerState<RoomCrudDialog> {
   Widget build(BuildContext context) {
     final mediaQuery = MediaQuery.of(context);
     final isMobile = mediaQuery.size.width < 640;
+    final availableHeight = mediaQuery.size.height - mediaQuery.viewInsets.bottom;
 
     return Dialog(
+      insetAnimationDuration: Duration.zero,
+      insetAnimationCurve: Curves.linear,
       insetPadding: EdgeInsets.symmetric(
         horizontal: isMobile ? 12 : 24,
-        vertical: isMobile ? 16 : 24,
+        vertical: isMobile ? 10 : 24,
       ),
       shape: RoundedRectangleBorder(borderRadius: AppRadius.roundedLg),
       backgroundColor: AppColors.surface,
       child: ConstrainedBox(
         constraints: BoxConstraints(
           maxWidth: math.min(620.0, mediaQuery.size.width - 24),
-          maxHeight: math.min(720.0, mediaQuery.size.height * 0.92),
+          maxHeight: math.min(720.0, availableHeight * (isMobile ? 0.96 : 0.92)),
         ),
         child: Padding(
           padding: EdgeInsets.all(isMobile ? AppSpacing.md : AppSpacing.xl),
@@ -357,6 +362,8 @@ class _RoomCrudDialogState extends ConsumerState<RoomCrudDialog> {
 
                 Expanded(
                   child: SingleChildScrollView(
+                    physics: const ClampingScrollPhysics(),
+                    keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [

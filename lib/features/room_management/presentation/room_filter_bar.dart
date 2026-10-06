@@ -196,6 +196,8 @@ class RoomFilterBar extends ConsumerWidget {
         height: 36,
         child: TextField(
           style: const TextStyle(fontSize: 13),
+          scrollPadding: const EdgeInsets.only(bottom: 120, top: 20),
+          scrollPhysics: const ClampingScrollPhysics(),
           decoration: InputDecoration(
             hintText: 'Cari kamar / tamu...',
             hintStyle: const TextStyle(fontSize: 12.5, color: AppColors.textSecondary),

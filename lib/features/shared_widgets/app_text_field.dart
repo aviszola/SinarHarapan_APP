@@ -8,6 +8,8 @@ class AppTextField extends StatefulWidget {
   final String label;
   final String? hint;
   final TextEditingController? controller;
+  final FocusNode? focusNode;
+  final EdgeInsets? scrollPadding;
   final bool isPassword;
   final bool isAutoFilled;
   final IconData? prefixIcon;
@@ -26,6 +28,8 @@ class AppTextField extends StatefulWidget {
     required this.label,
     this.hint,
     this.controller,
+    this.focusNode,
+    this.scrollPadding,
     this.isPassword = false,
     this.isAutoFilled = false,
     this.prefixIcon,
@@ -47,21 +51,51 @@ class AppTextField extends StatefulWidget {
 class _AppTextFieldState extends State<AppTextField> {
   bool _obscure = true;
   bool _focused = false;
-  late final FocusNode _focusNode;
+  FocusNode? _internalFocusNode;
+
+  FocusNode get _effectiveFocusNode =>
+      widget.focusNode ?? (_internalFocusNode ??= FocusNode());
 
   @override
   void initState() {
     super.initState();
     _obscure = widget.isPassword;
-    _focusNode = FocusNode()
-      ..addListener(() {
-        if (mounted) setState(() => _focused = _focusNode.hasFocus);
+    _effectiveFocusNode.addListener(_handleFocusChange);
+  }
+
+  @override
+  void didUpdateWidget(AppTextField oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.focusNode != oldWidget.focusNode) {
+      (oldWidget.focusNode ?? _internalFocusNode)
+          ?.removeListener(_handleFocusChange);
+      _effectiveFocusNode.addListener(_handleFocusChange);
+    }
+  }
+
+  void _handleFocusChange() {
+    if (_effectiveFocusNode.hasFocus) {
+      // Smooth auto-scroll context into visible area when virtual keyboard opens
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && _effectiveFocusNode.hasFocus) {
+          Scrollable.ensureVisible(
+            context,
+            alignment: 0.28,
+            duration: const Duration(milliseconds: 280),
+            curve: Curves.easeOutCubic,
+          );
+        }
       });
+    }
+    if (mounted) {
+      setState(() => _focused = _effectiveFocusNode.hasFocus);
+    }
   }
 
   @override
   void dispose() {
-    _focusNode.dispose();
+    _effectiveFocusNode.removeListener(_handleFocusChange);
+    _internalFocusNode?.dispose();
     super.dispose();
   }
 
@@ -75,14 +109,18 @@ class _AppTextFieldState extends State<AppTextField> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Expanded(
-              child: Text(
-                widget.label,
+              child: AnimatedDefaultTextStyle(
+                duration: const Duration(milliseconds: 180),
+                curve: Curves.easeOut,
                 style: AppTypography.bodySm.copyWith(
                   fontWeight: FontWeight.w600,
                   color: _focused ? AppColors.navy700 : AppColors.textPrimary,
                 ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
+                child: Text(
+                  widget.label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
             ),
             if (widget.isAutoFilled) ...[
@@ -117,7 +155,15 @@ class _AppTextFieldState extends State<AppTextField> {
 
         TextFormField(
           controller: widget.controller,
-          focusNode: _focusNode,
+          focusNode: _effectiveFocusNode,
+          scrollPadding: widget.scrollPadding ??
+              const EdgeInsets.only(
+                bottom: 120,
+                top: 24,
+                left: 16,
+                right: 16,
+              ),
+          scrollPhysics: const ClampingScrollPhysics(),
           obscureText: widget.isPassword && _obscure,
           keyboardType: widget.keyboardType,
           validator: widget.validator,

@@ -17,8 +17,8 @@ class LoginScreen extends ConsumerStatefulWidget {
 class _LoginScreenState extends ConsumerState<LoginScreen>
     with SingleTickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
-  final _usernameController = TextEditingController(text: 'resepsionis01');
-  final _passwordController = TextEditingController(text: 'Resepsionis123!');
+  final _usernameController = TextEditingController();
+  final _passwordController = TextEditingController();
 
   late final AnimationController _animCtrl;
   late final Animation<double> _fadeIn;
@@ -27,6 +27,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        ref.read(authStateProvider.notifier).clearError();
+      }
+    });
     _animCtrl = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 600),
@@ -83,6 +88,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
 
     return Scaffold(
       backgroundColor: AppColors.navy900,
+      resizeToAvoidBottomInset: true,
       body: Row(
         children: [
           // ── Left Panel: Brand Identity ──────────────────────────
@@ -105,6 +111,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                     child: SlideTransition(
                       position: _slideUp,
                       child: SingleChildScrollView(
+                        physics: const ClampingScrollPhysics(),
+                        keyboardDismissBehavior:
+                            ScrollViewKeyboardDismissBehavior.onDrag,
                         padding: EdgeInsets.symmetric(
                           horizontal: size.width > 900 ? 48 : (size.width < 400 ? 20 : 28),
                           vertical: size.width < 600 ? 20 : 40,
@@ -150,7 +159,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                                 // Username
                                 AppTextField(
                                   label: 'Nama Pengguna',
-                                  hint: 'receptionist atau manager',
+                                  hint: 'resepsionis01 atau manager01',
                                   controller: _usernameController,
                                   prefixIcon: Icons.person_outline_rounded,
                                   validator: (v) => (v == null || v.trim().isEmpty)

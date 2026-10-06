@@ -48,7 +48,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
     state = state.copyWith(isLoading: true, errorMessage: null);
     try {
       final user = await _repo.login(username: username, password: password);
-      state = state.copyWith(user: user, isLoading: false);
+      state = AuthState(user: user, isLoading: false, errorMessage: null);
       return true;
     } catch (e) {
       state = state.copyWith(
@@ -60,13 +60,31 @@ class AuthNotifier extends StateNotifier<AuthState> {
   }
 
   Future<bool> quickLogin(UserRole role) async {
-    final username = role == UserRole.receptionist ? 'receptionist' : 'manager';
-    return login(username, 'password123');
+    state = state.copyWith(isLoading: true, errorMessage: null);
+    try {
+      final user = await _repo.quickLogin(role);
+      state = AuthState(user: user, isLoading: false, errorMessage: null);
+      return true;
+    } catch (e) {
+      state = state.copyWith(
+        isLoading: false,
+        errorMessage: e.toString().replaceAll('Exception: ', ''),
+      );
+      return false;
+    }
   }
 
-  void logout() {
-    _repo.logout(); // Hapus token lokal + panggil POST /auth/logout best-effort
+  Future<void> logout() async {
     state = const AuthState();
+    try {
+      await _repo.logout();
+    } catch (_) {}
+  }
+
+  void clearError() {
+    if (state.errorMessage != null) {
+      state = state.copyWith(errorMessage: null);
+    }
   }
 }
 

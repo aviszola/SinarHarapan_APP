@@ -298,9 +298,10 @@ class _WhatsAppReceiptDialogState extends State<WhatsAppReceiptDialog> {
       620.0,
       mediaQuery.size.width - (isMobile ? 20 : 48),
     );
+    final availableHeight = mediaQuery.size.height - mediaQuery.viewInsets.bottom;
     final dialogHeight = math.min(
       780.0,
-      mediaQuery.size.height * (isMobile ? 0.95 : 0.90),
+      availableHeight * (isMobile ? 0.96 : 0.90),
     );
 
     final currencyFormatter = NumberFormat.currency(
@@ -317,9 +318,11 @@ class _WhatsAppReceiptDialogState extends State<WhatsAppReceiptDialog> {
     final cleanPhone = _sanitizePhoneNumber(_phoneController.text.trim());
 
     return Dialog(
+      insetAnimationDuration: Duration.zero,
+      insetAnimationCurve: Curves.linear,
       insetPadding: EdgeInsets.symmetric(
         horizontal: isMobile ? 10 : 24,
-        vertical: isMobile ? 12 : 24,
+        vertical: isMobile ? 10 : 24,
       ),
       shape: RoundedRectangleBorder(borderRadius: AppRadius.roundedLg),
       backgroundColor: AppColors.surface,
@@ -417,6 +420,8 @@ class _WhatsAppReceiptDialogState extends State<WhatsAppReceiptDialog> {
                 TextField(
                   controller: _phoneController,
                   keyboardType: TextInputType.phone,
+                  scrollPadding: const EdgeInsets.only(bottom: 120, top: 20),
+                  scrollPhysics: const ClampingScrollPhysics(),
                   onChanged: (_) => setState(() {}),
                   decoration: InputDecoration(
                     prefixIcon: const Icon(Icons.phone_android, size: 20),
@@ -461,6 +466,8 @@ class _WhatsAppReceiptDialogState extends State<WhatsAppReceiptDialog> {
                       child: TextField(
                         controller: _phoneController,
                         keyboardType: TextInputType.phone,
+                        scrollPadding: const EdgeInsets.only(bottom: 120, top: 20),
+                        scrollPhysics: const ClampingScrollPhysics(),
                         onChanged: (_) => setState(() {}),
                         decoration: InputDecoration(
                           prefixIcon: const Icon(Icons.phone_android, size: 20),
