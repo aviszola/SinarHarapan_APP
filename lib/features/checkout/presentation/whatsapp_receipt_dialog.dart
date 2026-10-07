@@ -9,6 +9,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../app/theme.dart';
 import '../../room_management/domain/room_model.dart';
 import '../../shared_widgets/app_button.dart';
+import '../../shared_widgets/app_feedback.dart';
 import '../domain/invoice_sequence_service.dart';
 
 class WhatsAppReceiptDialog extends StatefulWidget {
@@ -153,10 +154,10 @@ class _WhatsAppReceiptDialogState extends State<WhatsAppReceiptDialog> {
     final bytes = await _captureReceiptPng();
     if (bytes == null) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Gagal membuat gambar struk. Silakan coba lagi.'),
-          ),
+        AppFeedback.showError(
+          context,
+          title: 'Gagal Membuat Struk',
+          message: 'Gagal membuat gambar struk. Silakan coba kembali.',
         );
       }
       return;
@@ -178,27 +179,18 @@ class _WhatsAppReceiptDialogState extends State<WhatsAppReceiptDialog> {
       setState(() => _savedImagePath = file.path);
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            backgroundColor: const Color(0xFF16A34A),
-            content: Row(
-              children: [
-                const Icon(Icons.image_outlined, color: Colors.white),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text('Foto struk berhasil disimpan: ${file.path}'),
-                ),
-              ],
-            ),
-          ),
+        AppFeedback.showSuccess(
+          context,
+          title: 'Foto Struk Disimpan',
+          message: 'Tersimpan di: ${file.path}',
         );
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Gambar struk siap: ${bytes.lengthInBytes} bytes.'),
-          ),
+        AppFeedback.showInfo(
+          context,
+          title: 'Struk Siap',
+          message: 'Ukuran berkas struk: ${bytes.lengthInBytes} bytes.',
         );
       }
     }
@@ -223,24 +215,19 @@ class _WhatsAppReceiptDialogState extends State<WhatsAppReceiptDialog> {
     try {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            backgroundColor: Color(0xFF16A34A),
-            duration: Duration(seconds: 4),
-            content: Text(
-              'WhatsApp terbuka! Foto struk telah disimpan di folder Downloads & teks pesan disalin ke clipboard.',
-            ),
-          ),
+        AppFeedback.showSuccess(
+          context,
+          title: 'WhatsApp Dibuka',
+          message:
+              'Struk tersimpan di Downloads dan teks pesan telah disalin ke clipboard.',
         );
       }
     } catch (_) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              'Teks struk berhasil disalin. Silakan tempelkan di WhatsApp.',
-            ),
-          ),
+        AppFeedback.showInfo(
+          context,
+          title: 'Teks Struk Disalin',
+          message: 'Teks struk berhasil disalin. Silakan tempelkan di WhatsApp.',
         );
       }
     }
@@ -271,22 +258,11 @@ class _WhatsAppReceiptDialogState extends State<WhatsAppReceiptDialog> {
       _dispatchedMessageId = msgId;
     });
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        backgroundColor: const Color(0xFF16A34A),
-        duration: const Duration(seconds: 4),
-        content: Row(
-          children: [
-            const Icon(Icons.check_circle_outline, color: Colors.white),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                'Foto struk + pesan teks berhasil dikirim ke WhatsApp +$cleanPhone (ID: $msgId)!',
-              ),
-            ),
-          ],
-        ),
-      ),
+    AppFeedback.showSuccess(
+      context,
+      title: 'Struk Terkirim',
+      message:
+          'Foto struk & pesan berhasil dikirim ke WhatsApp +$cleanPhone (ID: $msgId).',
     );
   }
 

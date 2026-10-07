@@ -8,6 +8,7 @@ import '../../../core/network/api_client.dart';
 import '../../room_management/domain/room_model.dart';
 import '../../room_management/presentation/room_controller.dart';
 import '../../shared_widgets/app_button.dart';
+import '../../shared_widgets/app_feedback.dart';
 import '../../shared_widgets/app_text_field.dart';
 
 class CheckOutDialog extends ConsumerStatefulWidget {
@@ -113,11 +114,10 @@ class _CheckOutDialogState extends ConsumerState<CheckOutDialog> {
 
     if (resId == null || resId.isEmpty) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            backgroundColor: AppColors.statusOccupied,
-            content: Text('Gagal checkout: data reservasi aktif tidak ditemukan untuk kamar ini.'),
-          ),
+        AppFeedback.showError(
+          context,
+          title: 'Gagal Check-Out',
+          message: 'Data reservasi aktif tidak ditemukan untuk kamar ini.',
         );
       }
       return;
@@ -141,39 +141,28 @@ class _CheckOutDialogState extends ConsumerState<CheckOutDialog> {
         if (additional > 0) {
           _showAdditionalChargesReceiptDialog(_currentRoom, additional);
         } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              backgroundColor: AppColors.statusDirty,
-              content: Row(
-                children: [
-                  const Icon(Icons.cleaning_services_rounded, color: Colors.white),
-                  const SizedBox(width: 8),
-                  Text(
-                    'Check-Out Kamar ${_currentRoom.roomNumber} selesai tanpa biaya tambahan. Status kamar beralih ke Dirty.',
-                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
-                  ),
-                ],
-              ),
-            ),
+          AppFeedback.showSuccess(
+            context,
+            title: 'Check-Out Berhasil',
+            message:
+                'Kamar ${_currentRoom.roomNumber} telah check-out. Status kamar beralih ke Dirty untuk dibersihkan.',
           );
         }
       }
     } on ApiException catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            backgroundColor: AppColors.statusOccupied,
-            content: Text(e.message),
-          ),
+        AppFeedback.showError(
+          context,
+          title: 'Gagal Check-Out',
+          message: e.message,
         );
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            backgroundColor: AppColors.statusOccupied,
-            content: Text(e.toString().replaceAll('Exception: ', '')),
-          ),
+        AppFeedback.showError(
+          context,
+          title: 'Kesalahan Sistem',
+          message: e.toString().replaceAll('Exception: ', ''),
         );
       }
     }
@@ -263,16 +252,16 @@ class _CheckOutDialogState extends ConsumerState<CheckOutDialog> {
           ElevatedButton.icon(
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.navy700,
-              foregroundColor: Colors.white,
+              foregroundColor: AppColors.white,
             ),
             icon: const Icon(Icons.print_outlined, size: 16),
             label: const Text('Cetak Struk'),
             onPressed: () {
               Navigator.of(ctx).pop();
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Mencetak struk rincian biaya tambahan ke thermal printer...'),
-                ),
+              AppFeedback.showInfo(
+                context,
+                title: 'Mencetak Struk',
+                message: 'Mengirim perintah cetak biaya tambahan ke thermal printer...',
               );
             },
           ),

@@ -10,6 +10,7 @@ import '../../room_management/domain/room_model.dart';
 import '../../room_management/presentation/room_controller.dart';
 import '../../room_management/presentation/room_crud_dialog.dart';
 import '../../shared_widgets/app_button.dart';
+import '../../shared_widgets/app_feedback.dart';
 import '../../shared_widgets/app_header.dart';
 import '../../shared_widgets/metric_card.dart';
 import '../../shared_widgets/status_badge.dart';
@@ -31,6 +32,7 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
   final ReportingRepository _reportingRepo = ReportingRepository();
   List<AuditLogModel> _auditLogs = [];
   bool _isLoadingAuditLogs = false;
+  String _auditLogFilter = 'ALL';
   Map<String, dynamic>? _summaryData;
   bool _isLoadingSummary = false;
 
@@ -70,70 +72,62 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
     try {
       await ref.read(roomListProvider.notifier).toggleMaintenance(room.id);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            backgroundColor: room.isMaintenance ? AppColors.statusAvailable : AppColors.statusMaintenance,
-            content: Text(room.isMaintenance
-                ? 'Kamar ${room.roomNumber} diaktifkan kembali ke status Tersedia.'
-                : 'Kamar ${room.roomNumber} diubah ke mode Perbaikan / Maintenance.'),
-          ),
-        );
+        if (room.isMaintenance) {
+          AppFeedback.showSuccess(
+            context,
+            title: 'Kamar Siap Dihuni',
+            message: 'Kamar ${room.roomNumber} telah diaktifkan kembali ke status Tersedia.',
+          );
+        } else {
+          AppFeedback.showInfo(
+            context,
+            title: 'Mode Pemeliharaan',
+            message: 'Kamar ${room.roomNumber} dipindahkan ke mode Maintenance (Perbaikan).',
+          );
+        }
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            backgroundColor: AppColors.statusOccupied,
-            content: Text(e.toString().replaceAll('Exception: ', '')),
-          ),
+        AppFeedback.showError(
+          context,
+          title: 'Gagal Mengubah Status',
+          message: e.toString().replaceAll('Exception: ', ''),
         );
       }
     }
   }
 
-  void _handleDeleteRoom(RoomModel room) {
-    showDialog(
-      context: context,
-      builder: (dialogCtx) => AlertDialog(
-        title: Text('Hapus Kamar ${room.roomNumber}?'),
-        content: Text('Apakah Anda yakin ingin menghapus unit kamar ${room.roomNumber} (Tipe ${room.roomType}) dari inventaris hotel?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogCtx).pop(),
-            child: const Text('Batal'),
-          ),
-          FilledButton(
-            style: FilledButton.styleFrom(
-              backgroundColor: AppColors.statusOccupied,
-            ),
-            onPressed: () async {
-              Navigator.of(dialogCtx).pop();
-              try {
-                await ref.read(roomListProvider.notifier).deleteRoom(room.id);
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      backgroundColor: AppColors.statusOccupied,
-                      content: Text('Kamar ${room.roomNumber} berhasil dihapus dari inventaris.'),
-                    ),
-                  );
-                }
-              } catch (e) {
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      backgroundColor: AppColors.statusOccupied,
-                      content: Text(e.toString().replaceAll('Exception: ', '')),
-                    ),
-                  );
-                }
-              }
-            },
-            child: const Text('Hapus Unit'),
-          ),
-        ],
-      ),
+  Future<void> _handleDeleteRoom(RoomModel room) async {
+    final confirmed = await AppConfirmationDialog.show(
+      context,
+      title: 'Hapus Kamar ${room.roomNumber}?',
+      message: 'Apakah Anda yakin ingin menghapus unit kamar ${room.roomNumber} (Tipe ${room.roomType}) dari inventaris hotel? Tindakan ini bersifat permanen.',
+      confirmLabel: 'Hapus Unit Kamar',
+      cancelLabel: 'Batal',
+      isDestructive: true,
+      icon: Icons.delete_forever_rounded,
     );
+
+    if (!confirmed || !mounted) return;
+
+    try {
+      await ref.read(roomListProvider.notifier).deleteRoom(room.id);
+      if (mounted) {
+        AppFeedback.showSuccess(
+          context,
+          title: 'Unit Dihapus',
+          message: 'Kamar ${room.roomNumber} berhasil dihapus dari inventaris operasional.',
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        AppFeedback.showError(
+          context,
+          title: 'Gagal Menghapus Kamar',
+          message: e.toString().replaceAll('Exception: ', ''),
+        );
+      }
+    }
   }
 
   bool _isExportingExcel = false;
@@ -166,11 +160,10 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
       if (!mounted) return;
 
       if (savedPath == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Pengunduhan Excel dibatalkan.'),
-            duration: Duration(seconds: 2),
-          ),
+        AppFeedback.showInfo(
+          context,
+          title: 'Unduhan Dibatalkan',
+          message: 'Pengunduhan berkas Excel dibatalkan oleh pengguna.',
         );
         return;
       }
@@ -184,36 +177,19 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
         isExcel: true,
       );
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          backgroundColor: AppColors.statusAvailable,
-          duration: const Duration(seconds: 3),
-          content: Row(
-            children: [
-              const Icon(Icons.check_circle_outline, color: AppColors.surface),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  'Laporan Excel tersimpan: $fileName',
-                  style: const TextStyle(color: AppColors.surface, fontSize: 13),
-                ),
-              ),
-            ],
-          ),
-          action: SnackBarAction(
-            label: 'BUKA',
-            textColor: AppColors.surface,
-            onPressed: () => ReportExportService.openFile(savedPath!),
-          ),
-        ),
+      AppFeedback.showSuccess(
+        context,
+        title: 'Unduhan Selesai',
+        message: 'Laporan Excel tersimpan: $fileName',
+        actionLabel: 'BUKA',
+        onAction: () => ReportExportService.openFile(savedPath!),
       );
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          backgroundColor: AppColors.error,
-          content: Text('Gagal mengekspor Excel: $e'),
-        ),
+      AppFeedback.showError(
+        context,
+        title: 'Ekspor Gagal',
+        message: 'Gagal mengekspor Excel: $e',
       );
     } finally {
       if (mounted) setState(() => _isExportingExcel = false);
@@ -250,11 +226,10 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
       if (!mounted) return;
 
       if (savedPath == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Pengunduhan PDF dibatalkan.'),
-            duration: Duration(seconds: 2),
-          ),
+        AppFeedback.showInfo(
+          context,
+          title: 'Unduhan Dibatalkan',
+          message: 'Pengunduhan PDF dibatalkan oleh pengguna.',
         );
         return;
       }
@@ -268,36 +243,19 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
         isExcel: false,
       );
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          backgroundColor: AppColors.navy700,
-          duration: const Duration(seconds: 3),
-          content: Row(
-            children: [
-              const Icon(Icons.picture_as_pdf_outlined, color: AppColors.surface),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  'Laporan PDF resmi tersimpan: $fileName',
-                  style: const TextStyle(color: AppColors.surface, fontSize: 13),
-                ),
-              ),
-            ],
-          ),
-          action: SnackBarAction(
-            label: 'BUKA',
-            textColor: AppColors.surface,
-            onPressed: () => ReportExportService.openFile(savedPath!),
-          ),
-        ),
+      AppFeedback.showSuccess(
+        context,
+        title: 'Unduhan Selesai',
+        message: 'Laporan PDF resmi tersimpan: $fileName',
+        actionLabel: 'BUKA',
+        onAction: () => ReportExportService.openFile(savedPath!),
       );
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          backgroundColor: AppColors.error,
-          content: Text('Gagal mengekspor PDF: $e'),
-        ),
+      AppFeedback.showError(
+        context,
+        title: 'Ekspor Gagal',
+        message: 'Gagal mengekspor PDF: $e',
       );
     } finally {
       if (mounted) setState(() => _isExportingPdf = false);
@@ -661,7 +619,7 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
   ) {
     switch (_activeNavIndex) {
       case 0:
-        return _buildOverviewTab(currencyFormatter, totalRooms, occupiedRooms, occupancyRate);
+        return _buildOverviewTab(currencyFormatter, totalRooms, occupiedRooms, occupancyRate, rooms);
       case 1:
         return _buildInventoryTab(currencyFormatter, rooms);
       case 2:
@@ -679,20 +637,21 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
     int totalRooms,
     int occupiedRooms,
     double occupancyRate,
+    List<RoomModel> rooms,
   ) {
     final summary = _summaryData;
-    final totalCheckIn = summary?['totalCheckIn']?.toString() ?? 'Data tidak tersedia';
-    final totalCheckOut = summary?['totalCheckOut']?.toString() ?? 'Data tidak tersedia';
+    final totalCheckIn = summary?['totalCheckIn']?.toString() ?? '0';
+    final totalCheckOut = summary?['totalCheckOut']?.toString() ?? '0';
     final occRateVal = summary?['occupancyRate'] != null
         ? '${summary!['occupancyRate']}%'
-        : (occupancyRate > 0 ? '${occupancyRate.toStringAsFixed(1)}%' : 'Data tidak tersedia');
+        : (occupancyRate > 0 ? '${occupancyRate.toStringAsFixed(1)}%' : '0.0%');
     final rawRevenue = summary?['totalNetRevenue'];
     final num? parsedRevenue = rawRevenue == null
         ? null
         : (rawRevenue is num ? rawRevenue : num.tryParse(rawRevenue.toString()));
     final totalNetRevenue = parsedRevenue != null
         ? currencyFormatter.format(parsedRevenue)
-        : 'Data tidak tersedia';
+        : 'Rp 0';
 
     // Channel composition dari summary (endpoint.md §8.1)
     final channels = summary?['channelComposition'] as Map<String, dynamic>?;
@@ -705,6 +664,32 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
     final totalChannels = (reddoorzCount ?? 0) + (walkInCount ?? 0);
     final reddoorzPct = totalChannels > 0 ? ((reddoorzCount ?? 0) / totalChannels * 100).round() : 50;
     final walkInPct = totalChannels > 0 ? (100 - reddoorzPct) : 50;
+
+    final reddoorzNominal = totalChannels > 0 && parsedRevenue != null
+        ? (parsedRevenue * (reddoorzCount ?? 0) / totalChannels)
+        : 0;
+    final walkInNominal = totalChannels > 0 && parsedRevenue != null
+        ? (parsedRevenue * (walkInCount ?? 0) / totalChannels)
+        : 0;
+
+    // Kalkulasi okupansi riil per lantai dari list rooms
+    final f1Rooms = rooms.where((r) => r.floor == 1).toList();
+    final f1Occ = f1Rooms.where((r) => r.isOccupied).length;
+    final f1Total = f1Rooms.isNotEmpty ? f1Rooms.length : 5;
+    final f1Ratio = f1Rooms.isNotEmpty ? f1Occ / f1Rooms.length : 0.0;
+    final f1Label = '${(f1Ratio * 100).toStringAsFixed(0)}% ($f1Occ/$f1Total Kamar)';
+
+    final f2Rooms = rooms.where((r) => r.floor == 2).toList();
+    final f2Occ = f2Rooms.where((r) => r.isOccupied).length;
+    final f2Total = f2Rooms.isNotEmpty ? f2Rooms.length : 5;
+    final f2Ratio = f2Rooms.isNotEmpty ? f2Occ / f2Rooms.length : 0.0;
+    final f2Label = '${(f2Ratio * 100).toStringAsFixed(0)}% ($f2Occ/$f2Total Kamar)';
+
+    final f3Rooms = rooms.where((r) => r.floor == 3).toList();
+    final f3Occ = f3Rooms.where((r) => r.isOccupied).length;
+    final f3Total = f3Rooms.isNotEmpty ? f3Rooms.length : 4;
+    final f3Ratio = f3Rooms.isNotEmpty ? f3Occ / f3Rooms.length : 0.0;
+    final f3Label = '${(f3Ratio * 100).toStringAsFixed(0)}% ($f3Occ/$f3Total Kamar)';
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -722,24 +707,56 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
               value: totalCheckIn,
               trendText: summary != null ? 'Tamu terdaftar bulan ini' : 'Memuat data...',
               isTrendPositive: true,
+              trailing: Container(
+                padding: const EdgeInsets.all(7),
+                decoration: BoxDecoration(
+                  color: AppColors.orange100,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(Icons.login_rounded, size: 18, color: AppColors.orange800),
+              ),
             );
             final kpi2 = MetricCard(
               title: 'Total Check-Out',
               value: totalCheckOut,
               trendText: summary != null ? 'Selesai menginap' : 'Memuat data...',
               isTrendPositive: true,
+              trailing: Container(
+                padding: const EdgeInsets.all(7),
+                decoration: BoxDecoration(
+                  color: AppColors.navy50,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(Icons.logout_rounded, size: 18, color: AppColors.navy700),
+              ),
             );
             final kpi3 = MetricCard(
               title: 'Rasio Okupansi Realtime',
               value: occRateVal,
               trendText: '$occupiedRooms terisi dari $totalRooms total kamar',
               isTrendPositive: true,
+              trailing: Container(
+                padding: const EdgeInsets.all(7),
+                decoration: BoxDecoration(
+                  color: AppColors.availableBg,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(Icons.meeting_room_rounded, size: 18, color: AppColors.statusAvailable),
+              ),
             );
             final kpi4 = MetricCard(
               title: 'Akumulasi Pendapatan Bersih',
               value: totalNetRevenue,
               trendText: summary != null ? 'Total pendapatan bersih bulan berjalan' : 'Memuat data...',
               isTrendPositive: true,
+              trailing: Container(
+                padding: const EdgeInsets.all(7),
+                decoration: BoxDecoration(
+                  color: AppColors.navy50,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(Icons.account_balance_wallet_rounded, size: 18, color: AppColors.navy900),
+              ),
             );
 
             if (constraints.maxWidth >= 980) {
@@ -884,8 +901,8 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
                                 Text('Mitra RedDoorz', style: AppTypography.caption),
                                 Text(
                                   reddoorzCount != null
-                                      ? '$reddoorzCount Transaksi (Nominal: Data tidak tersedia)'
-                                      : 'Data tidak tersedia',
+                                      ? '$reddoorzCount Transaksi · ${currencyFormatter.format(reddoorzNominal)}'
+                                      : '0 Transaksi',
                                   style: AppTypography.bodySm.copyWith(fontWeight: FontWeight.w700),
                                   overflow: TextOverflow.ellipsis,
                                 ),
@@ -906,8 +923,8 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
                                 Text('Walk-in Langsung', style: AppTypography.caption),
                                 Text(
                                   walkInCount != null
-                                      ? '$walkInCount Transaksi (Nominal: Data tidak tersedia)'
-                                      : 'Data tidak tersedia',
+                                      ? '$walkInCount Transaksi · ${currencyFormatter.format(walkInNominal)}'
+                                      : '0 Transaksi',
                                   style: AppTypography.bodySm.copyWith(fontWeight: FontWeight.w700),
                                   overflow: TextOverflow.ellipsis,
                                 ),
@@ -940,11 +957,11 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
                   ),
                   const SizedBox(height: AppSpacing.md),
 
-                  _buildFloorOccupancyRow('Lantai 1 (Kamar 101 - 105)', 0.0, 'Data tidak tersedia'),
+                  _buildFloorOccupancyRow('Lantai 1 (Kamar 101 - 105)', f1Ratio, f1Label),
                   const SizedBox(height: 10),
-                  _buildFloorOccupancyRow('Lantai 2 (Kamar 201 - 205)', 0.0, 'Data tidak tersedia'),
+                  _buildFloorOccupancyRow('Lantai 2 (Kamar 201 - 205)', f2Ratio, f2Label),
                   const SizedBox(height: 10),
-                  _buildFloorOccupancyRow('Lantai 3 (Kamar 301 - 304)', 0.0, 'Data tidak tersedia'),
+                  _buildFloorOccupancyRow('Lantai 3 (Kamar 301 - 304)', f3Ratio, f3Label),
                 ],
               ),
             );
@@ -988,16 +1005,26 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
               ),
             ),
             const SizedBox(width: 8),
-            Text(label, style: AppTypography.caption.copyWith(color: AppColors.navy700, fontWeight: FontWeight.bold)),
+            Text(
+              label,
+              style: AppTypography.caption.copyWith(
+                color: ratio > 0 ? AppColors.orange800 : AppColors.textSecondary,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ],
         ),
-        const SizedBox(height: 4),
-        LinearProgressIndicator(
-          value: ratio,
-          backgroundColor: AppColors.bg,
-          color: AppColors.navy700,
-          minHeight: 8,
-          borderRadius: AppRadius.roundedSm,
+        const SizedBox(height: 5),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(4),
+          child: LinearProgressIndicator(
+            value: ratio,
+            backgroundColor: AppColors.navy50,
+            valueColor: AlwaysStoppedAnimation<Color>(
+              ratio > 0 ? AppColors.orange600 : AppColors.border,
+            ),
+            minHeight: 6,
+          ),
         ),
       ],
     );
@@ -1559,8 +1586,31 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
     );
   }
 
-  // TAB 3: Audit Trail Log
+  // TAB 3: Audit Trail Log (Modern Human-Readable Feed)
   Widget _buildAuditTrailTab() {
+    final currencyFormatter = NumberFormat.currency(
+      locale: 'id_ID',
+      symbol: 'Rp ',
+      decimalDigits: 0,
+    );
+
+    final filteredLogs = _auditLogs.where((log) {
+      if (_auditLogFilter == 'ALL') return true;
+      if (_auditLogFilter == 'CHECKIN_OUT') {
+        return log.actionType == 'CHECK_IN' || log.actionType == 'CHECK_OUT';
+      }
+      if (_auditLogFilter == 'ROOM_MGMT') {
+        return log.actionType.contains('ROOM') || log.actionType.contains('STATUS');
+      }
+      if (_auditLogFilter == 'SECURITY') {
+        return log.actionType.contains('LOGIN') || log.actionType.contains('AUTH') || log.actionType.contains('SECURITY');
+      }
+      if (_auditLogFilter == 'REPORT') {
+        return log.actionType.contains('REPORT') || log.actionType.contains('EXPORT');
+      }
+      return true;
+    }).toList();
+
     return Container(
       decoration: BoxDecoration(
         color: AppColors.surface,
@@ -1570,22 +1620,60 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          // Header Tab & Deskripsi
           Padding(
             padding: const EdgeInsets.all(AppSpacing.md),
-            child: Wrap(
-              alignment: WrapAlignment.spaceBetween,
-              crossAxisAlignment: WrapCrossAlignment.center,
-              spacing: AppSpacing.md,
-              runSpacing: 4,
+            child: Row(
               children: [
-                Text('Log Aktivitas Staf & Audit Trail Transaksi', style: AppTypography.h3),
-                Text(
-                  'Setiap tindakan check-in, check-out, ubah inventaris, dan unduh laporan tercatat permanen.',
-                  style: AppTypography.caption,
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          const Icon(Icons.history_toggle_off_rounded, size: 22, color: AppColors.navy900),
+                          const SizedBox(width: 8),
+                          Text('Rekam Jejak Operasional & Audit Trail', style: AppTypography.h3),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Setiap aktivitas check-in, check-out, ubah status kamar, dan tindakan staf terekam real-time untuk akuntabilitas hotel.',
+                        style: AppTypography.bodySm.copyWith(color: AppColors.textSecondary),
+                      ),
+                    ],
+                  ),
+                ),
+                IconButton(
+                  tooltip: 'Muat Ulang Log',
+                  icon: const Icon(Icons.refresh, color: AppColors.navy700),
+                  onPressed: _loadAuditLogs,
                 ),
               ],
             ),
           ),
+
+          // Filter Segment Chips (Gaya Linear / Modern SaaS)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: 4),
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  _buildAuditFilterChip('ALL', 'Semua Aktivitas (${_auditLogs.length})'),
+                  const SizedBox(width: 8),
+                  _buildAuditFilterChip('CHECKIN_OUT', 'Check-In & Out'),
+                  const SizedBox(width: 8),
+                  _buildAuditFilterChip('ROOM_MGMT', 'Status Kamar & Fisik'),
+                  const SizedBox(width: 8),
+                  _buildAuditFilterChip('SECURITY', 'Keamanan & Autentikasi'),
+                  const SizedBox(width: 8),
+                  _buildAuditFilterChip('REPORT', 'Ekspor Laporan'),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
           const Divider(height: 1),
 
           if (_isLoadingAuditLogs)
@@ -1593,134 +1681,504 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
               padding: EdgeInsets.all(AppSpacing.xl),
               child: Center(child: CircularProgressIndicator()),
             )
-          else if (_auditLogs.isEmpty)
-            const Padding(
-              padding: EdgeInsets.all(AppSpacing.xl),
-              child: Center(child: Text('Data tidak tersedia')),
+          else if (filteredLogs.isEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 48, horizontal: 24),
+              child: Center(
+                child: Column(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: AppColors.navy50,
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(Icons.inbox_outlined, size: 36, color: AppColors.textDisabled),
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      'Tidak ada catatan aktivitas pada kategori ini',
+                      style: AppTypography.bodySm.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.navy900,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Pilih filter lain atau lakukan tindakan di sistem untuk melihat rekaman log.',
+                      style: AppTypography.caption.copyWith(color: AppColors.textSecondary),
+                    ),
+                  ],
+                ),
+              ),
             )
           else
             LayoutBuilder(
               builder: (context, constraints) {
-                final isMobile = constraints.maxWidth < 720;
+                final isMobile = constraints.maxWidth < 760;
 
-                if (isMobile) {
-                  // Mobile Card View for Audit Trail
-                  return ListView.separated(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: _auditLogs.length,
-                    separatorBuilder: (_, _) => const Divider(height: 1),
-                    itemBuilder: (context, index) {
-                      final log = _auditLogs[index];
-                      final timeStr = DateFormat('dd MMM, HH:mm').format(log.timestamp);
+                return ListView.separated(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: filteredLogs.length,
+                  separatorBuilder: (_, _) => const Divider(height: 1),
+                  itemBuilder: (context, index) {
+                    final log = filteredLogs[index];
+                    final parsed = _parseAuditLog(log, currencyFormatter);
+                    final (actorName, actorRole) = _parseActor(log.userName);
+                    final cleanIp = _cleanIp(log.ipAddress);
+                    final dateStr = DateFormat('dd MMM yyyy').format(log.timestamp);
+                    final timeStr = DateFormat('HH:mm:ss').format(log.timestamp);
 
+                    if (isMobile) {
+                      // Modern Card View di Smartphone
                       return Padding(
                         padding: const EdgeInsets.all(AppSpacing.md),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
+                                Container(
+                                  padding: const EdgeInsets.all(7),
+                                  decoration: BoxDecoration(
+                                    color: parsed.iconBg,
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Icon(parsed.icon, size: 16, color: parsed.iconColor),
+                                ),
+                                const SizedBox(width: 8),
                                 Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                                   decoration: BoxDecoration(
-                                    color: AppColors.navy100,
-                                    borderRadius: AppRadius.roundedSm,
+                                    color: parsed.badgeBg,
+                                    borderRadius: BorderRadius.circular(4),
                                   ),
                                   child: Text(
-                                    log.actionType,
+                                    parsed.actionLabel,
                                     style: AppTypography.overline.copyWith(
-                                      color: AppColors.navy700,
+                                      color: parsed.badgeColor,
                                       fontWeight: FontWeight.w700,
+                                      fontSize: 10,
                                     ),
                                   ),
                                 ),
+                                const Spacer(),
                                 Text(
-                                  timeStr,
-                                  style: AppTypography.caption.copyWith(color: AppColors.textSecondary, fontSize: 11),
+                                  '$dateStr · $timeStr',
+                                  style: AppTypography.caption.copyWith(
+                                    color: AppColors.textSecondary,
+                                    fontSize: 11,
+                                  ),
                                 ),
                               ],
                             ),
-                            const SizedBox(height: 6),
-                            Text(log.details, style: AppTypography.bodySm.copyWith(fontWeight: FontWeight.w600)),
-                            const SizedBox(height: 4),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            const SizedBox(height: 8),
+                            Text(
+                              parsed.title,
+                              style: AppTypography.bodySm.copyWith(
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.navy900,
+                              ),
+                            ),
+                            if (parsed.subtitle.isNotEmpty) ...[
+                              const SizedBox(height: 2),
+                              Text(
+                                parsed.subtitle,
+                                style: AppTypography.caption.copyWith(
+                                  color: AppColors.textSecondary,
+                                ),
+                              ),
+                            ],
+                            const SizedBox(height: 8),
+                            Wrap(
+                              spacing: 8,
+                              runSpacing: 4,
                               children: [
-                                Text(log.userName, style: AppTypography.caption.copyWith(color: AppColors.textSecondary)),
-                                Text('IP: ${log.ipAddress}', style: const TextStyle(fontSize: 10.5, fontFamily: 'monospace', color: AppColors.textDisabled)),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.navy50,
+                                    borderRadius: BorderRadius.circular(4),
+                                    border: Border.all(color: AppColors.border),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      const Icon(Icons.person_outline, size: 12, color: AppColors.navy700),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        actorRole != null ? '$actorName ($actorRole)' : actorName,
+                                        style: const TextStyle(fontSize: 11, color: AppColors.navy900, fontWeight: FontWeight.w500),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.navy50,
+                                    borderRadius: BorderRadius.circular(4),
+                                    border: Border.all(color: AppColors.border),
+                                  ),
+                                  child: Text(
+                                    cleanIp,
+                                    style: const TextStyle(fontSize: 10.5, color: AppColors.textSecondary, fontFamily: 'monospace'),
+                                  ),
+                                ),
                               ],
                             ),
                           ],
                         ),
                       );
-                    },
-                  );
-                }
+                    }
 
-                // Desktop Table View
-                final contentWidth = math.max(760.0, constraints.maxWidth);
-                return SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: SizedBox(
-                    width: contentWidth,
-                    child: Column(
-                      children: [
-                        for (int index = 0; index < _auditLogs.length; index++) ...[
-                          if (index > 0) const Divider(height: 1),
-                          Builder(
-                            builder: (context) {
-                              final log = _auditLogs[index];
-                              return Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: 12),
-                                child: Row(
+                    // Modern SaaS Feed Row di Desktop & Laptop
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: 12),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          // Icon Avatar Lingkaran
+                          Container(
+                            width: 38,
+                            height: 38,
+                            decoration: BoxDecoration(
+                              color: parsed.iconBg,
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Icon(parsed.icon, size: 19, color: parsed.iconColor),
+                          ),
+                          const SizedBox(width: 14),
+
+                          // Konten Tengah: Action, Judul, Subtitle
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
                                   children: [
                                     Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
                                       decoration: BoxDecoration(
-                                        color: AppColors.navy100,
-                                        borderRadius: AppRadius.roundedSm,
+                                        color: parsed.badgeBg,
+                                        borderRadius: BorderRadius.circular(4),
                                       ),
                                       child: Text(
-                                        log.actionType,
+                                        parsed.actionLabel,
                                         style: AppTypography.overline.copyWith(
-                                          color: AppColors.navy700,
+                                          color: parsed.badgeColor,
                                           fontWeight: FontWeight.w700,
+                                          fontSize: 10,
                                         ),
                                       ),
                                     ),
-                                  const SizedBox(width: AppSpacing.md),
-
-                                  Expanded(
-                                    flex: 3,
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Text(log.details, style: AppTypography.bodySm.copyWith(fontWeight: FontWeight.w600)),
-                                        Text('Oleh: ${log.userName} • IP: ${log.ipAddress}', style: AppTypography.caption),
-                                      ],
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: Text(
+                                        parsed.title,
+                                        style: AppTypography.bodySm.copyWith(
+                                          fontWeight: FontWeight.w700,
+                                          color: AppColors.navy900,
+                                        ),
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
                                     ),
-                                  ),
-
+                                  ],
+                                ),
+                                const SizedBox(height: 3),
+                                if (parsed.subtitle.isNotEmpty)
                                   Text(
-                                    DateFormat('dd MMM yyyy, HH:mm:ss').format(log.timestamp),
+                                    parsed.subtitle,
                                     style: AppTypography.caption.copyWith(color: AppColors.textSecondary),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
                                   ),
-                                ],
+                                const SizedBox(height: 5),
+                                Row(
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                      decoration: BoxDecoration(
+                                        color: AppColors.navy50,
+                                        borderRadius: BorderRadius.circular(4),
+                                        border: Border.all(color: AppColors.border),
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          const Icon(Icons.person_outline, size: 12, color: AppColors.navy700),
+                                          const SizedBox(width: 4),
+                                          Text(
+                                            actorName,
+                                            style: const TextStyle(fontSize: 11, color: AppColors.navy900, fontWeight: FontWeight.w600),
+                                          ),
+                                          if (actorRole != null) ...[
+                                            const SizedBox(width: 4),
+                                            Text(
+                                              '• $actorRole',
+                                              style: const TextStyle(fontSize: 10, color: AppColors.textSecondary),
+                                            ),
+                                          ],
+                                        ],
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                      decoration: BoxDecoration(
+                                        color: AppColors.navy50,
+                                        borderRadius: BorderRadius.circular(4),
+                                        border: Border.all(color: AppColors.border),
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          const Icon(Icons.terminal_rounded, size: 12, color: AppColors.textSecondary),
+                                          const SizedBox(width: 4),
+                                          Text(
+                                            cleanIp,
+                                            style: const TextStyle(fontSize: 10.5, color: AppColors.textSecondary, fontFamily: 'monospace'),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+
+                          const SizedBox(width: 16),
+
+                          // Waktu Sisi Kanan
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              Text(
+                                timeStr,
+                                style: const TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w700,
+                                  color: AppColors.navy900,
+                                ),
                               ),
-                            );
-                          },
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-              );
-            },
-          ),
+                              const SizedBox(height: 2),
+                              Text(
+                                dateStr,
+                                style: AppTypography.caption.copyWith(color: AppColors.textSecondary, fontSize: 11),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                );
+              },
+            ),
         ],
       ),
     );
   }
+
+  Widget _buildAuditFilterChip(String key, String label) {
+    final isSelected = _auditLogFilter == key;
+    return InkWell(
+      onTap: () => setState(() => _auditLogFilter = key),
+      borderRadius: BorderRadius.circular(20),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: isSelected ? AppColors.navy900 : AppColors.surface,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isSelected ? AppColors.navy900 : AppColors.border,
+          ),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+            color: isSelected ? AppColors.surface : AppColors.navy700,
+          ),
+        ),
+      ),
+    );
+  }
+
+  String _cleanIp(String ip) {
+    if (ip.startsWith('::ffff:')) {
+      return ip.substring(7);
+    }
+    return ip;
+  }
+
+  (String name, String? role) _parseActor(String actorStr) {
+    final reg = RegExp(r'^(.*?)(?:\s*\((.*?)\))?$');
+    final m = reg.firstMatch(actorStr);
+    if (m != null) {
+      final n = m.group(1)?.trim() ?? actorStr;
+      final r = m.group(2)?.trim();
+      return (n.isNotEmpty ? n : 'Staf', r);
+    }
+    return (actorStr, null);
+  }
+
+  _AuditLogParsed _parseAuditLog(AuditLogModel log, NumberFormat currencyFormatter) {
+    final act = log.actionType.toUpperCase();
+    final d = log.details;
+
+    String? extract(String key) {
+      final reg = RegExp('$key:\\s*([^,}]+)', caseSensitive: false);
+      final match = reg.firstMatch(d);
+      return match?.group(1)?.trim();
+    }
+
+    if (act == 'CHECK_IN') {
+      final guest = extract('guestName') ?? 'Tamu';
+      final room = extract('roomNumber') ?? '-';
+      final inv = extract('invoiceNumber');
+      return _AuditLogParsed(
+        actionLabel: 'CHECK-IN',
+        title: 'Check-in Tamu: $guest',
+        subtitle: inv != null ? 'Kamar $room · No. Invoice: $inv' : 'Kamar $room · Reservasi berhasil diproses',
+        icon: Icons.login_rounded,
+        badgeBg: AppColors.availableBg,
+        badgeColor: AppColors.availableText,
+        iconBg: AppColors.availableBg,
+        iconColor: AppColors.statusAvailable,
+      );
+    } else if (act == 'CHECK_OUT') {
+      final room = extract('roomNumber') ?? '-';
+      final totalRaw = extract('totalAmount');
+      final inv = extract('invoiceNumber');
+      final lateFeeRaw = extract('lateFee');
+      String paymentStr = '';
+      if (totalRaw != null) {
+        final amount = num.tryParse(totalRaw);
+        if (amount != null) paymentStr = 'Total Biaya: ${currencyFormatter.format(amount)}';
+      }
+      final lateFee = num.tryParse(lateFeeRaw ?? '0') ?? 0;
+      final lateStr = lateFee > 0 ? ' (Denda: ${currencyFormatter.format(lateFee)})' : '';
+
+      return _AuditLogParsed(
+        actionLabel: 'CHECK-OUT',
+        title: 'Check-out Selesai: Kamar $room',
+        subtitle: [
+          if (paymentStr.isNotEmpty) '$paymentStr$lateStr',
+          if (inv != null) 'Invoice: $inv',
+        ].join(' · '),
+        icon: Icons.logout_rounded,
+        badgeBg: AppColors.orange100,
+        badgeColor: AppColors.orange800,
+        iconBg: AppColors.orange100,
+        iconColor: AppColors.orange600,
+      );
+    } else if (act.contains('STATUS') || act.contains('CLEAN')) {
+      final reason = extract('reason');
+      final newStatus = extract('newStatus') ?? '';
+      final prevStatus = extract('previousStatus') ?? '';
+      String title = 'Pembaruan Status Kamar';
+      String subtitle = 'Status kamar diperbarui';
+
+      if (reason == 'MARK_CLEAN' || newStatus == 'AVAILABLE') {
+        title = 'Pembersihan Kamar Selesai (Siap Dijual)';
+        subtitle = prevStatus.isNotEmpty ? 'Status diubah dari $prevStatus ke Siap Dihuni (Available)' : 'Kamar bersih dan siap ditempati tamu';
+      } else if (newStatus == 'MAINTENANCE') {
+        title = 'Kamar Masuk Perbaikan (Maintenance)';
+        subtitle = 'Unit dinonaktifkan sementara untuk perbaikan teknis';
+      } else if (newStatus == 'DIRTY') {
+        title = 'Kamar Ditandai Perlu Dibersihkan (Dirty)';
+        subtitle = 'Menunggu jadwal pembersihan tim housekeeping';
+      } else if (newStatus.isNotEmpty) {
+        title = 'Status Kamar Diubah: $newStatus';
+        subtitle = prevStatus.isNotEmpty ? 'Sebelumnya berstatus: $prevStatus' : d;
+      }
+
+      return _AuditLogParsed(
+        actionLabel: 'STATUS KAMAR',
+        title: title,
+        subtitle: subtitle,
+        icon: Icons.cleaning_services_rounded,
+        badgeBg: AppColors.navy50,
+        badgeColor: AppColors.navy700,
+        iconBg: AppColors.navy50,
+        iconColor: AppColors.navy700,
+      );
+    } else if (act.contains('LOGIN') || act.contains('AUTH')) {
+      final user = extract('username') ?? 'staf';
+      final isFailed = act.contains('FAIL');
+      return _AuditLogParsed(
+        actionLabel: isFailed ? 'LOGIN GAGAL' : 'LOGIN BERHASIL',
+        title: isFailed ? 'Percobaan Masuk Gagal (Security Alert)' : 'Autentikasi Pengguna Berhasil',
+        subtitle: 'Upaya akses sistem untuk akun "$user"',
+        icon: isFailed ? Icons.gpp_maybe_rounded : Icons.verified_user_rounded,
+        badgeBg: isFailed ? AppColors.errorBg : AppColors.availableBg,
+        badgeColor: isFailed ? AppColors.errorText : AppColors.availableText,
+        iconBg: isFailed ? AppColors.errorBg : AppColors.availableBg,
+        iconColor: isFailed ? AppColors.error : AppColors.statusAvailable,
+      );
+    } else if (act.contains('DELETE')) {
+      final room = extract('roomNumber') ?? '';
+      return _AuditLogParsed(
+        actionLabel: 'HAPUS DATA',
+        title: 'Penghapusan Inventaris Kamar $room',
+        subtitle: 'Data unit kamar dihapus dari daftar operasional hotel',
+        icon: Icons.delete_outline_rounded,
+        badgeBg: AppColors.errorBg,
+        badgeColor: AppColors.errorText,
+        iconBg: AppColors.errorBg,
+        iconColor: AppColors.error,
+      );
+    } else if (act.contains('EXPORT') || act.contains('REPORT')) {
+      final format = extract('format')?.toUpperCase() ?? 'EXCEL';
+      final total = extract('totalRecords') ?? 'beberapa';
+      return _AuditLogParsed(
+        actionLabel: 'UNDUH LAPORAN',
+        title: 'Ekspor Rekapitulasi Laporan $format',
+        subtitle: 'Mengunduh rekapitulasi data keuangan & operasional ($total data)',
+        icon: Icons.file_download_outlined,
+        badgeBg: AppColors.navy100,
+        badgeColor: AppColors.navy900,
+        iconBg: AppColors.navy50,
+        iconColor: AppColors.navy700,
+      );
+    } else {
+      return _AuditLogParsed(
+        actionLabel: act.replaceAll('_', ' '),
+        title: 'Aktivitas ${act.replaceAll('_', ' ')}',
+        subtitle: d.isNotEmpty ? d : 'Tidak ada rincian tambahan',
+        icon: Icons.history_rounded,
+        badgeBg: AppColors.navy50,
+        badgeColor: AppColors.navy700,
+        iconBg: AppColors.navy50,
+        iconColor: AppColors.navy700,
+      );
+    }
+  }
+}
+
+class _AuditLogParsed {
+  final String actionLabel;
+  final String title;
+  final String subtitle;
+  final IconData icon;
+  final Color badgeBg;
+  final Color badgeColor;
+  final Color iconBg;
+  final Color iconColor;
+
+  const _AuditLogParsed({
+    required this.actionLabel,
+    required this.title,
+    required this.subtitle,
+    required this.icon,
+    required this.badgeBg,
+    required this.badgeColor,
+    required this.iconBg,
+    required this.iconColor,
+  });
 }

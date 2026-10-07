@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../app/theme.dart';
 import '../../shared_widgets/app_button.dart';
+import '../../shared_widgets/app_feedback.dart';
 import '../../shared_widgets/app_text_field.dart';
 import '../domain/room_model.dart';
 import 'room_controller.dart';
@@ -250,11 +251,10 @@ class _RoomCrudDialogState extends ConsumerState<RoomCrudDialog> {
     final price = double.tryParse(rawPrice) ?? 0;
 
     if (price <= 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          backgroundColor: AppColors.statusOccupied,
-          content: Text('Tarif per malam harus lebih dari Rp 0!'),
-        ),
+      AppFeedback.showWarning(
+        context,
+        title: 'Tarif Tidak Valid',
+        message: 'Tarif per malam harus lebih dari Rp 0.',
       );
       return;
     }
@@ -271,11 +271,10 @@ class _RoomCrudDialogState extends ConsumerState<RoomCrudDialog> {
             );
         if (mounted) {
           Navigator.of(context).pop();
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              backgroundColor: AppColors.statusAvailable,
-              content: Text('Data kamar ${_roomNumberController.text.trim()} berhasil diperbarui!'),
-            ),
+          AppFeedback.showSuccess(
+            context,
+            title: 'Kamar Diperbarui',
+            message: 'Data kamar ${_roomNumberController.text.trim()} berhasil diperbarui.',
           );
         }
       } else {
@@ -289,21 +288,19 @@ class _RoomCrudDialogState extends ConsumerState<RoomCrudDialog> {
 
         if (mounted) {
           Navigator.of(context).pop();
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              backgroundColor: AppColors.statusAvailable,
-              content: Text('Unit kamar ${_roomNumberController.text.trim()} berhasil ditambahkan ke inventaris!'),
-            ),
+          AppFeedback.showSuccess(
+            context,
+            title: 'Kamar Ditambahkan',
+            message: 'Unit kamar ${_roomNumberController.text.trim()} berhasil ditambahkan ke inventaris.',
           );
         }
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            backgroundColor: AppColors.statusOccupied,
-            content: Text(e.toString().replaceAll('Exception: ', '')),
-          ),
+        AppFeedback.showError(
+          context,
+          title: 'Gagal Menyimpan Kamar',
+          message: e.toString().replaceAll('Exception: ', ''),
         );
       }
     }

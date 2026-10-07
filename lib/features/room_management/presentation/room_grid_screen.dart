@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -9,6 +8,7 @@ import '../../auth/presentation/auth_controller.dart';
 import '../../checkout/presentation/check_out_dialog.dart';
 import '../../reservation/presentation/active_guests_modal.dart';
 import '../../reservation/presentation/check_in_modal.dart';
+import '../../shared_widgets/app_feedback.dart';
 import '../../shared_widgets/app_header.dart';
 import '../domain/room_model.dart';
 import 'room_card.dart';
@@ -56,44 +56,41 @@ class _RoomGridScreenState extends ConsumerState<RoomGridScreen> {
     }
   }
 
-  void _showDirtyDialog(RoomModel room) {
-    showDialog(
-      context: context,
-      builder: (ctx) => _SimpleDialog(
-        icon: Icons.cleaning_services_outlined,
-        iconColor: AppColors.statusDirty,
-        title: 'Pembersihan Kamar ${room.roomNumber}',
-        body:
-            'Kamar baru saja ditinggalkan tamu. Apakah housekeeping sudah selesai dan kamar siap dihuni kembali?',
-        cancelLabel: 'Nanti',
-        confirmLabel: 'Tandai Tersedia',
-        confirmVariant: _ConfirmVariant.primary,
-        onConfirm: () async {
-          Navigator.of(ctx).pop();
-          await ref.read(roomListProvider.notifier).markRoomCleaned(room.id);
-          if (mounted) {
-            _showSnack(
-              'Kamar ${room.roomNumber} kini berstatus Available.',
-              AppColors.statusAvailable,
-            );
-          }
-        },
-      ),
+  void _showDirtyDialog(RoomModel room) async {
+    final confirmed = await AppConfirmationDialog.show(
+      context,
+      icon: Icons.cleaning_services_rounded,
+      iconColor: AppColors.orange600,
+      iconBgColor: AppColors.orange50,
+      title: 'Pembersihan Kamar ${room.roomNumber}',
+      message:
+          'Kamar baru saja ditinggalkan tamu. Apakah housekeeping sudah selesai dan kamar siap dihuni kembali?',
+      confirmLabel: 'Tandai Tersedia',
+      cancelLabel: 'Nanti',
     );
+
+    if (confirmed == true && mounted) {
+      await ref.read(roomListProvider.notifier).markRoomCleaned(room.id);
+      if (mounted) {
+        AppFeedback.showSuccess(
+          context,
+          title: 'Kamar Siap Huni',
+          message: 'Kamar ${room.roomNumber} kini berstatus Available.',
+        );
+      }
+    }
   }
 
   void _showMaintenanceDialog(RoomModel room) {
-    showDialog(
-      context: context,
-      builder: (ctx) => _SimpleDialog(
-        icon: Icons.build_circle_outlined,
-        iconColor: AppColors.textDisabled,
-        title: 'Kamar ${room.roomNumber} Dalam Perbaikan',
-        body:
-            'Kamar ini sedang dinonaktifkan untuk renovasi. Pengaturan status dapat dilakukan melalui panel Manajer.',
-        cancelLabel: 'Tutup',
-        onConfirm: null,
-      ),
+    AppConfirmationDialog.show(
+      context,
+      icon: Icons.construction_rounded,
+      iconColor: AppColors.textDisabled,
+      iconBgColor: AppColors.surface,
+      title: 'Kamar ${room.roomNumber} Dalam Perbaikan',
+      message:
+          'Kamar ini sedang dinonaktifkan untuk renovasi/pemeliharaan. Pengaturan status dapat dilakukan melalui panel Manajer.',
+      cancelLabel: 'Tutup',
     );
   }
 
@@ -111,12 +108,6 @@ class _RoomGridScreenState extends ConsumerState<RoomGridScreen> {
     if (mounted) {
       context.go('/login');
     }
-  }
-
-  void _showSnack(String msg, Color color) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(backgroundColor: color, content: Text(msg)),
-    );
   }
 
   @override
@@ -173,7 +164,19 @@ class _RoomGridScreenState extends ConsumerState<RoomGridScreen> {
               onRefresh: _handleRefresh,
               color: AppColors.navy700,
               child: filteredRooms.isEmpty
-                  ? _EmptyState()
+                  ? Center(
+                      child: AppEmptyState(
+                        icon: Icons.meeting_room_outlined,
+                        title: 'Tidak Ada Kamar Ditemukan',
+                        message:
+                            'Tidak ada unit kamar yang sesuai dengan filter atau kata kunci saat ini.',
+                        actionLabel: 'Reset Filter',
+                        onAction: () {
+                          ref.read(roomFilterProvider.notifier).state =
+                              const RoomFilterState();
+                        },
+                      ),
+                    )
                   : _RoomGrid(rooms: filteredRooms, onTap: _handleRoomTap),
             ),
           ),
@@ -298,157 +301,3 @@ class _RoomGrid extends StatelessWidget {
   }
 }
 
-// ── Empty State ───────────────────────────────────────────────────────
-class _EmptyState extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            width: 64,
-            height: 64,
-            decoration: BoxDecoration(
-              color: AppColors.navy50,
-              borderRadius: AppRadius.roundedLg,
-            ),
-            child: const Icon(
-              Icons.meeting_room_outlined,
-              size: 32,
-              color: AppColors.textDisabled,
-            ),
-          ),
-          const SizedBox(height: AppSpacing.md),
-          Text(
-            'Tidak ada kamar yang cocok',
-            style: AppTypography.h3.copyWith(color: AppColors.textSecondary),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            'Coba ubah filter yang dipilih',
-            style: AppTypography.caption,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ── Simple Dialog ─────────────────────────────────────────────────────
-enum _ConfirmVariant { primary, destructive }
-
-class _SimpleDialog extends StatelessWidget {
-  final IconData icon;
-  final Color iconColor;
-  final String title;
-  final String body;
-  final String? cancelLabel;
-  final String? confirmLabel;
-  final _ConfirmVariant? confirmVariant;
-  final VoidCallback? onConfirm;
-
-  const _SimpleDialog({
-    required this.icon,
-    required this.iconColor,
-    required this.title,
-    required this.body,
-    this.cancelLabel,
-    this.confirmLabel,
-    this.confirmVariant,
-    this.onConfirm,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isMobile = screenWidth < 600;
-
-    return Dialog(
-      insetPadding: EdgeInsets.symmetric(
-        horizontal: isMobile ? 16 : 24,
-        vertical: 24,
-      ),
-      child: ConstrainedBox(
-        constraints: BoxConstraints(
-          maxWidth: math.min(440.0, screenWidth - 32),
-        ),
-        child: Padding(
-          padding: EdgeInsets.all(isMobile ? AppSpacing.lg : AppSpacing.xl),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Icon(icon, size: 22, color: iconColor),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      title,
-                      style: (isMobile ? AppTypography.bodyLg : AppTypography.h3).copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: AppSpacing.md),
-
-              Text(body, style: AppTypography.body.copyWith(
-                color: AppColors.textSecondary,
-              )),
-
-              const SizedBox(height: AppSpacing.xl),
-
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  if (cancelLabel != null)
-                    TextButton(
-                      onPressed: () => Navigator.of(context).pop(),
-                      child: Text(
-                        cancelLabel!,
-                        style: AppTypography.bodySm.copyWith(
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                    ),
-                  if (onConfirm != null && confirmLabel != null) ...[
-                    const SizedBox(width: AppSpacing.sm),
-                    FilledButton(
-                      style: FilledButton.styleFrom(
-                        backgroundColor: confirmVariant == _ConfirmVariant.destructive
-                            ? AppColors.error
-                            : AppColors.orange600,
-                        foregroundColor: confirmVariant == _ConfirmVariant.destructive
-                            ? AppColors.white
-                            : AppColors.navy900,
-                        shape: const RoundedRectangleBorder(
-                          borderRadius: AppRadius.roundedMd,
-                        ),
-                        minimumSize: const Size(0, 44),
-                        padding: const EdgeInsets.symmetric(horizontal: 20),
-                      ),
-                      onPressed: onConfirm,
-                      child: Text(
-                        confirmLabel!,
-                        style: AppTypography.bodySm.copyWith(
-                          color: confirmVariant == _ConfirmVariant.destructive
-                              ? AppColors.white
-                              : AppColors.navy900,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ],
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}

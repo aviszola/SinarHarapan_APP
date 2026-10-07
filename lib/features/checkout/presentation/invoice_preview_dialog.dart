@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import '../../../app/theme.dart';
 import '../../room_management/domain/room_model.dart';
 import '../../shared_widgets/app_button.dart';
+import '../../shared_widgets/app_feedback.dart';
 import '../domain/invoice_pdf_service.dart';
 import '../domain/invoice_sequence_service.dart';
 import 'whatsapp_receipt_dialog.dart';
@@ -63,11 +64,10 @@ class _InvoicePreviewDialogState extends State<InvoicePreviewDialog> {
       if (!mounted) return;
 
       if (savedPath == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Pengunduhan PDF dibatalkan.'),
-            duration: Duration(seconds: 2),
-          ),
+        AppFeedback.showInfo(
+          context,
+          title: 'Pengunduhan Dibatalkan',
+          message: 'Penyimpanan dokumen faktur PDF dibatalkan oleh pengguna.',
         );
         return;
       }
@@ -76,37 +76,19 @@ class _InvoicePreviewDialogState extends State<InvoicePreviewDialog> {
 
       _showDownloadSuccessDialog(savedPath, fileName);
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          backgroundColor: AppColors.navy700,
-          duration: const Duration(seconds: 5),
-          content: Row(
-            children: [
-              const Icon(Icons.picture_as_pdf_outlined, color: Colors.white),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  'Faktur PDF resmi tersimpan: $fileName',
-                  style: const TextStyle(color: Colors.white, fontSize: 13),
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            ],
-          ),
-          action: SnackBarAction(
-            label: 'BUKA',
-            textColor: AppColors.orange500,
-            onPressed: () => InvoicePdfService.openFile(savedPath),
-          ),
-        ),
+      AppFeedback.showSuccess(
+        context,
+        title: 'Faktur PDF Tersimpan',
+        message: fileName,
+        actionLabel: 'BUKA',
+        onAction: () => InvoicePdfService.openFile(savedPath),
       );
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            backgroundColor: Colors.red.shade700,
-            content: Text('Gagal mengunduh PDF: $e'),
-          ),
+        AppFeedback.showError(
+          context,
+          title: 'Gagal Mengunduh PDF',
+          message: e.toString(),
         );
       }
     } finally {
@@ -130,11 +112,10 @@ class _InvoicePreviewDialogState extends State<InvoicePreviewDialog> {
       );
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            backgroundColor: Colors.red.shade700,
-            content: Text('Gagal membuka printer: $e'),
-          ),
+        AppFeedback.showError(
+          context,
+          title: 'Gagal Membuka Printer',
+          message: e.toString(),
         );
       }
     } finally {

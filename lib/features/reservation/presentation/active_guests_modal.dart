@@ -6,6 +6,7 @@ import '../../../app/theme.dart';
 import '../../checkout/presentation/check_out_dialog.dart';
 import '../../room_management/domain/room_model.dart';
 import '../../shared_widgets/app_button.dart';
+import '../../shared_widgets/app_feedback.dart';
 
 class ActiveGuestsModal extends StatefulWidget {
   final List<RoomModel> occupiedRooms;
@@ -36,8 +37,10 @@ class _ActiveGuestsModalState extends State<ActiveGuestsModal> {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
     } catch (_) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Tidak dapat membuka aplikasi WhatsApp.')),
+        AppFeedback.showError(
+          context,
+          title: 'Gagal Membuka WhatsApp',
+          message: 'Tidak dapat membuka aplikasi WhatsApp.',
         );
       }
     }
@@ -55,13 +58,11 @@ class _ActiveGuestsModalState extends State<ActiveGuestsModal> {
     });
 
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          backgroundColor: const Color(0xFF16A34A),
-          content: Text(
+      AppFeedback.showSuccess(
+        context,
+        title: 'Pengingat Terkirim',
+        message:
             'Pengingat check-out terkirim ke WhatsApp ${room.activeGuestPhone} (${room.activeGuestName})!',
-          ),
-        ),
       );
     }
   }

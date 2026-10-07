@@ -16,6 +16,7 @@ import '../../room_management/data/room_repository.dart';
 import '../../room_management/domain/room_model.dart';
 import '../../room_management/presentation/room_controller.dart';
 import '../../shared_widgets/app_button.dart';
+import '../../shared_widgets/app_feedback.dart';
 import '../../shared_widgets/app_text_field.dart';
 
 class CheckInModal extends ConsumerStatefulWidget {
@@ -289,25 +290,12 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
       });
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            backgroundColor: AppColors.navy900,
-            duration: const Duration(seconds: 4),
-            content: Row(
-              children: [
-                const Icon(Icons.check_circle_rounded, color: AppColors.statusAvailable, size: 20),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    usedFallback
-                        ? '✨ Data identitas ($_idType) berhasil dideteksi otomatis. Silakan periksa atau sesuaikan data.'
-                        : '✅ Data identitas berhasil diekstrak oleh server OCR.',
-                    style: const TextStyle(color: Colors.white, fontSize: 13),
-                  ),
-                ),
-              ],
-            ),
-          ),
+        AppFeedback.showSuccess(
+          context,
+          title: usedFallback ? 'Data Terdeteksi Otomatis' : 'Ekstraksi OCR Berhasil',
+          message: usedFallback
+              ? 'Data identitas ($_idType) berhasil dideteksi otomatis. Silakan tinjau kelengkapannya.'
+              : 'Data identitas berhasil diekstrak dengan akurat oleh modul OCR.',
         );
       }
     } catch (e) {
@@ -515,37 +503,21 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
         final receptionistName = authState.user?.fullName ?? 'Siti Rahmawati';
         final totalBayar = calculatedBasePrice * _totalNights;
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            backgroundColor: AppColors.statusAvailable,
-            duration: const Duration(seconds: 7),
-            content: Row(
-              children: [
-                const Icon(Icons.check_circle_outline, color: Colors.white),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    'Check-in Kamar ${widget.room.roomNumber} berhasil & Lunas! Invoice $returnedInvoice telah diterbitkan.',
-                    style: const TextStyle(color: Colors.white),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              ],
-            ),
-            action: SnackBarAction(
-              label: 'UNDUH PDF',
-              textColor: Colors.white,
-              onPressed: () {
-                InvoicePdfService.saveInvoicePdf(
-                  room: targetRoom,
-                  roomTotal: totalBayar,
-                  grandTotal: totalBayar,
-                  receptionistName: receptionistName,
-                  invoiceNumber: returnedInvoice,
-                );
-              },
-            ),
-          ),
+        AppFeedback.showSuccess(
+          context,
+          title: 'Check-in Berhasil & Lunas',
+          message:
+              'Kamar ${widget.room.roomNumber} berhasil check-in. Invoice $returnedInvoice telah diterbitkan.',
+          actionLabel: 'UNDUH PDF',
+          onAction: () {
+            InvoicePdfService.saveInvoicePdf(
+              room: targetRoom,
+              roomTotal: totalBayar,
+              grandTotal: totalBayar,
+              receptionistName: receptionistName,
+              invoiceNumber: returnedInvoice,
+            );
+          },
         );
       }
     } on ApiException catch (e) {
@@ -554,17 +526,24 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
         _errorMessage = e.message;
       });
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            backgroundColor: AppColors.statusOccupied,
-            content: Text(e.message),
-          ),
+        AppFeedback.showError(
+          context,
+          title: 'Gagal Check-in',
+          message: e.message,
         );
       }
     } catch (e) {
+      final err = e.toString().replaceAll('Exception: ', '');
       setState(() {
-        _errorMessage = e.toString().replaceAll('Exception: ', '');
+        _errorMessage = err;
       });
+      if (mounted) {
+        AppFeedback.showError(
+          context,
+          title: 'Terjadi Kesalahan',
+          message: err,
+        );
+      }
     }
   }
 
