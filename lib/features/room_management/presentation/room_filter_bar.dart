@@ -4,10 +4,17 @@ import '../../../app/theme.dart';
 import '../../shared_widgets/status_badge.dart';
 import 'room_controller.dart';
 
-/// Clean, compact room filter bar following modern SaaS design (Linear / Stripe style).
-/// Replaces sprawling pill chips with sleek, ergonomic dropdown filters.
+/// Clean, unified property command bar following modern SaaS design (Linear / Stripe style).
+/// Integrates live property pulse (occupancy & status breakdown) with ergonomic search & filtering.
 class RoomFilterBar extends ConsumerWidget {
-  const RoomFilterBar({super.key});
+  final VoidCallback? onRefresh;
+  final bool isRefreshing;
+
+  const RoomFilterBar({
+    super.key,
+    this.onRefresh,
+    this.isRefreshing = false,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -15,6 +22,12 @@ class RoomFilterBar extends ConsumerWidget {
     final notifier = ref.read(roomFilterProvider.notifier);
     final stats = ref.watch(roomStatsProvider);
     final totalRooms = stats.values.fold<int>(0, (a, b) => a + b);
+
+    final available = stats[RoomStatusType.available] ?? 0;
+    final occupied = stats[RoomStatusType.occupied] ?? 0;
+    final dirty = stats[RoomStatusType.dirty] ?? 0;
+    final maintenance = stats[RoomStatusType.maintenance] ?? 0;
+    final occupancyRate = totalRooms > 0 ? (occupied / totalRooms * 100).round() : 0;
 
     final hasActiveFilter = filter.searchQuery.isNotEmpty ||
         filter.roomType != 'ALL' ||
@@ -160,28 +173,28 @@ class RoomFilterBar extends ConsumerWidget {
     Widget buildResetButton() {
       return InkWell(
         onTap: () => notifier.state = const RoomFilterState(),
-        borderRadius: BorderRadius.circular(6),
+        borderRadius: AppRadius.roundedSm,
         child: Container(
           height: 36,
           padding: const EdgeInsets.symmetric(horizontal: 10),
           decoration: BoxDecoration(
-            color: const Color(0xFFFEE2E2),
-            borderRadius: BorderRadius.circular(6),
+            color: AppColors.errorBg,
+            borderRadius: AppRadius.roundedSm,
             border: Border.all(
-              color: const Color(0xFFFCA5A5),
+              color: AppColors.error.withAlpha(80),
             ),
           ),
-          child: Row(
+          child: const Row(
             mainAxisSize: MainAxisSize.min,
-            children: const [
-              Icon(Icons.close_rounded, size: 14, color: AppColors.statusOccupied),
+            children: [
+              Icon(Icons.close_rounded, size: 14, color: AppColors.errorText),
               SizedBox(width: 4),
               Text(
                 'Reset Filter',
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
-                  color: AppColors.statusOccupied,
+                  color: AppColors.errorText,
                 ),
               ),
             ],
@@ -213,16 +226,16 @@ class RoomFilterBar extends ConsumerWidget {
             filled: true,
             fillColor: AppColors.bg,
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(6),
+              borderRadius: AppRadius.roundedSm,
               borderSide: const BorderSide(color: AppColors.border),
             ),
             enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(6),
+              borderRadius: AppRadius.roundedSm,
               borderSide: const BorderSide(color: AppColors.border),
             ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(6),
-              borderSide: const BorderSide(color: AppColors.navy700, width: 1.5),
+            focusedBorder: const OutlineInputBorder(
+              borderRadius: AppRadius.roundedSm,
+              borderSide: BorderSide(color: AppColors.navy700, width: 1.5),
             ),
           ),
           onChanged: (val) => notifier.state = filter.copyWith(searchQuery: val),
@@ -230,13 +243,147 @@ class RoomFilterBar extends ConsumerWidget {
       );
     }
 
+    Widget buildOccupancyPill() {
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          color: AppColors.navy50,
+          borderRadius: AppRadius.roundedMd,
+          border: Border.all(color: AppColors.border),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'Hunian',
+              style: AppTypography.caption.copyWith(
+                color: AppColors.textSecondary,
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(width: 6),
+            Text(
+              '$occupancyRate%',
+              style: AppTypography.caption.copyWith(
+                color: AppColors.navy900,
+                fontSize: 13.5,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+            const SizedBox(width: 4),
+            Text(
+              '($occupied/$totalRooms)',
+              style: AppTypography.caption.copyWith(
+                color: AppColors.textDisabled,
+                fontSize: 11.5,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    Widget buildStatusDots() {
+      return Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _buildDotWithLabel(AppColors.statusAvailable, 'Available', available),
+          const SizedBox(width: 10),
+          _buildDotWithLabel(AppColors.statusOccupied, 'Occupied', occupied),
+          const SizedBox(width: 10),
+          _buildDotWithLabel(AppColors.statusDirty, 'Dirty', dirty),
+          const SizedBox(width: 10),
+          _buildDotWithLabel(AppColors.statusMaintenance, 'Maint.', maintenance),
+        ],
+      );
+    }
+
+    Widget buildRefreshButton() {
+      if (onRefresh == null) return const SizedBox.shrink();
+      return Tooltip(
+        message: 'Segarkan data kamar',
+        child: InkWell(
+          onTap: isRefreshing ? null : onRefresh,
+          borderRadius: AppRadius.roundedMd,
+          child: Container(
+            height: 36,
+            padding: const EdgeInsets.symmetric(horizontal: 10),
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: AppRadius.roundedMd,
+              border: Border.all(color: AppColors.border),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                isRefreshing
+                    ? const SizedBox(
+                        width: 13,
+                        height: 13,
+                        child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.navy700),
+                      )
+                    : const Icon(Icons.refresh_rounded, size: 15, color: AppColors.navy700),
+                const SizedBox(width: 5),
+                Text(
+                  'Segarkan',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.navy700,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
     return LayoutBuilder(
       builder: (context, constraints) {
-        final isMobile = constraints.maxWidth < 640;
+        final isDesktop = constraints.maxWidth >= 1060;
+        final isCompact = constraints.maxWidth < 640;
 
-        if (isMobile) {
-          // Responsive 2-line layout for mobile phones
+        if (isDesktop) {
+          // Unified 1-line SaaS Command Bar (Linear / Stripe style)
           return Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: 8),
+            decoration: const BoxDecoration(
+              color: AppColors.surface,
+              border: Border(bottom: BorderSide(color: AppColors.border)),
+            ),
+            child: Row(
+              children: [
+                buildOccupancyPill(),
+                const SizedBox(width: 12),
+                buildStatusDots(),
+                const Spacer(),
+                buildSearchField(width: 200),
+                const SizedBox(width: 8),
+                roomTypeDropdown,
+                const SizedBox(width: 8),
+                floorDropdown,
+                const SizedBox(width: 8),
+                statusDropdown,
+                if (hasActiveFilter) ...[
+                  const SizedBox(width: 8),
+                  buildResetButton(),
+                ],
+                if (onRefresh != null) ...[
+                  const SizedBox(width: 8),
+                  buildRefreshButton(),
+                ],
+              ],
+            ),
+          );
+        }
+
+        if (isCompact) {
+          // Ergonomic 2-line layout for mobile phones
+          return Container(
+            width: double.infinity,
             padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm + 4, vertical: 8),
             decoration: const BoxDecoration(
               color: AppColors.surface,
@@ -246,10 +393,24 @@ class RoomFilterBar extends ConsumerWidget {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // Full-width search bar on mobile
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  physics: const BouncingScrollPhysics(),
+                  child: Row(
+                    children: [
+                      buildOccupancyPill(),
+                      const SizedBox(width: 10),
+                      buildStatusDots(),
+                      if (onRefresh != null) ...[
+                        const SizedBox(width: 8),
+                        buildRefreshButton(),
+                      ],
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 8),
                 buildSearchField(),
                 const SizedBox(height: 8),
-                // Horizontal scrolling filter chips
                 SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
                   physics: const BouncingScrollPhysics(),
@@ -272,36 +433,48 @@ class RoomFilterBar extends ConsumerWidget {
           );
         }
 
-        // Single-line desktop / tablet layout
+        // Tablet layout
         return Container(
+          width: double.infinity,
           padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: 8),
           decoration: const BoxDecoration(
             color: AppColors.surface,
             border: Border(bottom: BorderSide(color: AppColors.border)),
           ),
-          child: SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            physics: const BouncingScrollPhysics(),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                buildSearchField(width: 220),
-                const SizedBox(
-                  height: 20,
-                  child: VerticalDivider(color: AppColors.border, width: 20),
-                ),
-                roomTypeDropdown,
-                const SizedBox(width: 8),
-                floorDropdown,
-                const SizedBox(width: 8),
-                statusDropdown,
-                if (hasActiveFilter) ...[
-                  const SizedBox(width: 10),
-                  buildResetButton(),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                children: [
+                  buildOccupancyPill(),
+                  const SizedBox(width: 12),
+                  buildStatusDots(),
+                  const Spacer(),
+                  if (onRefresh != null) buildRefreshButton(),
                 ],
-              ],
-            ),
+              ),
+              const SizedBox(height: 8),
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                physics: const BouncingScrollPhysics(),
+                child: Row(
+                  children: [
+                    buildSearchField(width: 220),
+                    const SizedBox(width: 8),
+                    roomTypeDropdown,
+                    const SizedBox(width: 8),
+                    floorDropdown,
+                    const SizedBox(width: 8),
+                    statusDropdown,
+                    if (hasActiveFilter) ...[
+                      const SizedBox(width: 8),
+                      buildResetButton(),
+                    ],
+                  ],
+                ),
+              ),
+            ],
           ),
         );
       },
@@ -320,7 +493,7 @@ class RoomFilterBar extends ConsumerWidget {
       height: 36,
       decoration: BoxDecoration(
         color: isActive ? AppColors.navy50 : AppColors.surface,
-        borderRadius: BorderRadius.circular(6),
+        borderRadius: AppRadius.roundedSm,
         border: Border.all(
           color: isActive ? AppColors.navy700 : AppColors.border,
           width: isActive ? 1.5 : 1,
@@ -337,7 +510,7 @@ class RoomFilterBar extends ConsumerWidget {
             color: isActive ? AppColors.navy700 : AppColors.textSecondary,
           ),
           dropdownColor: AppColors.surface,
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: AppRadius.roundedMd,
           selectedItemBuilder: (context) {
             return items.map((_) {
               return Row(
@@ -361,6 +534,24 @@ class RoomFilterBar extends ConsumerWidget {
           onChanged: onChanged,
         ),
       ),
+    );
+  }
+
+  Widget _buildDotWithLabel(Color color, String label, int count) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _buildDot(color),
+        const SizedBox(width: 5),
+        Text(
+          '$label · $count',
+          style: const TextStyle(
+            color: AppColors.textSecondary,
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ],
     );
   }
 

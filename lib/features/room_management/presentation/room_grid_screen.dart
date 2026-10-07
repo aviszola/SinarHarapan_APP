@@ -16,7 +16,8 @@ import 'room_controller.dart';
 import 'room_filter_bar.dart';
 
 class RoomGridScreen extends ConsumerStatefulWidget {
-  const RoomGridScreen({super.key});
+  final DateTime? fixedTime;
+  const RoomGridScreen({super.key, this.fixedTime});
 
   @override
   ConsumerState<RoomGridScreen> createState() => _RoomGridScreenState();
@@ -60,7 +61,7 @@ class _RoomGridScreenState extends ConsumerState<RoomGridScreen> {
       context: context,
       builder: (ctx) => _SimpleDialog(
         icon: Icons.cleaning_services_outlined,
-        iconColor: const Color(0xFFD97706),
+        iconColor: AppColors.statusDirty,
         title: 'Pembersihan Kamar ${room.roomNumber}',
         body:
             'Kamar baru saja ditinggalkan tamu. Apakah housekeeping sudah selesai dan kamar siap dihuni kembali?',
@@ -126,7 +127,6 @@ class _RoomGridScreenState extends ConsumerState<RoomGridScreen> {
 
     final filteredRooms = ref.watch(filteredRoomsProvider);
     final stats         = ref.watch(roomStatsProvider);
-    final totalRooms    = stats.values.fold<int>(0, (a, b) => a + b);
     final occupiedCount = stats[RoomStatusType.occupied] ?? 0;
 
     return Scaffold(
@@ -137,12 +137,12 @@ class _RoomGridScreenState extends ConsumerState<RoomGridScreen> {
           if (AppConfig.useMock)
             Container(
               width: double.infinity,
-              color: Colors.amber.shade800,
+              color: AppColors.orange800,
               padding: const EdgeInsets.symmetric(vertical: 4),
               child: const Center(
                 child: Text(
                   '⚠️ DATA CONTOH (MOCK MODE AKTIF) - JANGAN GUNAKAN UNTUK TRANSAKSI ASLI',
-                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 11),
+                  style: TextStyle(color: AppColors.white, fontWeight: FontWeight.bold, fontSize: 11),
                 ),
               ),
             ),
@@ -152,6 +152,7 @@ class _RoomGridScreenState extends ConsumerState<RoomGridScreen> {
             userName: userName,
             userRole: userRole,
             activeWaCount: occupiedCount,
+            fixedTime: widget.fixedTime,
             onLogout: _handleLogout,
             onOpenActiveGuests: _handleOpenActiveGuests,
             // Sembunyikan portal Manajer jika login sebagai Resepsionis
@@ -160,16 +161,11 @@ class _RoomGridScreenState extends ConsumerState<RoomGridScreen> {
                 : null,
           ),
 
-          // ── Stats Ribbon ─────────────────────────────────────────
-          _StatsRibbon(
-            stats: stats,
-            totalRooms: totalRooms,
+          // ── Unified Command Bar (Stats + Filters + Refresh) ───────
+          RoomFilterBar(
             onRefresh: _handleRefresh,
             isRefreshing: _isRefreshing,
           ),
-
-          // ── Filter Bar ────────────────────────────────────────────
-          const RoomFilterBar(),
 
           // ── Room Grid ─────────────────────────────────────────────
           Expanded(
@@ -187,183 +183,7 @@ class _RoomGridScreenState extends ConsumerState<RoomGridScreen> {
   }
 }
 
-// ── Stats Ribbon ─────────────────────────────────────────────────────
-class _StatsRibbon extends StatelessWidget {
-  final Map<RoomStatusType, int> stats;
-  final int totalRooms;
-  final VoidCallback onRefresh;
-  final bool isRefreshing;
-
-  const _StatsRibbon({
-    required this.stats,
-    required this.totalRooms,
-    required this.onRefresh,
-    required this.isRefreshing,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final available   = stats[RoomStatusType.available]   ?? 0;
-    final occupied    = stats[RoomStatusType.occupied]    ?? 0;
-    final dirty       = stats[RoomStatusType.dirty]       ?? 0;
-    final maintenance = stats[RoomStatusType.maintenance] ?? 0;
-
-    final occupancyRate = totalRooms > 0
-        ? (occupied / totalRooms * 100).round()
-        : 0;
-
-    final isMobile = MediaQuery.of(context).size.width < 600;
-
-    return Container(
-      decoration: const BoxDecoration(
-        color: AppColors.surface,
-        border: Border(bottom: BorderSide(color: AppColors.border)),
-      ),
-      padding: EdgeInsets.symmetric(
-          horizontal: isMobile ? AppSpacing.sm + 4 : AppSpacing.md,
-          vertical: AppSpacing.sm + 2),
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        physics: const BouncingScrollPhysics(),
-        child: Row(
-          children: [
-            // Occupancy pill - airy, modern, lightweight
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-              decoration: BoxDecoration(
-                color: const Color(0xFFF1F5F9),
-                borderRadius: AppRadius.roundedMd,
-                border: Border.all(color: const Color(0xFFE2E8F0)),
-              ),
-              child: Row(
-                children: [
-                  Text(
-                    'Hunian',
-                    style: AppTypography.caption.copyWith(
-                      color: AppColors.textSecondary,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(width: 6),
-                  Text(
-                    '$occupancyRate%',
-                    style: AppTypography.caption.copyWith(
-                      color: AppColors.navy900,
-                      fontSize: 13.5,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                  const SizedBox(width: 5),
-                  Text(
-                    '($occupied/$totalRooms)',
-                    style: AppTypography.caption.copyWith(
-                      color: AppColors.textDisabled,
-                      fontSize: 11.5,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(width: AppSpacing.md),
-
-            // Status dots
-            _StatusDot(color: AppColors.statusAvailable, label: 'Available', count: available),
-            const SizedBox(width: AppSpacing.md),
-            _StatusDot(color: AppColors.statusOccupied,  label: 'Occupied',  count: occupied),
-            const SizedBox(width: AppSpacing.md),
-            _StatusDot(color: AppColors.statusDirty,     label: 'Dirty',     count: dirty),
-            const SizedBox(width: AppSpacing.md),
-            _StatusDot(color: AppColors.statusMaintenance, label: 'Maintenance', count: maintenance),
-
-            const SizedBox(width: AppSpacing.lg),
-
-            // Manual Refresh button — replaces heavy auto-sync timer
-            InkWell(
-              onTap: isRefreshing ? null : onRefresh,
-              borderRadius: BorderRadius.circular(8),
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                decoration: BoxDecoration(
-                  color: AppColors.surface,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: AppColors.border),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    if (isRefreshing)
-                      const SizedBox(
-                        width: 12,
-                        height: 12,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: AppColors.navy700,
-                        ),
-                      )
-                    else
-                      const Icon(
-                        Icons.refresh_rounded,
-                        size: 14,
-                        color: AppColors.textSecondary,
-                      ),
-                    const SizedBox(width: 5),
-                    Text(
-                      isRefreshing ? 'Memuat...' : 'Segarkan',
-                      style: AppTypography.caption.copyWith(
-                        color: AppColors.navy900,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _StatusDot extends StatelessWidget {
-  final Color color;
-  final String label;
-  final int count;
-
-  const _StatusDot({
-    required this.color,
-    required this.label,
-    required this.count,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          width: 9,
-          height: 9,
-          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-        ),
-        const SizedBox(width: 7),
-        Text(
-          '$label · $count',
-          style: AppTypography.caption.copyWith(
-            color: AppColors.textSecondary,
-            fontWeight: FontWeight.w600,
-            fontSize: 13.5,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-// ── Room Grid ────────────────────────────────────────────────────────
+// ── Room Grid (Organized by Floor) ───────────────────────────────────
 class _RoomGrid extends StatelessWidget {
   final List<RoomModel> rooms;
   final void Function(RoomModel) onTap;
@@ -372,18 +192,23 @@ class _RoomGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Group rooms by floor for clear physical spatial awareness
+    final Map<int, List<RoomModel>> roomsByFloor = {};
+    for (final r in rooms) {
+      roomsByFloor.putIfAbsent(r.floor, () => []).add(r);
+    }
+    final sortedFloors = roomsByFloor.keys.toList()..sort();
+
     return LayoutBuilder(
       builder: (context, constraints) {
         int cols = 4;
-        if (constraints.maxWidth >= 1400) {
-          cols = 6;
-        } else if (constraints.maxWidth >= 1100) {
+        if (constraints.maxWidth >= 1500) {
           cols = 5;
-        } else if (constraints.maxWidth >= 850) {
+        } else if (constraints.maxWidth >= 1150) {
           cols = 4;
-        } else if (constraints.maxWidth >= 550) {
+        } else if (constraints.maxWidth >= 820) {
           cols = 3;
-        } else if (constraints.maxWidth >= 360) {
+        } else if (constraints.maxWidth >= 540) {
           cols = 2;
         } else {
           cols = 1;
@@ -391,20 +216,80 @@ class _RoomGrid extends StatelessWidget {
 
         final isCompact = constraints.maxWidth < 600;
 
-        return GridView.builder(
-          padding: EdgeInsets.all(isCompact ? AppSpacing.sm + 4 : AppSpacing.lg),
-          physics: const BouncingScrollPhysics(),
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: cols,
-            crossAxisSpacing: isCompact ? 8 : AppSpacing.md,
-            mainAxisSpacing: isCompact ? 8 : AppSpacing.md,
-            mainAxisExtent: isCompact ? (cols == 1 ? 116 : 130) : 126,
+        return ListView.builder(
+          padding: EdgeInsets.symmetric(
+            horizontal: isCompact ? AppSpacing.sm + 4 : AppSpacing.lg,
+            vertical: AppSpacing.sm,
           ),
-          itemCount: rooms.length,
-          itemBuilder: (context, index) {
-            return RoomCard(
-              room: rooms[index],
-              onTap: () => onTap(rooms[index]),
+          physics: const BouncingScrollPhysics(),
+          itemCount: sortedFloors.length,
+          itemBuilder: (context, floorIndex) {
+            final floor = sortedFloors[floorIndex];
+            final floorRooms = roomsByFloor[floor]!;
+
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(4, 14, 4, 10),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: const BoxDecoration(
+                          color: AppColors.navy100,
+                          borderRadius: AppRadius.roundedSm,
+                        ),
+                        child: const Icon(Icons.layers_rounded, size: 14, color: AppColors.navy700),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Lantai $floor',
+                        style: AppTypography.h3.copyWith(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.navy900,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: AppColors.navy50,
+                          borderRadius: AppRadius.roundedSm,
+                          border: Border.all(color: AppColors.border),
+                        ),
+                        child: Text(
+                          '${floorRooms.length} Unit',
+                          style: const TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                GridView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: cols,
+                    crossAxisSpacing: isCompact ? 8 : AppSpacing.md,
+                    mainAxisSpacing: isCompact ? 8 : AppSpacing.md,
+                    mainAxisExtent: isCompact ? (cols == 1 ? 120 : 134) : 132,
+                  ),
+                  itemCount: floorRooms.length,
+                  itemBuilder: (context, index) {
+                    return RoomCard(
+                      room: floorRooms[index],
+                      onTap: () => onTap(floorRooms[index]),
+                    );
+                  },
+                ),
+                const SizedBox(height: 8),
+              ],
             );
           },
         );
@@ -535,9 +420,11 @@ class _SimpleDialog extends StatelessWidget {
                     FilledButton(
                       style: FilledButton.styleFrom(
                         backgroundColor: confirmVariant == _ConfirmVariant.destructive
-                            ? AppColors.statusOccupied
+                            ? AppColors.error
                             : AppColors.orange600,
-                        foregroundColor: Colors.white,
+                        foregroundColor: confirmVariant == _ConfirmVariant.destructive
+                            ? AppColors.white
+                            : AppColors.navy900,
                         shape: const RoundedRectangleBorder(
                           borderRadius: AppRadius.roundedMd,
                         ),
@@ -548,7 +435,9 @@ class _SimpleDialog extends StatelessWidget {
                       child: Text(
                         confirmLabel!,
                         style: AppTypography.bodySm.copyWith(
-                          color: Colors.white,
+                          color: confirmVariant == _ConfirmVariant.destructive
+                              ? AppColors.white
+                              : AppColors.navy900,
                           fontWeight: FontWeight.w600,
                         ),
                       ),

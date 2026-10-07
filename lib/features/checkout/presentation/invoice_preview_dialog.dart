@@ -152,10 +152,10 @@ class _InvoicePreviewDialogState extends State<InvoicePreviewDialog> {
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: const Color(0xFFDCFCE7),
+                color: AppColors.availableBg,
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: const Icon(Icons.check_circle_rounded, color: Color(0xFF16A34A), size: 24),
+              child: const Icon(Icons.check_circle_rounded, color: AppColors.statusAvailable, size: 24),
             ),
             const SizedBox(width: 12),
             const Expanded(
@@ -298,9 +298,9 @@ class _InvoicePreviewDialogState extends State<InvoicePreviewDialog> {
                   margin: const EdgeInsets.only(bottom: AppSpacing.sm),
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFDCFCE7),
+                    color: AppColors.availableBg,
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: const Color(0xFF16A34A).withValues(alpha: 0.4)),
+                    border: Border.all(color: AppColors.statusAvailable.withValues(alpha: 0.4)),
                   ),
                   child: Wrap(
                     alignment: WrapAlignment.spaceBetween,
@@ -311,18 +311,18 @@ class _InvoicePreviewDialogState extends State<InvoicePreviewDialog> {
                       Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(Icons.mark_chat_read_rounded, color: Color(0xFF16A34A), size: 18),
+                          const Icon(Icons.mark_chat_read_rounded, color: AppColors.statusAvailable, size: 18),
                           const SizedBox(width: 8),
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               const Text(
                                 'Struk Digital Siap Dikirim ke WhatsApp Tamu',
-                                style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12, color: Color(0xFF16A34A)),
+                                style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12, color: AppColors.availableText),
                               ),
                               Text(
                                 'Kirim bukti bayar resmi ke ${widget.room.activeGuestPhone ?? "kontak WhatsApp tamu"}.',
-                                style: const TextStyle(fontSize: 11, color: Color(0xFF15803D)),
+                                style: const TextStyle(fontSize: 11, color: AppColors.availableDark),
                               ),
                             ],
                           ),
@@ -330,7 +330,7 @@ class _InvoicePreviewDialogState extends State<InvoicePreviewDialog> {
                       ),
                       ElevatedButton.icon(
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF16A34A),
+                          backgroundColor: AppColors.statusAvailable,
                           foregroundColor: Colors.white,
                           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),

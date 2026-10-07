@@ -419,17 +419,17 @@ class _CheckOutDialogState extends ConsumerState<CheckOutDialog> {
                           decoration: BoxDecoration(
                             color: AppColors.statusWarningBg,
                             borderRadius: AppRadius.roundedMd,
-                            border: Border.all(color: const Color(0xFFD97706)),
+                            border: Border.all(color: AppColors.statusDirty),
                           ),
                           child: Row(
                             children: [
-                              const Icon(Icons.warning_amber_rounded, color: Color(0xFFD97706), size: 20),
+                              Icon(Icons.warning_amber_rounded, color: AppColors.statusDirty, size: 20),
                               const SizedBox(width: 8),
                               Expanded(
                                 child: Text(
                                   'Terlambat check-out $_lateHours jam melebihi batas 12:00 WIB. Dikenakan denda late check-out otomatis.',
                                   style: AppTypography.caption.copyWith(
-                                    color: const Color(0xFFD97706),
+                                    color: AppColors.statusDirty,
                                     fontWeight: FontWeight.w600,
                                   ),
                                 ),
@@ -546,17 +546,17 @@ class _CheckOutDialogState extends ConsumerState<CheckOutDialog> {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF25D366).withValues(alpha: 0.08),
+                          color: AppColors.whatsapp.withValues(alpha: 0.08),
                           borderRadius: BorderRadius.circular(8),
                           border: Border.all(
-                            color: const Color(0xFF16A34A).withValues(alpha: 0.3),
+                            color: AppColors.statusAvailable.withValues(alpha: 0.3),
                           ),
                         ),
                         child: Row(
                           children: [
                             Checkbox(
                               value: _sendWaReceipt,
-                              activeColor: const Color(0xFF16A34A),
+                              activeColor: AppColors.statusAvailable,
                               onChanged: (val) => setState(() => _sendWaReceipt = val ?? true),
                             ),
                             Expanded(

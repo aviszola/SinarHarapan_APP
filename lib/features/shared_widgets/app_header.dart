@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import '../../app/theme.dart';
 
@@ -12,6 +13,7 @@ class ReceptionistTopBar extends StatefulWidget {
   final VoidCallback? onOpenActiveGuests;
   final VoidCallback? onOpenManagerPortal;
   final int activeWaCount;
+  final DateTime? fixedTime;
 
   const ReceptionistTopBar({
     super.key,
@@ -21,6 +23,7 @@ class ReceptionistTopBar extends StatefulWidget {
     this.onOpenActiveGuests,
     this.onOpenManagerPortal,
     this.activeWaCount = 0,
+    this.fixedTime,
   });
 
   @override
@@ -28,22 +31,24 @@ class ReceptionistTopBar extends StatefulWidget {
 }
 
 class _ReceptionistTopBarState extends State<ReceptionistTopBar> {
-  late Timer _clockTimer;
+  Timer? _clockTimer;
   late DateTime _now;
 
   @override
   void initState() {
     super.initState();
-    _now = DateTime.now();
-    // Tick every second for live clock
-    _clockTimer = Timer.periodic(const Duration(seconds: 1), (_) {
-      if (mounted) setState(() => _now = DateTime.now());
-    });
+    _now = widget.fixedTime ?? DateTime.now();
+    // Tick every second for live clock only if not fixed
+    if (widget.fixedTime == null) {
+      _clockTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+        if (mounted) setState(() => _now = DateTime.now());
+      });
+    }
   }
 
   @override
   void dispose() {
-    _clockTimer.cancel();
+    _clockTimer?.cancel();
     super.dispose();
   }
 
@@ -64,7 +69,7 @@ class _ReceptionistTopBarState extends State<ReceptionistTopBar> {
         decoration: const BoxDecoration(
           color: AppColors.navy900,
           border: Border(
-            bottom: BorderSide(color: Color(0xFF0A2A6E), width: 1),
+            bottom: BorderSide(color: AppColors.navy700, width: 1),
           ),
         ),
         padding: EdgeInsets.symmetric(
@@ -87,9 +92,8 @@ class _ReceptionistTopBarState extends State<ReceptionistTopBar> {
                 children: [
                   Text(
                     timeStr,
-                    style: TextStyle(
-                      fontFamily: 'monospace',
-                      color: Colors.white,
+                    style: GoogleFonts.plusJakartaSans(
+                      color: AppColors.white,
                       fontSize: isTablet ? 16 : 19,
                       fontWeight: FontWeight.w700,
                       letterSpacing: 1.5,
@@ -110,9 +114,8 @@ class _ReceptionistTopBarState extends State<ReceptionistTopBar> {
               // Compact mobile clock
               Text(
                 DateFormat('HH:mm').format(_now),
-                style: const TextStyle(
-                  fontFamily: 'monospace',
-                  color: Colors.white70,
+                style: GoogleFonts.plusJakartaSans(
+                  color: AppColors.white.withAlpha(180),
                   fontSize: 13,
                   fontWeight: FontWeight.w700,
                   letterSpacing: 0.5,
@@ -137,7 +140,7 @@ class _ReceptionistTopBarState extends State<ReceptionistTopBar> {
                   tooltip: 'Portal Manajer & Inventaris Kamar',
                   icon: const Icon(
                     Icons.admin_panel_settings_outlined,
-                    color: Colors.white,
+                    color: AppColors.white,
                     size: 20,
                   ),
                   onPressed: widget.onOpenManagerPortal,
@@ -146,12 +149,12 @@ class _ReceptionistTopBarState extends State<ReceptionistTopBar> {
                 TextButton.icon(
                   style: TextButton.styleFrom(
                     backgroundColor: AppColors.navy700,
-                    foregroundColor: Colors.white,
+                    foregroundColor: AppColors.white,
                     padding: const EdgeInsets.symmetric(
                       horizontal: 12,
                       vertical: 8,
                     ),
-                    shape: RoundedRectangleBorder(
+                    shape: const RoundedRectangleBorder(
                       borderRadius: AppRadius.roundedMd,
                     ),
                   ),
@@ -163,7 +166,7 @@ class _ReceptionistTopBarState extends State<ReceptionistTopBar> {
                   label: Text(
                     'Portal Manajer (Inventaris)',
                     style: AppTypography.caption.copyWith(
-                      color: Colors.white,
+                      color: AppColors.white,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -217,7 +220,7 @@ class _BrandMark extends StatelessWidget {
             child: Text(
               'SH',
               style: TextStyle(
-                color: Colors.white,
+                color: AppColors.navy900,
                 fontWeight: FontWeight.w800,
                 fontSize: 16,
                 letterSpacing: -0.3,
@@ -234,7 +237,7 @@ class _BrandMark extends StatelessWidget {
               Text(
                 'Sinar Harapan',
                 style: AppTypography.h3.copyWith(
-                  color: Colors.white,
+                  color: AppColors.white,
                   fontWeight: FontWeight.w700,
                   fontSize: 16,
                 ),
@@ -246,16 +249,16 @@ class _BrandMark extends StatelessWidget {
                       horizontal: 6,
                       vertical: 2,
                     ),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFDC2626).withAlpha(50),
+                    decoration: const BoxDecoration(
+                      color: AppColors.orange100,
                       borderRadius: AppRadius.roundedSm,
                     ),
                     child: const Text(
                       'RedDoorz',
                       style: TextStyle(
-                        color: Color(0xFFFCA5A5),
+                        color: AppColors.orange800,
                         fontSize: 11,
-                        fontWeight: FontWeight.w600,
+                        fontWeight: FontWeight.w700,
                         letterSpacing: 0.3,
                       ),
                     ),
@@ -282,7 +285,7 @@ class _BrandMark extends StatelessWidget {
 class _VDivider extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return Container(height: 28, width: 1, color: Colors.white.withAlpha(20));
+    return Container(height: 28, width: 1, color: AppColors.white.withAlpha(20));
   }
 }
 
@@ -321,27 +324,27 @@ class _ActiveGuestsChipState extends State<_ActiveGuestsChip> {
       if (_hovered) {
         bgColor = AppColors.orange600;
         borderColor = AppColors.orange500;
-        iconColor = Colors.white;
-        textColor = Colors.white;
-        badgeBgColor = Colors.white;
+        iconColor = AppColors.navy900;
+        textColor = AppColors.navy900;
+        badgeBgColor = AppColors.navy900;
         badgeTextColor = AppColors.orange600;
         shadows = [
           BoxShadow(
-            color: AppColors.orange600.withValues(alpha: 0.45),
+            color: AppColors.orange600.withAlpha(115),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
         ];
       } else {
-        bgColor = AppColors.orange600.withValues(alpha: 0.18);
-        borderColor = AppColors.orange500.withValues(alpha: 0.6);
+        bgColor = AppColors.orange600.withAlpha(46);
+        borderColor = AppColors.orange500.withAlpha(153);
         iconColor = AppColors.orange500;
-        textColor = Colors.white;
+        textColor = AppColors.white;
         badgeBgColor = AppColors.orange600;
-        badgeTextColor = Colors.white;
+        badgeTextColor = AppColors.navy900;
         shadows = [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.15),
+            color: AppColors.navy900.withAlpha(40),
             blurRadius: 4,
             offset: const Offset(0, 1),
           ),
@@ -350,10 +353,10 @@ class _ActiveGuestsChipState extends State<_ActiveGuestsChip> {
     } else {
       bgColor = _hovered
           ? AppColors.navy700
-          : AppColors.navy700.withValues(alpha: 0.5);
-      borderColor = Colors.white.withValues(alpha: 0.15);
-      iconColor = Colors.white70;
-      textColor = Colors.white70;
+          : AppColors.navy700.withAlpha(128);
+      borderColor = AppColors.white.withAlpha(40);
+      iconColor = AppColors.white.withAlpha(180);
+      textColor = AppColors.white.withAlpha(180);
       badgeBgColor = Colors.transparent;
       badgeTextColor = Colors.transparent;
       shadows = null;
@@ -406,7 +409,7 @@ class _ActiveGuestsChipState extends State<_ActiveGuestsChip> {
                     boxShadow: _hovered
                         ? [
                             BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.15),
+                              color: AppColors.navy900.withAlpha(40),
                               blurRadius: 3,
                               offset: const Offset(0, 1),
                             ),
@@ -473,13 +476,13 @@ class _UserChipState extends State<_UserChip> {
             decoration: BoxDecoration(
               color: AppColors.navy500,
               borderRadius: AppRadius.roundedFull,
-              border: Border.all(color: Colors.white.withAlpha(30), width: 1.5),
+              border: Border.all(color: AppColors.white.withAlpha(30), width: 1.5),
             ),
             child: Center(
               child: Text(
                 widget.initials,
                 style: const TextStyle(
-                  color: Colors.white,
+                  color: AppColors.white,
                   fontWeight: FontWeight.w700,
                   fontSize: 14,
                 ),
@@ -499,7 +502,7 @@ class _UserChipState extends State<_UserChip> {
               Text(
                 displayName,
                 style: AppTypography.bodySm.copyWith(
-                  color: Colors.white,
+                  color: AppColors.white,
                   fontWeight: FontWeight.w600,
                   fontSize: 14,
                 ),
@@ -532,14 +535,14 @@ class _UserChipState extends State<_UserChip> {
                 height: 36,
                 decoration: BoxDecoration(
                   color: _hovered
-                      ? AppColors.statusOccupied.withAlpha(30)
+                      ? AppColors.error.withAlpha(30)
                       : Colors.transparent,
                   borderRadius: AppRadius.roundedMd,
                 ),
                 child: Icon(
                   Icons.logout_rounded,
                   size: 19,
-                  color: _hovered ? AppColors.statusOccupied : Colors.white54,
+                  color: _hovered ? AppColors.error : AppColors.white.withAlpha(140),
                 ),
               ),
             ),
@@ -591,7 +594,7 @@ class ManagerSidebar extends StatelessWidget {
         height: double.infinity,
         decoration: const BoxDecoration(
           color: AppColors.navy900,
-          border: Border(right: BorderSide(color: Color(0xFF0A2A6E), width: 1)),
+          border: Border(right: BorderSide(color: AppColors.navy700, width: 1)),
         ),
         child: LayoutBuilder(
           builder: (context, constraints) {
@@ -619,7 +622,7 @@ class ManagerSidebar extends StatelessWidget {
                                 child: Text(
                                   'SH',
                                   style: TextStyle(
-                                    color: Colors.white,
+                                    color: AppColors.navy900,
                                     fontWeight: FontWeight.w800,
                                     fontSize: 15,
                                   ),
@@ -634,7 +637,7 @@ class ManagerSidebar extends StatelessWidget {
                                 Text(
                                   'Sinar Harapan',
                                   style: AppTypography.h3.copyWith(
-                                    color: Colors.white,
+                                    color: AppColors.white,
                                     fontSize: 15.5,
                                     fontWeight: FontWeight.w700,
                                   ),
@@ -652,7 +655,7 @@ class ManagerSidebar extends StatelessWidget {
                         ),
                       ),
 
-                      const Divider(color: Color(0xFF0A2A6E), height: 1),
+                      const Divider(color: AppColors.navy700, height: 1),
 
                       const SizedBox(height: AppSpacing.sm),
 
@@ -690,7 +693,7 @@ class ManagerSidebar extends StatelessWidget {
 
                       const Spacer(),
 
-                      const Divider(color: Color(0xFF0A2A6E), height: 1),
+                      const Divider(color: AppColors.navy700, height: 1),
 
                       // ── User Section ─────────────────────────────────────────
                       Padding(
@@ -708,7 +711,7 @@ class ManagerSidebar extends StatelessWidget {
                                 child: Text(
                                   initials,
                                   style: const TextStyle(
-                                    color: Colors.white,
+                                    color: AppColors.white,
                                     fontWeight: FontWeight.w700,
                                     fontSize: 14,
                                   ),
@@ -725,7 +728,7 @@ class ManagerSidebar extends StatelessWidget {
                                         ? '${managerName.substring(0, 14)}…'
                                         : managerName,
                                     style: AppTypography.bodySm.copyWith(
-                                      color: Colors.white,
+                                      color: AppColors.white,
                                       fontWeight: FontWeight.w600,
                                       fontSize: 13.5,
                                     ),
@@ -742,10 +745,10 @@ class ManagerSidebar extends StatelessWidget {
                               ),
                             ),
                             IconButton(
-                              icon: const Icon(
+                              icon: Icon(
                                 Icons.logout_rounded,
                                 size: 19,
-                                color: Colors.white38,
+                                color: AppColors.white.withAlpha(100),
                               ),
                               tooltip: 'Keluar',
                               onPressed: onLogout,
@@ -847,16 +850,16 @@ class _SidebarNavItemState extends State<_SidebarNavItem> {
                       isActive ? widget.activeIcon : widget.inactiveIcon,
                       size: 21,
                       color: isActive
-                          ? Colors.white
-                          : (_hovered ? Colors.white70 : Colors.white38),
+                          ? AppColors.white
+                          : (_hovered ? AppColors.white.withAlpha(180) : AppColors.white.withAlpha(100)),
                     ),
                     const SizedBox(width: 12),
                     Text(
                       widget.label,
                       style: AppTypography.body.copyWith(
                         color: isActive
-                            ? Colors.white
-                            : (_hovered ? Colors.white70 : Colors.white54),
+                            ? AppColors.white
+                            : (_hovered ? AppColors.white.withAlpha(180) : AppColors.white.withAlpha(140)),
                         fontWeight: isActive
                             ? FontWeight.w600
                             : FontWeight.w400,

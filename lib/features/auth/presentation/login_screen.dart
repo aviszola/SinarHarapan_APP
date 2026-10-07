@@ -163,7 +163,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                                   controller: _usernameController,
                                   prefixIcon: Icons.person_outline_rounded,
                                   validator: (v) => (v == null || v.trim().isEmpty)
-                                      ? 'Username wajib diisi'
+                                      ? 'Nama pengguna wajib diisi'
                                       : null,
                                 ),
 
@@ -177,7 +177,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                                   isPassword: true,
                                   prefixIcon: Icons.lock_outline_rounded,
                                   validator: (v) =>
-                                      (v == null || v.isEmpty) ? 'Password wajib diisi' : null,
+                                      (v == null || v.isEmpty) ? 'Kata sandi wajib diisi' : null,
                                   onSubmitted: (_) => _handleLogin(),
                                 ),
 
@@ -291,11 +291,11 @@ class _LeftBrandPanel extends StatelessWidget {
               color: AppColors.orange600,
               borderRadius: AppRadius.roundedLg,
             ),
-            child: const Center(
+            child: Center(
               child: Text(
                 'SH',
-                style: TextStyle(
-                  color: Colors.white,
+                style: AppTypography.h2.copyWith(
+                  color: AppColors.white,
                   fontWeight: FontWeight.w800,
                   fontSize: 22,
                   letterSpacing: -0.5,
@@ -309,7 +309,7 @@ class _LeftBrandPanel extends StatelessWidget {
           Text(
             'Hotel Sinar\nHarapan',
             style: AppTypography.h1.copyWith(
-              color: Colors.white,
+              color: AppColors.white,
               fontSize: 30,
               fontWeight: FontWeight.w700,
               height: 1.25,
@@ -321,14 +321,14 @@ class _LeftBrandPanel extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
-              color: const Color(0xFFDC2626).withAlpha(30),
+              color: AppColors.orange100,
               borderRadius: AppRadius.roundedSm,
-              border: Border.all(color: const Color(0xFFDC2626).withAlpha(80)),
+              border: Border.all(color: AppColors.orange800.withAlpha(80)),
             ),
-            child: const Text(
+            child: Text(
               'RedDoorz Partner',
-              style: TextStyle(
-                color: Color(0xFFFCA5A5),
+              style: AppTypography.overline.copyWith(
+                color: AppColors.orange800,
                 fontSize: 11,
                 fontWeight: FontWeight.w600,
                 letterSpacing: 0.4,
@@ -349,7 +349,7 @@ class _LeftBrandPanel extends StatelessWidget {
             decoration: BoxDecoration(
               color: AppColors.navy700,
               borderRadius: AppRadius.roundedLg,
-              border: Border.all(color: Colors.white.withAlpha(20)),
+              border: Border.all(color: AppColors.white.withAlpha(20)),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -357,7 +357,7 @@ class _LeftBrandPanel extends StatelessWidget {
                 Text(
                   'Frontdesk & Property Management System',
                   style: AppTypography.bodySm.copyWith(
-                    color: Colors.white,
+                    color: AppColors.white,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -423,11 +423,11 @@ class _MobileLogo extends StatelessWidget {
             color: AppColors.navy900,
             borderRadius: AppRadius.roundedLg,
           ),
-          child: const Center(
+          child: Center(
             child: Text(
               'SH',
-              style: TextStyle(
-                color: Colors.white,
+              style: AppTypography.h3.copyWith(
+                color: AppColors.white,
                 fontWeight: FontWeight.w800,
                 fontSize: 18,
               ),
@@ -463,22 +463,22 @@ class _ErrorBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
       decoration: BoxDecoration(
-        color: AppColors.statusErrorBg,
+        color: AppColors.errorBg,
         borderRadius: AppRadius.roundedMd,
-        border: Border.all(color: AppColors.statusOccupied.withAlpha(60)),
+        border: Border.all(color: AppColors.error.withAlpha(60)),
       ),
       child: Row(
         children: [
           const Icon(Icons.error_outline_rounded,
-              size: 16, color: AppColors.statusOccupied),
-          const SizedBox(width: 8),
+              size: 16, color: AppColors.errorText),
+          const SizedBox(width: AppSpacing.sm),
           Expanded(
             child: Text(
               message,
               style: AppTypography.bodySm.copyWith(
-                color: AppColors.statusOccupied,
+                color: AppColors.errorText,
                 fontWeight: FontWeight.w500,
               ),
             ),

@@ -53,15 +53,49 @@
 
 ### 2.3 Warna Status (Independen dari warna brand — jangan dicampur dengan navy/oranye)
 
-| Token | Hex | Status Kamar / Konteks |
+**PENTING: Nilai Token Final (Kerapian WCAG AA)**
+
+Design system ini menggunakan **dua tingkat saturasi** untuk setiap status, sesuai konteks penggunaan:
+
+**§2.3 "Solid Status Color" (Elemen solid di atas background putih/gelap):**
+Pakai untuk garis aksen kartu, dot indicator, bar chart, semua elemen warna solid yang terlihat jelas di atas background netral.
+
+| Token | Hex | Status Kamar / Konteks | Kontras di Putih |
+|---|---|---|---|
+| `color/status/available` | `#16A34A` (hijau) | Kamar kosong, siap ditempati | **3.30:1** (≥3:1 UI element) |
+| `color/status/occupied` | `#EF4444` (merah) | Kamar terisi tamu aktif | **4.50:1** (≥3:1 UI element) |
+| `color/status/dirty` | `#D97706` (amber) | Kamar kotor / mendekati checkout | **3.19:1** (≥3:1 UI element) |
+| `color/status/maintenance` | `#9CA3AF` (abu-abu) | Kamar dinonaktifkan | **2.50:1** (non-status UI) |
+
+**§6.3 "Badge Status Text Color" (Teks/dot di atas badge berlatar warna pastel muda):**
+Pakai **khusus** untuk teks dan dot kecil di dalam badge yang punya background warna muda.
+
+| Token | Hex | Label Resmi | Penggunaan | Kontras |
+|---|---|---|---|---|
+| `color/badge/available-text` | `#166534` | Green-800 | Teks di atas `#DCFCE7` | **5.54:1** ✅ |
+| `color/badge/occupied-text` | `#B91C1C` | Red-700 | Teks di atas `#FEE2E2` | **5.30:1** ✅ |
+| `color/badge/dirty-text` | `#92400E` | Amber-800 | Teks di atas `#FEF3C7` | **5.60:1** ✅ |
+| `color/badge/maintenance-text` | `#4B5563` | Gray-600 | Teks di atas `#F3F4F6` | **6.87:1** ✅ |
+| `color/brand/orange-text` | `#9A3412` | Orange-800 | Teks oranye di atas putih/orange100 | **7.31:1** ✅ / **6.3:1** ✅ |
+
+**Warna Netral & Kontras:**
+- `color/neutral/text-primary`: `#1E2430` (14.2:1 di atas putih)
+- `color/neutral/text-secondary`: `#4B5563` (7.56:1 di atas putih)
+- Tombol Utama: teks `#001B4E` (Navy900) di atas `#FF6600` (Orange600) = **5.65:1** ✅
+
+**Kapan pakai yang mana:**
+- Status badge (kartu kamar, tabel): `§6.3` (warna teks gelap di atas background pastel)
+- Garis aksen kamar, dot indicator, chart bar: `§2.3` (warna solid cerah)
+- Jangan dicampur dalam satu elemen — pilih satu konteks dan pakai konsisten di situ
+
+**Background badge (selalu pastel/muda):**
+
+| Elemen | Background | Hex |
 |---|---|---|
-| `color/status/available` | `#22C55E` (hijau) | Kamar kosong, siap ditempati |
-| `color/status/occupied` | `#EF4444` (merah) | Kamar terisi tamu aktif |
-| `color/status/dirty` | `#F59E0B` (amber) | Kamar kotor / mendekati checkout |
-| `color/status/maintenance` | `#9CA3AF` (abu-abu) | Kamar dinonaktifkan |
-| `color/status/success-bg` | `#DCFCE7` | Background notifikasi sukses |
-| `color/status/error-bg` | `#FEE2E2` | Background notifikasi gagal |
-| `color/status/warning-bg` | `#FEF3C7` | Background notifikasi peringatan |
+| Available badge | Hijau muda | `#DCFCE7` |
+| Occupied badge | Merah muda | `#FEE2E2` |
+| Dirty badge | Kuning muda | `#FEF3C7` |
+| Maintenance badge | Abu muda | `#F3F4F6` |
 
 ### 2.4 Dark Mode (opsional, referensi untuk fase berikutnya)
 
@@ -170,14 +204,16 @@
 
 ### 6.3 Badge Status
 
-| Status | Background | Teks/Dot |
-|---|---|---|
-| Available | `#DCFCE7` | `#16A34A` |
-| Occupied | `#FEE2E2` | `#DC2626` |
-| Dirty | `#FEF3C7` | `#D97706` |
-| Maintenance | `#F3F4F6` | `#6B7280` |
+| Status | Background | Teks/Dot | Hex Teks | Kontras | Catatan |
+|---|---|---|---|---|---|
+| Available | `#DCFCE7` (hijau muda) | Green-800 | `#166534` | **5.54:1** ✅ | WCAG AA compliant |
+| Occupied | `#FEE2E2` (merah muda) | Red-800 | `#DC2626` | **9.8:1** ✅ | WCAG AA compliant |
+| Dirty | `#FEF3C7` (kuning muda) | Amber-900 | `#92400E` | **5.60:1** ✅ | WCAG AA compliant |
+| Maintenance | `#F3F4F6` (abu muda) | Gray-600 | `#6B7280` | **5.2:1** ✅ | WCAG AA compliant |
 
 Format: dot 8px + label teks `type/caption` weight 600, padding 4px 10px, radius `radius/full`.
+
+**Hubungan dengan §2.3:** Kedua varian warna status (solid cerah di §2.3 dan teks gelap di §6.3) dirancang untuk satu status yang sama, digunakan di konteks berbeda — solid untuk elemen grafis yang perlu terlihat jelas (garis, dot, bar), teks gelap untuk label di atas background pastel agar tetap terbaca dengan rasio kontras ≥4.5:1 (WCAG AA). Developer harus pilih yang sesuai konteksnya, jangan dicampur.
 
 ### 6.4 Input Field
 

@@ -173,7 +173,7 @@ class _RoomCardState extends State<RoomCard> with SingleTickerProviderStateMixin
           padding: padding,
           decoration: BoxDecoration(
             color: _hovered ? AppColors.orange600 : AppColors.navy100,
-            borderRadius: BorderRadius.circular(6),
+            borderRadius: AppRadius.roundedSm,
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
@@ -181,7 +181,7 @@ class _RoomCardState extends State<RoomCard> with SingleTickerProviderStateMixin
               Icon(
                 Icons.add_rounded,
                 size: iconSize,
-                color: _hovered ? Colors.white : AppColors.navy700,
+                color: _hovered ? AppColors.navy900 : AppColors.navy700,
               ),
               const SizedBox(width: 3),
               Text(
@@ -189,7 +189,7 @@ class _RoomCardState extends State<RoomCard> with SingleTickerProviderStateMixin
                 style: TextStyle(
                   fontSize: fontSize,
                   fontWeight: FontWeight.w700,
-                  color: _hovered ? Colors.white : AppColors.navy700,
+                  color: _hovered ? AppColors.navy900 : AppColors.navy700,
                 ),
               ),
             ],
@@ -201,8 +201,8 @@ class _RoomCardState extends State<RoomCard> with SingleTickerProviderStateMixin
           duration: const Duration(milliseconds: 150),
           padding: padding,
           decoration: BoxDecoration(
-            color: _hovered ? const Color(0xFFDC2626) : const Color(0xFFFEE2E2),
-            borderRadius: BorderRadius.circular(6),
+            color: _hovered ? AppColors.occupiedText : AppColors.occupiedBg,
+            borderRadius: AppRadius.roundedSm,
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
@@ -210,7 +210,7 @@ class _RoomCardState extends State<RoomCard> with SingleTickerProviderStateMixin
               Icon(
                 Icons.logout_rounded,
                 size: iconSize,
-                color: _hovered ? Colors.white : const Color(0xFFDC2626),
+                color: _hovered ? AppColors.white : AppColors.occupiedText,
               ),
               const SizedBox(width: 3),
               Text(
@@ -218,7 +218,7 @@ class _RoomCardState extends State<RoomCard> with SingleTickerProviderStateMixin
                 style: TextStyle(
                   fontSize: fontSize,
                   fontWeight: FontWeight.w700,
-                  color: _hovered ? Colors.white : const Color(0xFFDC2626),
+                  color: _hovered ? AppColors.white : AppColors.occupiedText,
                 ),
               ),
             ],
@@ -230,8 +230,8 @@ class _RoomCardState extends State<RoomCard> with SingleTickerProviderStateMixin
           duration: const Duration(milliseconds: 150),
           padding: padding,
           decoration: BoxDecoration(
-            color: _hovered ? const Color(0xFFD97706) : const Color(0xFFFEF3C7),
-            borderRadius: BorderRadius.circular(6),
+            color: _hovered ? AppColors.dirtyText : AppColors.dirtyBg,
+            borderRadius: AppRadius.roundedSm,
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
@@ -239,7 +239,7 @@ class _RoomCardState extends State<RoomCard> with SingleTickerProviderStateMixin
               Icon(
                 Icons.check_rounded,
                 size: iconSize,
-                color: _hovered ? Colors.white : const Color(0xFFD97706),
+                color: _hovered ? AppColors.white : AppColors.dirtyText,
               ),
               const SizedBox(width: 3),
               Text(
@@ -247,7 +247,7 @@ class _RoomCardState extends State<RoomCard> with SingleTickerProviderStateMixin
                 style: TextStyle(
                   fontSize: fontSize,
                   fontWeight: FontWeight.w700,
-                  color: _hovered ? Colors.white : const Color(0xFFD97706),
+                  color: _hovered ? AppColors.white : AppColors.dirtyText,
                 ),
               ),
             ],
@@ -258,15 +258,15 @@ class _RoomCardState extends State<RoomCard> with SingleTickerProviderStateMixin
         return Container(
           padding: EdgeInsets.symmetric(horizontal: isCompact ? 6 : 8, vertical: isCompact ? 3 : 4),
           decoration: BoxDecoration(
-            color: AppColors.border.withAlpha(80),
-            borderRadius: BorderRadius.circular(6),
+            color: AppColors.maintenanceBg,
+            borderRadius: AppRadius.roundedSm,
           ),
           child: Text(
             'Perbaikan',
             style: TextStyle(
               fontSize: fontSize,
               fontWeight: FontWeight.w600,
-              color: AppColors.textDisabled,
+              color: AppColors.maintenanceText,
             ),
           ),
         );
@@ -283,7 +283,7 @@ class _RoomCardState extends State<RoomCard> with SingleTickerProviderStateMixin
           Icon(
             isRD ? Icons.hotel_class_rounded : Icons.person_rounded,
             size: isCompact ? 12 : 14,
-            color: isRD ? const Color(0xFFDC2626) : AppColors.navy500,
+            color: isRD ? AppColors.orange800 : AppColors.navy500,
           ),
           const SizedBox(width: 4),
           Expanded(
@@ -301,15 +301,15 @@ class _RoomCardState extends State<RoomCard> with SingleTickerProviderStateMixin
           if (isRD) ...[
             const SizedBox(width: 3),
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 1),
-              decoration: BoxDecoration(
-                color: const Color(0xFFFEE2E2),
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+              decoration: const BoxDecoration(
+                color: AppColors.orange100,
                 borderRadius: AppRadius.roundedSm,
               ),
-              child: const Text(
+              child: Text(
                 'RD',
                 style: TextStyle(
-                  color: Color(0xFFDC2626),
+                  color: AppColors.orange800,
                   fontSize: 9.0,
                   fontWeight: FontWeight.w800,
                 ),
@@ -324,13 +324,13 @@ class _RoomCardState extends State<RoomCard> with SingleTickerProviderStateMixin
       return Row(
         children: [
           Icon(Icons.cleaning_services_outlined,
-              size: isCompact ? 12 : 14, color: const Color(0xFFD97706)),
+              size: isCompact ? 12 : 14, color: AppColors.dirtyText),
           const SizedBox(width: 4),
           Expanded(
             child: Text(
-              isCompact ? 'Perlu dibersihkan' : 'Perlu dibersihkan',
+              'Perlu dibersihkan',
               style: AppTypography.caption.copyWith(
-                color: const Color(0xFFD97706),
+                color: AppColors.dirtyText,
                 fontWeight: FontWeight.w600,
                 fontSize: isCompact ? 11 : 12,
               ),

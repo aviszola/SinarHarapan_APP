@@ -186,23 +186,23 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          backgroundColor: const Color(0xFF16A34A),
+          backgroundColor: AppColors.statusAvailable,
           duration: const Duration(seconds: 3),
           content: Row(
             children: [
-              const Icon(Icons.check_circle_outline, color: Colors.white),
+              const Icon(Icons.check_circle_outline, color: AppColors.surface),
               const SizedBox(width: 10),
               Expanded(
                 child: Text(
                   'Laporan Excel tersimpan: $fileName',
-                  style: const TextStyle(color: Colors.white, fontSize: 13),
+                  style: const TextStyle(color: AppColors.surface, fontSize: 13),
                 ),
               ),
             ],
           ),
           action: SnackBarAction(
             label: 'BUKA',
-            textColor: Colors.white,
+            textColor: AppColors.surface,
             onPressed: () => ReportExportService.openFile(savedPath!),
           ),
         ),
@@ -211,7 +211,7 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          backgroundColor: Colors.red.shade700,
+          backgroundColor: AppColors.error,
           content: Text('Gagal mengekspor Excel: $e'),
         ),
       );
@@ -274,19 +274,19 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
           duration: const Duration(seconds: 3),
           content: Row(
             children: [
-              const Icon(Icons.picture_as_pdf_outlined, color: Colors.white),
+              const Icon(Icons.picture_as_pdf_outlined, color: AppColors.surface),
               const SizedBox(width: 10),
               Expanded(
                 child: Text(
                   'Laporan PDF resmi tersimpan: $fileName',
-                  style: const TextStyle(color: Colors.white, fontSize: 13),
+                  style: const TextStyle(color: AppColors.surface, fontSize: 13),
                 ),
               ),
             ],
           ),
           action: SnackBarAction(
             label: 'BUKA',
-            textColor: Colors.white,
+            textColor: AppColors.surface,
             onPressed: () => ReportExportService.openFile(savedPath!),
           ),
         ),
@@ -295,7 +295,7 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          backgroundColor: Colors.red.shade700,
+          backgroundColor: AppColors.error,
           content: Text('Gagal mengekspor PDF: $e'),
         ),
       );
@@ -332,12 +332,12 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: isExcel ? const Color(0xFFDCFCE7) : const Color(0xFFFEE2E2),
+                    color: isExcel ? AppColors.availableBg : AppColors.errorBg,
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
                     isExcel ? Icons.table_chart : Icons.picture_as_pdf,
-                    color: isExcel ? const Color(0xFF16A34A) : AppColors.orange600,
+                    color: isExcel ? AppColors.statusAvailable : AppColors.orange600,
                     size: 24,
                   ),
                 ),
@@ -426,8 +426,8 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
               ),
               ElevatedButton.icon(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: isExcel ? const Color(0xFF16A34A) : AppColors.orange600,
-                  foregroundColor: Colors.white,
+                  backgroundColor: isExcel ? AppColors.statusAvailable : AppColors.orange600,
+                  foregroundColor: AppColors.surface,
                 ),
                 icon: const Icon(Icons.open_in_new, size: 18),
                 label: Text(isExcel ? 'Buka Excel Sekarang' : 'Buka PDF Sekarang'),
@@ -550,7 +550,7 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
                           if (isMobile) ...[
                             IconButton(
                               tooltip: 'Ekspor Excel (.xlsx)',
-                              icon: const Icon(Icons.table_view_outlined, color: Color(0xFF16A34A)),
+                              icon: const Icon(Icons.table_view_outlined, color: AppColors.statusAvailable),
                               onPressed: _handleExportExcel,
                             ),
                             IconButton(
@@ -720,13 +720,13 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
             final kpi1 = MetricCard(
               title: 'Total Check-In (Bulan Berjalan)',
               value: totalCheckIn,
-              trendText: summary != null ? 'Data resmi backend' : 'Data tidak tersedia',
+              trendText: summary != null ? 'Tamu terdaftar bulan ini' : 'Memuat data...',
               isTrendPositive: true,
             );
             final kpi2 = MetricCard(
               title: 'Total Check-Out',
               value: totalCheckOut,
-              trendText: summary != null ? 'Data resmi backend' : 'Data tidak tersedia',
+              trendText: summary != null ? 'Selesai menginap' : 'Memuat data...',
               isTrendPositive: true,
             );
             final kpi3 = MetricCard(
@@ -738,7 +738,7 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
             final kpi4 = MetricCard(
               title: 'Akumulasi Pendapatan Bersih',
               value: totalNetRevenue,
-              trendText: summary != null ? 'Data resmi backend' : 'Data tidak tersedia',
+              trendText: summary != null ? 'Total pendapatan bersih bulan berjalan' : 'Memuat data...',
               isTrendPositive: true,
             );
 
@@ -833,12 +833,12 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
                           Expanded(
                             flex: totalChannels > 0 ? reddoorzPct : 50,
                             child: Container(
-                              color: Colors.red.shade700,
+                              color: AppColors.orange600,
                               alignment: Alignment.center,
                               child: Text(
                                 totalChannels > 0 ? 'RedDoorz $reddoorzPct%' : 'RedDoorz',
                                 style: const TextStyle(
-                                  color: Colors.white,
+                                  color: AppColors.white,
                                   fontSize: 11,
                                   fontWeight: FontWeight.bold,
                                 ),
@@ -853,7 +853,7 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
                               child: Text(
                                 totalChannels > 0 ? 'Walk-in $walkInPct%' : 'Walk-in',
                                 style: const TextStyle(
-                                  color: Colors.white,
+                                  color: AppColors.white,
                                   fontSize: 11,
                                   fontWeight: FontWeight.bold,
                                 ),
@@ -875,7 +875,7 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
                       Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Container(width: 12, height: 12, color: Colors.red.shade700),
+                          Container(width: 12, height: 12, color: AppColors.orange600),
                           const SizedBox(width: 8),
                           Flexible(
                             child: Column(
@@ -1150,7 +1150,7 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
                                 icon: Icon(
                                   Icons.build_circle_outlined,
                                   size: 15,
-                                  color: room.isMaintenance ? const Color(0xFF16A34A) : AppColors.textSecondary,
+                                  color: room.isMaintenance ? AppColors.statusAvailable : AppColors.textSecondary,
                                 ),
                                 label: Text(
                                   room.isMaintenance ? 'Aktifkan' : 'Maintenance',
@@ -1390,7 +1390,7 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
                                   style: TextStyle(
                                     fontSize: 11,
                                     fontWeight: FontWeight.w700,
-                                    color: hasGuest ? AppColors.statusOccupied : const Color(0xFF16A34A),
+                                    color: hasGuest ? AppColors.statusOccupied : AppColors.statusAvailable,
                                   ),
                                 ),
                               ),
@@ -1415,13 +1415,13 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
                                   Container(
                                     padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                     decoration: BoxDecoration(
-                                      color: source == 'REDDOORZ' ? Colors.red.shade50 : AppColors.navy100,
+                                      color: source == 'REDDOORZ' ? AppColors.orange100 : AppColors.navy100,
                                       borderRadius: AppRadius.roundedSm,
                                     ),
                                     child: Text(
                                       source,
                                       style: AppTypography.overline.copyWith(
-                                        color: source == 'REDDOORZ' ? Colors.red.shade700 : AppColors.navy700,
+                                        color: source == 'REDDOORZ' ? AppColors.orange800 : AppColors.navy700,
                                         fontSize: 10,
                                       ),
                                     ),
@@ -1512,13 +1512,13 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
                                         Container(
                                           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                           decoration: BoxDecoration(
-                                            color: source == 'REDDOORZ' ? Colors.red.shade50 : AppColors.navy100,
+                                            color: source == 'REDDOORZ' ? AppColors.orange100 : AppColors.navy100,
                                             borderRadius: AppRadius.roundedSm,
                                           ),
                                           child: Text(
                                             source,
                                             style: AppTypography.overline.copyWith(
-                                              color: source == 'REDDOORZ' ? Colors.red.shade700 : AppColors.navy700,
+                                              color: source == 'REDDOORZ' ? AppColors.orange800 : AppColors.navy700,
                                             ),
                                           ),
                                         ),
@@ -1537,7 +1537,7 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
                                     child: Text(
                                       hasGuest ? 'Menginap' : 'Selesai',
                                       style: AppTypography.caption.copyWith(
-                                        color: hasGuest ? AppColors.statusOccupied : const Color(0xFF16A34A),
+                                        color: hasGuest ? AppColors.statusOccupied : AppColors.statusAvailable,
                                         fontWeight: FontWeight.w600,
                                       ),
                                     ),

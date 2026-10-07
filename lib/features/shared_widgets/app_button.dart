@@ -30,13 +30,13 @@ class AppButton extends StatelessWidget {
     final (Color bg, Color fg, BorderSide border, Color splash) = switch (variant) {
       AppButtonVariant.primary     => (
           AppColors.orange600,
-          Colors.white,
+          AppColors.navy900,  // Updated to AppColors.navy900 (5.65:1 on orange600)
           BorderSide.none,
           AppColors.orange500,
         ),
       AppButtonVariant.secondary   => (
           AppColors.navy700,
-          Colors.white,
+          AppColors.white,
           BorderSide.none,
           AppColors.navy500,
         ),
@@ -53,10 +53,10 @@ class AppButton extends StatelessWidget {
           AppColors.navy100,
         ),
       AppButtonVariant.destructive => (
-          AppColors.statusOccupied,
-          Colors.white,
+          AppColors.error,
+          AppColors.white,
           BorderSide.none,
-          const Color(0xFFDC2626),
+          AppColors.errorText,
         ),
     };
 

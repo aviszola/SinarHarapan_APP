@@ -305,10 +305,6 @@ class _ExecutiveTrendChartState extends State<ExecutiveTrendChart> {
 
           // High-level KPI comparisons
           _buildComparisonSummary(),
-          const SizedBox(height: AppSpacing.md),
-
-          // Executive Summary & Rekapitulasi Strip
-          _buildRekapitulasiStrip(),
           const SizedBox(height: AppSpacing.lg),
 
           // The Interactive Line Chart
@@ -357,7 +353,7 @@ class _ExecutiveTrendChartState extends State<ExecutiveTrendChart> {
                     ),
                   ),
                   child: Text(
-                    'KOMPARATIF HISTORIS & REALTIME',
+                    'KOMPARASI HISTORIS',
                     style: AppTypography.overline.copyWith(
                       color: AppColors.orange600,
                       fontWeight: FontWeight.w700,
@@ -370,7 +366,7 @@ class _ExecutiveTrendChartState extends State<ExecutiveTrendChart> {
                     vertical: 2,
                   ),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF16A34A).withValues(alpha: 0.1),
+                    color: AppColors.availableBg,
                     borderRadius: BorderRadius.circular(4),
                   ),
                   child: Row(
@@ -379,7 +375,7 @@ class _ExecutiveTrendChartState extends State<ExecutiveTrendChart> {
                       const Icon(
                         Icons.trending_up,
                         size: 14,
-                        color: Color(0xFF16A34A),
+                        color: AppColors.statusAvailable,
                       ),
                       const SizedBox(width: 4),
                       Text(
@@ -387,7 +383,7 @@ class _ExecutiveTrendChartState extends State<ExecutiveTrendChart> {
                         style: const TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.bold,
-                          color: Color(0xFF16A34A),
+                          color: AppColors.availableText,
                         ),
                       ),
                     ],
@@ -397,7 +393,7 @@ class _ExecutiveTrendChartState extends State<ExecutiveTrendChart> {
             ),
             const SizedBox(height: 6),
             Text(
-              'Tren Pertumbuhan & Performa Operasional Multi-Dimensi',
+              'Tren Pendapatan & Okupansi',
               style: AppTypography.h3.copyWith(
                 fontWeight: FontWeight.w700,
                 color: AppColors.navy900,
@@ -405,7 +401,7 @@ class _ExecutiveTrendChartState extends State<ExecutiveTrendChart> {
             ),
             const SizedBox(height: 2),
             Text(
-              'Analisis komparasi garis data berjalan (sekarang) versus data historis (masa lalu) untuk proyeksi bisnis hotel.',
+              'Perbandingan performa operasional periode berjalan terhadap periode sebelumnya.',
               style: AppTypography.bodySm.copyWith(
                 color: AppColors.textSecondary,
               ),
@@ -706,9 +702,7 @@ class _ExecutiveTrendChartState extends State<ExecutiveTrendChart> {
                           vertical: 2,
                         ),
                         decoration: BoxDecoration(
-                          color: const Color(
-                            0xFF16A34A,
-                          ).withValues(alpha: 0.12),
+                          color: AppColors.availableBg,
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: Text(
@@ -716,7 +710,7 @@ class _ExecutiveTrendChartState extends State<ExecutiveTrendChart> {
                           style: const TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.bold,
-                            color: Color(0xFF16A34A),
+                            color: AppColors.availableText,
                           ),
                         ),
                       ),
@@ -812,186 +806,6 @@ class _ExecutiveTrendChartState extends State<ExecutiveTrendChart> {
                     compareChip,
                   ],
                 ),
-        );
-      },
-    );
-  }
-
-  /// Rekapitulasi Metrik Ringkas Khusus Periode Terpilih
-  Widget _buildRekapitulasiStrip() {
-    String avgTitle;
-    String avgValue;
-    String growthTitle;
-    String growthValue;
-    String statusTitle;
-    String statusValue;
-
-    switch (_selectedPeriod) {
-      case ChartPeriod.week:
-        avgTitle = 'Rata-Rata Harian (7 Hari)';
-        growthTitle = 'Laju Pertumbuhan (WoW)';
-        growthValue = '+18.9% Week-on-Week';
-        statusTitle = 'Pencapaian Mingguan';
-        statusValue = '112% dari Target';
-        switch (_selectedMetric) {
-          case ChartMetricType.revenue:
-            avgValue = 'Rp 3.142.857 / hari';
-            break;
-          case ChartMetricType.occupancy:
-            avgValue = '86.7% per hari';
-            break;
-          case ChartMetricType.guests:
-            avgValue = '13.4 tamu / hari';
-            break;
-        }
-        break;
-
-      case ChartPeriod.month:
-        avgTitle = 'Rata-Rata Harian (30 Hari)';
-        growthTitle = 'Laju Pertumbuhan (MoM)';
-        growthValue = '+18.2% Month-on-Month';
-        statusTitle = 'Pencapaian Bulanan';
-        statusValue = '108% dari Target';
-        switch (_selectedMetric) {
-          case ChartMetricType.revenue:
-            avgValue = 'Rp 1.625.000 / hari';
-            break;
-          case ChartMetricType.occupancy:
-            avgValue = '79.2% per hari';
-            break;
-          case ChartMetricType.guests:
-            avgValue = '6.1 tamu / hari';
-            break;
-        }
-        break;
-
-      case ChartPeriod.year:
-        avgTitle = 'Rata-Rata Bulanan (12 Bulan)';
-        growthTitle = 'Laju Pertumbuhan (YoY)';
-        growthValue = '+16.9% Year-on-Year';
-        statusTitle = 'Proyeksi Akhir Tahun';
-        statusValue = 'Rp 650 Jt (Target Tercapai)';
-        switch (_selectedMetric) {
-          case ChartMetricType.revenue:
-            avgValue = 'Rp 50.729.166 / bulan';
-            break;
-          case ChartMetricType.occupancy:
-            avgValue = '81.5% per bulan';
-            break;
-          case ChartMetricType.guests:
-            avgValue = '191.8 tamu / bulan';
-            break;
-        }
-        break;
-    }
-
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final isMobile = constraints.maxWidth < 640;
-
-        Widget card(String label, String value, IconData icon, Color color) {
-          return Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-            decoration: BoxDecoration(
-              color: AppColors.surface,
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: AppColors.border),
-            ),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(7),
-                  decoration: BoxDecoration(
-                    color: color.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: Icon(icon, size: 16, color: color),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        label,
-                        style: const TextStyle(
-                          fontSize: 10.5,
-                          fontWeight: FontWeight.w500,
-                          color: AppColors.textSecondary,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        value,
-                        style: const TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.navy900,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          );
-        }
-
-        if (isMobile) {
-          return Column(
-            children: [
-              card(avgTitle, avgValue, Icons.speed_outlined, AppColors.navy700),
-              const SizedBox(height: 8),
-              card(
-                growthTitle,
-                growthValue,
-                Icons.trending_up,
-                const Color(0xFF16A34A),
-              ),
-              const SizedBox(height: 8),
-              card(
-                statusTitle,
-                statusValue,
-                Icons.verified_outlined,
-                AppColors.orange600,
-              ),
-            ],
-          );
-        }
-
-        return Row(
-          children: [
-            Expanded(
-              child: card(
-                avgTitle,
-                avgValue,
-                Icons.speed_outlined,
-                AppColors.navy700,
-              ),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: card(
-                growthTitle,
-                growthValue,
-                Icons.trending_up,
-                const Color(0xFF16A34A),
-              ),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: card(
-                statusTitle,
-                statusValue,
-                Icons.verified_outlined,
-                AppColors.orange600,
-              ),
-            ),
-          ],
         );
       },
     );
