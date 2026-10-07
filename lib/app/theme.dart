@@ -16,25 +16,34 @@ class AppColors {
   static const Color navy100 = Color(0xFFE6EBF7);
   static const Color navy50  = Color(0xFFF0F3FB);
 
-  // Single Accent Orange — max 1 dominant per viewport
+  // External Channel Branding
+  static const Color whatsapp = Color(0xFF25D366);  // Official WhatsApp brand green
   static const Color orange600 = Color(0xFFFF6600);
   static const Color orange500 = Color(0xFFFF7A1A);
   static const Color orange100 = Color(0xFFFFEBDB);
   static const Color orange50  = Color(0xFFFFF5EE);
-
+  static const Color orange800 = Color(0xFF9A3412);  // Orange-800: teks oranye di atas putih (7.31:1) atau badge oranye (6.3:1)
+  static const Color amber800  = Color(0xFF92400E);  // Amber-800: teks di atas orange100 badge (5.60:1)
   // Neutrals
+  static const Color white     = Color(0xFFFFFFFF);
   static const Color bg        = Color(0xFFF7F8FA);
   static const Color surface   = Color(0xFFFFFFFF);
   static const Color border    = Color(0xFFE2E5EB);
   static const Color borderFocus = Color(0xFFCCD3E0);
   static const Color textPrimary    = Color(0xFF1E2430);
-  static const Color textSecondary  = Color(0xFF6B7280);
+  static const Color textSecondary  = Color(0xFF4B5563);  // Updated: #6B7280 -> #4B5563 (7.56:1 on white)
   static const Color textDisabled   = Color(0xFFB0B5BE);
 
-  // Room / Transaction Status (independent from brand)
-  static const Color statusAvailable   = Color(0xFF22C55E);
-  static const Color statusOccupied    = Color(0xFFEF4444);
-  static const Color statusDirty       = Color(0xFFF59E0B);
+  // System & Form Alert / Error (Terpisah dari status kamar 'occupied')
+  static const Color error     = Color(0xFFDC2626);  // Red-600 untuk border & action error/destructive
+  static const Color errorText = Color(0xFFB91C1C);  // Red-700: 5.30:1 di atas errorBg (WCAG AA)
+  static const Color errorBg   = Color(0xFFFEE2E2);  // Red-100 background alert error
+
+  // Room / Transaction Status (§2.3 - Solid color untuk elemen di atas bg putih)
+  // Pakai KHUSUS untuk: garis aksen kartu kamar, dot indicator kamar, status kamar
+  static const Color statusAvailable   = Color(0xFF16A34A);  // Updated: #22C55E -> #16A34A (3.30:1 on white)
+  static const Color statusOccupied    = Color(0xFFEF4444);  // Solid red (KHUSUS status kamar Occupied)
+  static const Color statusDirty       = Color(0xFFD97706);  // Updated: #F59E0B -> #D97706 (3.19:1 on white)
   static const Color statusMaintenance = Color(0xFF9CA3AF);
 
   static const Color statusSuccessBg     = Color(0xFFDCFCE7);
@@ -42,15 +51,18 @@ class AppColors {
   static const Color statusWarningBg     = Color(0xFFFEF3C7);
   static const Color statusMaintenanceBg = Color(0xFFF3F4F6);
 
-  // Availability badge bg (per design.md §6.3)
+  // Badge Status Text Colors (§6.3 - Teks/dot di atas badge kamar berlatar warna muda)
+  // Pakai KHUSUS untuk: teks & dot di dalam badge kamar
   static const Color availableBg    = Color(0xFFDCFCE7);
-  static const Color availableText  = Color(0xFF16A34A);
+  static const Color availableText  = Color(0xFF166534);  // Green-800: 5.54:1 kontras di atas availableBg (WCAG AA)
+  static const Color availableDark  = Color(0xFF15803D);  // Green-900: fallback untuk context lain
   static const Color occupiedBg     = Color(0xFFFEE2E2);
-  static const Color occupiedText   = Color(0xFFDC2626);
+  static const Color occupiedText   = Color(0xFFB91C1C);  // Red-700 (KHUSUS badge status kamar Occupied)
+  static const Color occupiedLight  = Color(0xFFFCA5A5);  // Light red untuk background/highlight kamar
   static const Color dirtyBg        = Color(0xFFFEF3C7);
-  static const Color dirtyText      = Color(0xFFD97706);
+  static const Color dirtyText      = Color(0xFF92400E);  // Amber-800: 5.60:1 kontras di atas dirtyBg (WCAG AA)
   static const Color maintenanceBg  = Color(0xFFF3F4F6);
-  static const Color maintenanceText = Color(0xFF6B7280);
+  static const Color maintenanceText = Color(0xFF4B5563);  // Updated: #6B7280 -> #4B5563 (6.87:1 on maintenanceBg)
 }
 
 class AppSpacing {
@@ -189,11 +201,11 @@ class AppTheme {
       colorScheme: const ColorScheme(
         brightness: Brightness.light,
         primary: AppColors.navy700,
-        onPrimary: Colors.white,
+        onPrimary: AppColors.white,
         secondary: AppColors.orange600,
-        onSecondary: Colors.white,
-        error: AppColors.statusOccupied,
-        onError: Colors.white,
+        onSecondary: AppColors.white,
+        error: AppColors.error,
+        onError: AppColors.white,
         surface: AppColors.surface,
         onSurface: AppColors.textPrimary,
       ),
@@ -240,11 +252,11 @@ class AppTheme {
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: AppRadius.roundedMd,
-          borderSide: const BorderSide(color: AppColors.statusOccupied, width: 1.5),
+          borderSide: const BorderSide(color: AppColors.error, width: 1.5),
         ),
         focusedErrorBorder: OutlineInputBorder(
           borderRadius: AppRadius.roundedMd,
-          borderSide: const BorderSide(color: AppColors.statusOccupied, width: 2),
+          borderSide: const BorderSide(color: AppColors.error, width: 2),
         ),
         hintStyle: AppTypography.body.copyWith(color: AppColors.textDisabled),
         labelStyle: AppTypography.bodySm.copyWith(color: AppColors.textSecondary),
@@ -259,14 +271,14 @@ class AppTheme {
       snackBarTheme: SnackBarThemeData(
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: AppRadius.roundedMd),
-        contentTextStyle: AppTypography.bodySm.copyWith(color: Colors.white),
+        contentTextStyle: AppTypography.bodySm.copyWith(color: AppColors.white),
       ),
       tooltipTheme: TooltipThemeData(
         decoration: BoxDecoration(
           color: AppColors.navy900,
           borderRadius: AppRadius.roundedSm,
         ),
-        textStyle: AppTypography.caption.copyWith(color: Colors.white),
+        textStyle: AppTypography.caption.copyWith(color: AppColors.white),
       ),
     );
   }

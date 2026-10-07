@@ -19,24 +19,24 @@ class StatusBadge extends StatelessWidget {
 
   _BadgeStyle get _style {
     return switch (status) {
-      RoomStatusType.available   => const _BadgeStyle(
-          bg:   Color(0xFFDCFCE7),
-          fg:   Color(0xFF16A34A),
+      RoomStatusType.available   => _BadgeStyle(
+          bg:   AppColors.availableBg,
+          fg:   AppColors.availableText,
           label: 'Available',
         ),
-      RoomStatusType.occupied    => const _BadgeStyle(
-          bg:   Color(0xFFFEE2E2),
-          fg:   Color(0xFFDC2626),
+      RoomStatusType.occupied    => _BadgeStyle(
+          bg:   AppColors.occupiedBg,
+          fg:   AppColors.occupiedText,
           label: 'Occupied',
         ),
-      RoomStatusType.dirty       => const _BadgeStyle(
-          bg:   Color(0xFFFEF3C7),
-          fg:   Color(0xFFD97706),
+      RoomStatusType.dirty       => _BadgeStyle(
+          bg:   AppColors.dirtyBg,
+          fg:   AppColors.dirtyText,
           label: 'Dirty',
         ),
-      RoomStatusType.maintenance => const _BadgeStyle(
-          bg:   Color(0xFFF3F4F6),
-          fg:   Color(0xFF6B7280),
+      RoomStatusType.maintenance => _BadgeStyle(
+          bg:   AppColors.maintenanceBg,
+          fg:   AppColors.maintenanceText,
           label: 'Maintenance',
         ),
     };

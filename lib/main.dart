@@ -42,11 +42,7 @@ void main() async {
   await initializeDateFormatting('id', null);
   // Inisialisasi token tersimpan dari secure vault
   await ApiClient().init();
-  runApp(
-    const ProviderScope(
-      child: SinarHarapanPmsApp(),
-    ),
-  );
+  runApp(const ProviderScope(child: SinarHarapanPmsApp()));
 }
 
 class SinarHarapanPmsApp extends ConsumerWidget {
