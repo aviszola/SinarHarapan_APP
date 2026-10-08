@@ -306,7 +306,7 @@ void main() {
 
       FlutterError.onError = originalOnError;
 
-      final room101Finder = find.text('101');
+      final room101Finder = find.text('Kamar 101');
       expect(room101Finder, findsOneWidget);
 
       FlutterError.onError = (details) {};

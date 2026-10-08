@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
-import '../../app/theme.dart';
+import '../../theme/app_colors.dart';
+import '../../theme/app_text_styles.dart';
+import '../../theme/app_spacing.dart';
 
 enum RoomStatusType { available, occupied, dirty, maintenance }
 
-/// Status badge — dot + label pill. Per design.md §6.3.
-/// dot 8px + caption bold, padding 4px 10px, radius full.
+/// Status badge — dot indikator + label Bahasa Indonesia.
+/// Menggunakan radius konsisten (6px) dan border 1px halus.
 class StatusBadge extends StatelessWidget {
   final RoomStatusType status;
   final String? customLabel;
-  final bool compact; // Shows dot only (no label) when true
+  final bool compact; // Hanya dot jika true
 
   const StatusBadge({
     super.key,
@@ -19,25 +21,25 @@ class StatusBadge extends StatelessWidget {
 
   _BadgeStyle get _style {
     return switch (status) {
-      RoomStatusType.available   => _BadgeStyle(
-          bg:   AppColors.availableBg,
-          fg:   AppColors.availableText,
-          label: 'Available',
+      RoomStatusType.available => const _BadgeStyle(
+          bg: AppColors.statusAvailableBg,
+          fg: AppColors.statusAvailableText,
+          label: 'Tersedia',
         ),
-      RoomStatusType.occupied    => _BadgeStyle(
-          bg:   AppColors.occupiedBg,
-          fg:   AppColors.occupiedText,
-          label: 'Occupied',
+      RoomStatusType.occupied => const _BadgeStyle(
+          bg: AppColors.statusOccupiedBg,
+          fg: AppColors.statusOccupiedText,
+          label: 'Terisi',
         ),
-      RoomStatusType.dirty       => _BadgeStyle(
-          bg:   AppColors.dirtyBg,
-          fg:   AppColors.dirtyText,
-          label: 'Dirty',
+      RoomStatusType.dirty => const _BadgeStyle(
+          bg: AppColors.statusDirtyBg,
+          fg: AppColors.statusDirtyText,
+          label: 'Kotor',
         ),
-      RoomStatusType.maintenance => _BadgeStyle(
-          bg:   AppColors.maintenanceBg,
-          fg:   AppColors.maintenanceText,
-          label: 'Maintenance',
+      RoomStatusType.maintenance => const _BadgeStyle(
+          bg: AppColors.statusMaintenanceBg,
+          fg: AppColors.statusMaintenanceText,
+          label: 'Perawatan',
         ),
     };
   }
@@ -49,28 +51,31 @@ class StatusBadge extends StatelessWidget {
 
     return Container(
       padding: compact
-          ? const EdgeInsets.all(6)
-          : const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+          ? const EdgeInsets.all(5)
+          : const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
         color: s.bg,
-        borderRadius: AppRadius.roundedFull,
+        borderRadius: AppRadius.roundedSm,
+        border: Border.all(color: s.fg.withAlpha(40), width: 1),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Container(
-            width: 8,
-            height: 8,
-            decoration: BoxDecoration(color: s.fg, shape: BoxShape.circle),
+            width: 6,
+            height: 6,
+            decoration: BoxDecoration(
+              color: s.fg,
+              shape: BoxShape.circle,
+            ),
           ),
           if (!compact) ...[
             const SizedBox(width: 6),
             Text(
               label,
-              style: AppTypography.caption.copyWith(
+              style: AppTextStyles.badge.copyWith(
                 color: s.fg,
-                fontWeight: FontWeight.w700,
-                fontSize: 12.5,
+                fontSize: 12,
               ),
             ),
           ],

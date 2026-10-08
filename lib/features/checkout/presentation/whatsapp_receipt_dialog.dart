@@ -9,6 +9,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../app/theme.dart';
 import '../../room_management/domain/room_model.dart';
 import '../../shared_widgets/app_button.dart';
+import '../../shared_widgets/app_feedback.dart';
 import '../domain/invoice_sequence_service.dart';
 
 class WhatsAppReceiptDialog extends StatefulWidget {
@@ -52,7 +53,7 @@ class _WhatsAppReceiptDialogState extends State<WhatsAppReceiptDialog> {
   void initState() {
     super.initState();
     final rawPhone =
-        widget.initialPhone ?? widget.room.activeGuestPhone ?? '081234567890';
+        widget.initialPhone ?? widget.room.activeGuestPhone ?? '';
     _phoneController = TextEditingController(text: rawPhone);
   }
 
@@ -153,10 +154,10 @@ class _WhatsAppReceiptDialogState extends State<WhatsAppReceiptDialog> {
     final bytes = await _captureReceiptPng();
     if (bytes == null) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Gagal membuat gambar struk. Silakan coba lagi.'),
-          ),
+        AppFeedback.showError(
+          context,
+          title: 'Gagal Membuat Struk',
+          message: 'Gagal membuat gambar struk. Silakan coba kembali.',
         );
       }
       return;
@@ -178,27 +179,18 @@ class _WhatsAppReceiptDialogState extends State<WhatsAppReceiptDialog> {
       setState(() => _savedImagePath = file.path);
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            backgroundColor: const Color(0xFF16A34A),
-            content: Row(
-              children: [
-                const Icon(Icons.image_outlined, color: Colors.white),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text('Foto struk berhasil disimpan: ${file.path}'),
-                ),
-              ],
-            ),
-          ),
+        AppFeedback.showSuccess(
+          context,
+          title: 'Foto Struk Disimpan',
+          message: 'Tersimpan di: ${file.path}',
         );
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Gambar struk siap: ${bytes.lengthInBytes} bytes.'),
-          ),
+        AppFeedback.showInfo(
+          context,
+          title: 'Struk Siap',
+          message: 'Ukuran berkas struk: ${bytes.lengthInBytes} bytes.',
         );
       }
     }
@@ -223,24 +215,19 @@ class _WhatsAppReceiptDialogState extends State<WhatsAppReceiptDialog> {
     try {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            backgroundColor: Color(0xFF16A34A),
-            duration: Duration(seconds: 4),
-            content: Text(
-              'WhatsApp terbuka! Foto struk telah disimpan di folder Downloads & teks pesan disalin ke clipboard.',
-            ),
-          ),
+        AppFeedback.showSuccess(
+          context,
+          title: 'WhatsApp Dibuka',
+          message:
+              'Struk tersimpan di Downloads dan teks pesan telah disalin ke clipboard.',
         );
       }
     } catch (_) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              'Teks struk berhasil disalin. Silakan tempelkan di WhatsApp.',
-            ),
-          ),
+        AppFeedback.showInfo(
+          context,
+          title: 'Teks Struk Disalin',
+          message: 'Teks struk berhasil disalin. Silakan tempelkan di WhatsApp.',
         );
       }
     }
@@ -271,22 +258,11 @@ class _WhatsAppReceiptDialogState extends State<WhatsAppReceiptDialog> {
       _dispatchedMessageId = msgId;
     });
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        backgroundColor: const Color(0xFF16A34A),
-        duration: const Duration(seconds: 4),
-        content: Row(
-          children: [
-            const Icon(Icons.check_circle_outline, color: Colors.white),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                'Foto struk + pesan teks berhasil dikirim ke WhatsApp +$cleanPhone (ID: $msgId)!',
-              ),
-            ),
-          ],
-        ),
-      ),
+    AppFeedback.showSuccess(
+      context,
+      title: 'Struk Terkirim',
+      message:
+          'Foto struk & pesan berhasil dikirim ke WhatsApp +$cleanPhone (ID: $msgId).',
     );
   }
 
@@ -342,12 +318,12 @@ class _WhatsAppReceiptDialogState extends State<WhatsAppReceiptDialog> {
                   Container(
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF25D366).withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(10),
+                      color: AppColors.whatsapp.withValues(alpha: 0.15),
+                      borderRadius: AppRadius.rounded,
                     ),
                     child: const Icon(
                       Icons.image_outlined,
-                      color: Color(0xFF16A34A),
+                      color: AppColors.whatsapp,
                       size: 24,
                     ),
                   ),
@@ -435,11 +411,11 @@ class _WhatsAppReceiptDialogState extends State<WhatsAppReceiptDialog> {
                       vertical: 10,
                     ),
                     border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: AppRadius.rounded,
                       borderSide: BorderSide(color: AppColors.border),
                     ),
                     enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: AppRadius.rounded,
                       borderSide: BorderSide(color: AppColors.border),
                     ),
                   ),
@@ -452,7 +428,7 @@ class _WhatsAppReceiptDialogState extends State<WhatsAppReceiptDialog> {
                       vertical: 10,
                     ),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: AppRadius.rounded,
                     ),
                   ),
                   icon: const Icon(Icons.download_rounded, size: 16),
@@ -481,11 +457,11 @@ class _WhatsAppReceiptDialogState extends State<WhatsAppReceiptDialog> {
                             vertical: 12,
                           ),
                           border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius: AppRadius.rounded,
                             borderSide: BorderSide(color: AppColors.border),
                           ),
                           enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius: AppRadius.rounded,
                             borderSide: BorderSide(color: AppColors.border),
                           ),
                         ),
@@ -499,7 +475,7 @@ class _WhatsAppReceiptDialogState extends State<WhatsAppReceiptDialog> {
                           vertical: 12,
                         ),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: AppRadius.rounded,
                         ),
                       ),
                       icon: const Icon(Icons.download_rounded, size: 16),
@@ -515,7 +491,7 @@ class _WhatsAppReceiptDialogState extends State<WhatsAppReceiptDialog> {
               Container(
                 decoration: BoxDecoration(
                   color: AppColors.bg,
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: AppRadius.rounded,
                   border: Border.all(color: AppColors.border),
                 ),
                 padding: const EdgeInsets.all(3),
@@ -531,7 +507,7 @@ class _WhatsAppReceiptDialogState extends State<WhatsAppReceiptDialog> {
                             color: _selectedViewTab == 0
                                 ? AppColors.navy900
                                 : Colors.transparent,
-                            borderRadius: BorderRadius.circular(6),
+                            borderRadius: AppRadius.rounded,
                           ),
                           alignment: Alignment.center,
                           child: Row(
@@ -541,7 +517,7 @@ class _WhatsAppReceiptDialogState extends State<WhatsAppReceiptDialog> {
                                 Icons.photo_size_select_actual_outlined,
                                 size: 15,
                                 color: _selectedViewTab == 0
-                                    ? Colors.white
+                                    ? AppColors.white
                                     : AppColors.textSecondary,
                               ),
                               const SizedBox(width: 6),
@@ -551,7 +527,7 @@ class _WhatsAppReceiptDialogState extends State<WhatsAppReceiptDialog> {
                                   fontSize: 12,
                                   fontWeight: FontWeight.w600,
                                   color: _selectedViewTab == 0
-                                      ? Colors.white
+                                      ? AppColors.white
                                       : AppColors.textPrimary,
                                 ),
                               ),
@@ -570,7 +546,7 @@ class _WhatsAppReceiptDialogState extends State<WhatsAppReceiptDialog> {
                             color: _selectedViewTab == 1
                                 ? AppColors.navy900
                                 : Colors.transparent,
-                            borderRadius: BorderRadius.circular(6),
+                            borderRadius: AppRadius.rounded,
                           ),
                           alignment: Alignment.center,
                           child: Row(
@@ -580,7 +556,7 @@ class _WhatsAppReceiptDialogState extends State<WhatsAppReceiptDialog> {
                                 Icons.notes_rounded,
                                 size: 15,
                                 color: _selectedViewTab == 1
-                                    ? Colors.white
+                                    ? AppColors.white
                                     : AppColors.textSecondary,
                               ),
                               const SizedBox(width: 6),
@@ -590,7 +566,7 @@ class _WhatsAppReceiptDialogState extends State<WhatsAppReceiptDialog> {
                                   fontSize: 12,
                                   fontWeight: FontWeight.w600,
                                   color: _selectedViewTab == 1
-                                      ? Colors.white
+                                      ? AppColors.white
                                       : AppColors.textPrimary,
                                 ),
                               ),
@@ -613,7 +589,7 @@ class _WhatsAppReceiptDialogState extends State<WhatsAppReceiptDialog> {
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
                           color: const Color(0xFFF1F5F9),
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: AppRadius.rounded,
                           border: Border.all(color: AppColors.border),
                         ),
                         child: SingleChildScrollView(
@@ -632,14 +608,14 @@ class _WhatsAppReceiptDialogState extends State<WhatsAppReceiptDialog> {
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
                           color: const Color(0xFFEFEAE2),
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: AppRadius.rounded,
                           border: Border.all(color: AppColors.border),
                         ),
                         child: Container(
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(8),
+                            color: AppColors.white,
+                            borderRadius: AppRadius.rounded,
                             boxShadow: const [
                               BoxShadow(
                                 color: Color(0x14000000),
@@ -671,10 +647,10 @@ class _WhatsAppReceiptDialogState extends State<WhatsAppReceiptDialog> {
                     vertical: 8,
                   ),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFDCFCE7),
-                    borderRadius: BorderRadius.circular(6),
+                    color: AppColors.statusSuccessBg,
+                    borderRadius: AppRadius.rounded,
                     border: Border.all(
-                      color: const Color(0xFF16A34A).withValues(alpha: 0.3),
+                      color: AppColors.statusAvailable.withValues(alpha: 0.3),
                     ),
                   ),
                   child: Row(
@@ -682,7 +658,7 @@ class _WhatsAppReceiptDialogState extends State<WhatsAppReceiptDialog> {
                       const Icon(
                         Icons.check_circle,
                         size: 16,
-                        color: Color(0xFF16A34A),
+                        color: AppColors.statusAvailable,
                       ),
                       const SizedBox(width: 8),
                       Expanded(
@@ -691,7 +667,7 @@ class _WhatsAppReceiptDialogState extends State<WhatsAppReceiptDialog> {
                           style: const TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.w600,
-                            color: Color(0xFF16A34A),
+                            color: AppColors.statusAvailable,
                           ),
                         ),
                       ),
@@ -758,14 +734,14 @@ class _WhatsAppReceiptDialogState extends State<WhatsAppReceiptDialog> {
                       // Direct WhatsApp Launch (Copies Photo & Opens WA)
                       ElevatedButton.icon(
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF25D366),
-                          foregroundColor: Colors.white,
+                          backgroundColor: AppColors.whatsapp,
+                          foregroundColor: AppColors.white,
                           padding: const EdgeInsets.symmetric(
                             horizontal: 14,
                             vertical: 11,
                           ),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius: AppRadius.rounded,
                           ),
                           elevation: 0,
                         ),
@@ -828,7 +804,7 @@ class _WhatsAppReceiptDialogState extends State<WhatsAppReceiptDialog> {
       constraints: const BoxConstraints(maxWidth: 380),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.white,
         borderRadius: BorderRadius.circular(4),
         border: Border.all(color: const Color(0xFFCBD5E1), width: 1.2),
         boxShadow: const [
@@ -855,13 +831,13 @@ class _WhatsAppReceiptDialogState extends State<WhatsAppReceiptDialog> {
                         vertical: 3,
                       ),
                       decoration: BoxDecoration(
-                        color: Colors.red.shade700,
-                        borderRadius: BorderRadius.circular(3),
+                        color: AppColors.brandOrange,
+                        borderRadius: AppRadius.roundedSm,
                       ),
                       child: const Text(
                         'RedDoorz',
                         style: TextStyle(
-                          color: Colors.white,
+                          color: AppColors.white,
                           fontWeight: FontWeight.bold,
                           fontSize: 10,
                         ),
@@ -916,7 +892,7 @@ class _WhatsAppReceiptDialogState extends State<WhatsAppReceiptDialog> {
           _buildReceiptRow('Waktu Check-Out', '$checkOutDateStr WIB'),
           _buildReceiptRow(
             'Kanal Pemesanan',
-            widget.room.bookingSource ?? 'Walk-in',
+            widget.room.bookingSource ?? 'Tidak tercatat',
           ),
 
           const SizedBox(height: 10),
@@ -1049,7 +1025,7 @@ class _WhatsAppReceiptDialogState extends State<WhatsAppReceiptDialog> {
                   height: 32,
                   width: 220,
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: AppColors.white,
                     border: Border.all(color: const Color(0xFFE2E8F0)),
                   ),
                   child: Row(
@@ -1058,7 +1034,7 @@ class _WhatsAppReceiptDialogState extends State<WhatsAppReceiptDialog> {
                       38,
                       (i) => Container(
                         width: (i % 3 == 0) ? 3 : (i % 2 == 0 ? 1.5 : 2),
-                        color: Colors.black,
+                        color: AppColors.navy900,
                       ),
                     ),
                   ),

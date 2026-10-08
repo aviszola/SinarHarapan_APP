@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../app/theme.dart';
 import '../../shared_widgets/app_button.dart';
+import '../../shared_widgets/app_feedback.dart';
 import '../../shared_widgets/app_text_field.dart';
 import '../domain/room_model.dart';
 import 'room_controller.dart';
@@ -77,14 +78,14 @@ class _RoomCrudDialogState extends ConsumerState<RoomCrudDialog> {
                 .toList();
 
             return AlertDialog(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              shape: const RoundedRectangleBorder(borderRadius: AppRadius.rounded),
               title: Row(
                 children: [
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
                       color: AppColors.orange50,
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: AppRadius.rounded,
                     ),
                     child: const Icon(Icons.hotel_class_outlined, color: AppColors.orange600, size: 20),
                   ),
@@ -130,7 +131,7 @@ class _RoomCrudDialogState extends ConsumerState<RoomCrudDialog> {
                               ),
                               backgroundColor: AppColors.navy50,
                               side: const BorderSide(color: AppColors.border),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                              shape: RoundedRectangleBorder(borderRadius: AppRadius.rounded),
                               onPressed: () {
                                 setState(() {
                                   _selectedFacilities.add(facility);
@@ -167,15 +168,15 @@ class _RoomCrudDialogState extends ConsumerState<RoomCrudDialog> {
                                 hintStyle: const TextStyle(fontSize: 13, color: AppColors.textDisabled),
                                 contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                                 border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(8),
+                                  borderRadius: AppRadius.rounded,
                                   borderSide: const BorderSide(color: AppColors.border),
                                 ),
                                 enabledBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(8),
+                                  borderRadius: AppRadius.rounded,
                                   borderSide: const BorderSide(color: AppColors.border),
                                 ),
                                 focusedBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(8),
+                                  borderRadius: AppRadius.rounded,
                                   borderSide: const BorderSide(color: AppColors.navy700, width: 1.5),
                                 ),
                               ),
@@ -199,9 +200,9 @@ class _RoomCrudDialogState extends ConsumerState<RoomCrudDialog> {
                           ElevatedButton.icon(
                             style: ElevatedButton.styleFrom(
                               backgroundColor: AppColors.navy900,
-                              foregroundColor: Colors.white,
+                              foregroundColor: AppColors.white,
                               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                              shape: RoundedRectangleBorder(borderRadius: AppRadius.rounded),
                             ),
                             icon: const Icon(Icons.add, size: 16),
                             label: const Text('Tambah', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
@@ -229,8 +230,8 @@ class _RoomCrudDialogState extends ConsumerState<RoomCrudDialog> {
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.navy900,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    foregroundColor: AppColors.white,
+                    shape: RoundedRectangleBorder(borderRadius: AppRadius.rounded),
                   ),
                   onPressed: () => Navigator.of(dialogCtx).pop(),
                   child: const Text('Selesai'),
@@ -250,11 +251,10 @@ class _RoomCrudDialogState extends ConsumerState<RoomCrudDialog> {
     final price = double.tryParse(rawPrice) ?? 0;
 
     if (price <= 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          backgroundColor: AppColors.statusOccupied,
-          content: Text('Tarif per malam harus lebih dari Rp 0!'),
-        ),
+      AppFeedback.showWarning(
+        context,
+        title: 'Tarif Tidak Valid',
+        message: 'Tarif per malam harus lebih dari Rp 0.',
       );
       return;
     }
@@ -271,11 +271,10 @@ class _RoomCrudDialogState extends ConsumerState<RoomCrudDialog> {
             );
         if (mounted) {
           Navigator.of(context).pop();
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              backgroundColor: AppColors.statusAvailable,
-              content: Text('Data kamar ${_roomNumberController.text.trim()} berhasil diperbarui!'),
-            ),
+          AppFeedback.showSuccess(
+            context,
+            title: 'Kamar Diperbarui',
+            message: 'Data kamar ${_roomNumberController.text.trim()} berhasil diperbarui.',
           );
         }
       } else {
@@ -289,21 +288,19 @@ class _RoomCrudDialogState extends ConsumerState<RoomCrudDialog> {
 
         if (mounted) {
           Navigator.of(context).pop();
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              backgroundColor: AppColors.statusAvailable,
-              content: Text('Unit kamar ${_roomNumberController.text.trim()} berhasil ditambahkan ke inventaris!'),
-            ),
+          AppFeedback.showSuccess(
+            context,
+            title: 'Kamar Ditambahkan',
+            message: 'Unit kamar ${_roomNumberController.text.trim()} berhasil ditambahkan ke inventaris.',
           );
         }
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            backgroundColor: AppColors.statusOccupied,
-            content: Text(e.toString().replaceAll('Exception: ', '')),
-          ),
+        AppFeedback.showError(
+          context,
+          title: 'Gagal Menyimpan Kamar',
+          message: e.toString().replaceAll('Exception: ', ''),
         );
       }
     }
@@ -539,7 +536,7 @@ class _RoomCrudDialogState extends ConsumerState<RoomCrudDialog> {
                                 ),
                                 backgroundColor: AppColors.navy50,
                                 side: const BorderSide(color: AppColors.border),
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                shape: RoundedRectangleBorder(borderRadius: AppRadius.rounded),
                                 deleteIcon: const Icon(Icons.close, size: 15, color: AppColors.navy700),
                                 deleteButtonTooltipMessage: 'Hapus $facility',
                                 onDeleted: () {
@@ -560,7 +557,7 @@ class _RoomCrudDialogState extends ConsumerState<RoomCrudDialog> {
                               ),
                               backgroundColor: AppColors.orange50,
                               side: const BorderSide(color: AppColors.orange500, width: 1),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                              shape: RoundedRectangleBorder(borderRadius: AppRadius.rounded),
                               onPressed: _showAddFacilityDialog,
                             ),
                           ],

@@ -197,7 +197,7 @@ class InvoicePdfService {
                       child: pw.Column(
                         crossAxisAlignment: pw.CrossAxisAlignment.start,
                         children: [
-                          _buildPdfInfoRow('Nama Tamu', room.activeGuestName ?? 'Tamu Walk-in', isBold: true),
+                          _buildPdfInfoRow('Nama Tamu', room.activeGuestName ?? 'Tidak tercatat', isBold: true),
                           pw.SizedBox(height: 3),
                           _buildPdfInfoRow(
                             'NIK Tamu',

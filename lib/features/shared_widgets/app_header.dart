@@ -85,7 +85,7 @@ class _ReceptionistTopBarState extends State<ReceptionistTopBar> {
               _VDivider(),
               SizedBox(width: isTablet ? AppSpacing.md : AppSpacing.lg),
 
-              // ── Live Date + Clock ──────────────────────────────────
+              // ── Tanggal & Waktu Terbaca Rapi ──────────────────────
               Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -94,17 +94,18 @@ class _ReceptionistTopBarState extends State<ReceptionistTopBar> {
                     timeStr,
                     style: GoogleFonts.plusJakartaSans(
                       color: AppColors.white,
-                      fontSize: isTablet ? 16 : 19,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: 1.5,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 0.5,
+                      fontFeatures: const [FontFeature.tabularFigures()],
                     ),
                   ),
                   if (!isTablet)
                     Text(
                       dateStr,
-                      style: AppTypography.caption.copyWith(
-                        color: AppColors.navy100.withAlpha(160),
-                        fontSize: 12,
+                      style: AppTextStyles.caption.copyWith(
+                        color: AppColors.brandNavyTint.withAlpha(180),
+                        fontSize: 11.5,
                       ),
                     ),
                 ],
@@ -212,15 +213,15 @@ class _BrandMark extends StatelessWidget {
         Container(
           width: 38,
           height: 38,
-          decoration: BoxDecoration(
-            color: AppColors.orange600,
-            borderRadius: AppRadius.roundedMd,
+          decoration: const BoxDecoration(
+            color: AppColors.brandOrange,
+            borderRadius: AppRadius.roundedSm,
           ),
           child: const Center(
             child: Text(
               'SH',
               style: TextStyle(
-                color: AppColors.navy900,
+                color: AppColors.white,
                 fontWeight: FontWeight.w800,
                 fontSize: 16,
                 letterSpacing: -0.3,
@@ -236,42 +237,18 @@ class _BrandMark extends StatelessWidget {
             children: [
               Text(
                 'Sinar Harapan',
-                style: AppTypography.h3.copyWith(
+                style: AppTextStyles.titleSmall.copyWith(
                   color: AppColors.white,
                   fontWeight: FontWeight.w700,
-                  fontSize: 16,
+                  fontSize: 15,
                 ),
               ),
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 6,
-                      vertical: 2,
-                    ),
-                    decoration: const BoxDecoration(
-                      color: AppColors.orange100,
-                      borderRadius: AppRadius.roundedSm,
-                    ),
-                    child: const Text(
-                      'RedDoorz',
-                      style: TextStyle(
-                        color: AppColors.orange800,
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 0.3,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 5),
-                  Text(
-                    'PMS',
-                    style: AppTypography.caption.copyWith(
-                      color: AppColors.navy100.withAlpha(140),
-                      fontSize: 11,
-                    ),
-                  ),
-                ],
+              Text(
+                'PMS Frontdesk',
+                style: AppTextStyles.caption.copyWith(
+                  color: AppColors.brandNavyTint.withAlpha(180),
+                  fontSize: 11,
+                ),
               ),
             ],
           ),
@@ -630,26 +607,32 @@ class ManagerSidebar extends StatelessWidget {
                               ),
                             ),
                             const SizedBox(width: 10),
-                            Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Sinar Harapan',
-                                  style: AppTypography.h3.copyWith(
-                                    color: AppColors.white,
-                                    fontSize: 15.5,
-                                    fontWeight: FontWeight.w700,
+                            Expanded(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Sinar Harapan',
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: AppTypography.h3.copyWith(
+                                      color: AppColors.white,
+                                      fontSize: 15.5,
+                                      fontWeight: FontWeight.w700,
+                                    ),
                                   ),
-                                ),
-                                Text(
-                                  'Manager Portal',
-                                  style: AppTypography.caption.copyWith(
-                                    color: AppColors.navy100.withAlpha(140),
-                                    fontSize: 11,
+                                  Text(
+                                    'Manager Portal',
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: AppTypography.caption.copyWith(
+                                      color: AppColors.navy100.withAlpha(140),
+                                      fontSize: 11,
+                                    ),
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
                           ],
                         ),
@@ -816,60 +799,44 @@ class _SidebarNavItemState extends State<_SidebarNavItem> {
           margin: const EdgeInsets.only(bottom: 2),
           decoration: BoxDecoration(
             color: isActive
-                ? AppColors.navy700.withAlpha(180)
+                ? AppColors.brandNavy
                 : (_hovered
-                      ? AppColors.navy700.withAlpha(80)
-                      : Colors.transparent),
-            borderRadius: AppRadius.roundedMd,
+                    ? AppColors.brandNavy.withAlpha(100)
+                    : Colors.transparent),
+            borderRadius: AppRadius.rounded,
           ),
-          child: Stack(
-            children: [
-              // Active indicator stripe (left 3px, per design.md)
-              if (isActive)
-                Positioned(
-                  left: 0,
-                  top: 8,
-                  bottom: 8,
-                  child: Container(
-                    width: 3,
-                    decoration: BoxDecoration(
-                      color: AppColors.orange600,
-                      borderRadius: AppRadius.roundedFull,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 14,
+              vertical: 10,
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  isActive ? widget.activeIcon : widget.inactiveIcon,
+                  size: 19,
+                  color: isActive
+                      ? AppColors.white
+                      : (_hovered ? AppColors.white.withAlpha(200) : AppColors.brandNavyTint.withAlpha(160)),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    widget.label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTextStyles.bodyMedium.copyWith(
+                      color: isActive
+                          ? AppColors.white
+                          : (_hovered ? AppColors.white.withAlpha(200) : AppColors.brandNavyTint.withAlpha(180)),
+                      fontWeight: isActive
+                          ? FontWeight.w600
+                          : FontWeight.w400,
                     ),
                   ),
                 ),
-
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 10,
-                ),
-                child: Row(
-                  children: [
-                    Icon(
-                      isActive ? widget.activeIcon : widget.inactiveIcon,
-                      size: 21,
-                      color: isActive
-                          ? AppColors.white
-                          : (_hovered ? AppColors.white.withAlpha(180) : AppColors.white.withAlpha(100)),
-                    ),
-                    const SizedBox(width: 12),
-                    Text(
-                      widget.label,
-                      style: AppTypography.body.copyWith(
-                        color: isActive
-                            ? AppColors.white
-                            : (_hovered ? AppColors.white.withAlpha(180) : AppColors.white.withAlpha(140)),
-                        fontWeight: isActive
-                            ? FontWeight.w600
-                            : FontWeight.w400,
-                        fontSize: 15,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

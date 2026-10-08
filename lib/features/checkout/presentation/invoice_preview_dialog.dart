@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import '../../../app/theme.dart';
 import '../../room_management/domain/room_model.dart';
 import '../../shared_widgets/app_button.dart';
+import '../../shared_widgets/app_feedback.dart';
 import '../domain/invoice_pdf_service.dart';
 import '../domain/invoice_sequence_service.dart';
 import 'whatsapp_receipt_dialog.dart';
@@ -63,11 +64,10 @@ class _InvoicePreviewDialogState extends State<InvoicePreviewDialog> {
       if (!mounted) return;
 
       if (savedPath == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Pengunduhan PDF dibatalkan.'),
-            duration: Duration(seconds: 2),
-          ),
+        AppFeedback.showInfo(
+          context,
+          title: 'Pengunduhan Dibatalkan',
+          message: 'Penyimpanan dokumen faktur PDF dibatalkan oleh pengguna.',
         );
         return;
       }
@@ -76,37 +76,19 @@ class _InvoicePreviewDialogState extends State<InvoicePreviewDialog> {
 
       _showDownloadSuccessDialog(savedPath, fileName);
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          backgroundColor: AppColors.navy700,
-          duration: const Duration(seconds: 5),
-          content: Row(
-            children: [
-              const Icon(Icons.picture_as_pdf_outlined, color: Colors.white),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  'Faktur PDF resmi tersimpan: $fileName',
-                  style: const TextStyle(color: Colors.white, fontSize: 13),
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            ],
-          ),
-          action: SnackBarAction(
-            label: 'BUKA',
-            textColor: AppColors.orange500,
-            onPressed: () => InvoicePdfService.openFile(savedPath),
-          ),
-        ),
+      AppFeedback.showSuccess(
+        context,
+        title: 'Faktur PDF Tersimpan',
+        message: fileName,
+        actionLabel: 'BUKA',
+        onAction: () => InvoicePdfService.openFile(savedPath),
       );
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            backgroundColor: Colors.red.shade700,
-            content: Text('Gagal mengunduh PDF: $e'),
-          ),
+        AppFeedback.showError(
+          context,
+          title: 'Gagal Mengunduh PDF',
+          message: e.toString(),
         );
       }
     } finally {
@@ -130,11 +112,10 @@ class _InvoicePreviewDialogState extends State<InvoicePreviewDialog> {
       );
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            backgroundColor: Colors.red.shade700,
-            content: Text('Gagal membuka printer: $e'),
-          ),
+        AppFeedback.showError(
+          context,
+          title: 'Gagal Membuka Printer',
+          message: e.toString(),
         );
       }
     } finally {
@@ -146,14 +127,14 @@ class _InvoicePreviewDialogState extends State<InvoicePreviewDialog> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        shape: const RoundedRectangleBorder(borderRadius: AppRadius.rounded),
         title: Row(
           children: [
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
                 color: AppColors.availableBg,
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: AppRadius.rounded,
               ),
               child: const Icon(Icons.check_circle_rounded, color: AppColors.statusAvailable, size: 24),
             ),
@@ -179,7 +160,7 @@ class _InvoicePreviewDialogState extends State<InvoicePreviewDialog> {
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
                 color: AppColors.bg,
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: AppRadius.rounded,
                 border: Border.all(color: AppColors.border),
               ),
               child: Column(
@@ -187,7 +168,7 @@ class _InvoicePreviewDialogState extends State<InvoicePreviewDialog> {
                 children: [
                   Row(
                     children: [
-                      const Icon(Icons.picture_as_pdf_rounded, color: Color(0xFFDC2626), size: 22),
+                      const Icon(Icons.picture_as_pdf_rounded, color: AppColors.error, size: 22),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
@@ -225,7 +206,7 @@ class _InvoicePreviewDialogState extends State<InvoicePreviewDialog> {
           ElevatedButton.icon(
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.navy700,
-              foregroundColor: Colors.white,
+              foregroundColor: AppColors.white,
             ),
             icon: const Icon(Icons.open_in_new_rounded, size: 16),
             label: const Text('Buka Berkas PDF'),
@@ -299,7 +280,7 @@ class _InvoicePreviewDialogState extends State<InvoicePreviewDialog> {
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                   decoration: BoxDecoration(
                     color: AppColors.availableBg,
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: AppRadius.rounded,
                     border: Border.all(color: AppColors.statusAvailable.withValues(alpha: 0.4)),
                   ),
                   child: Wrap(
@@ -331,9 +312,9 @@ class _InvoicePreviewDialogState extends State<InvoicePreviewDialog> {
                       ElevatedButton.icon(
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.statusAvailable,
-                          foregroundColor: Colors.white,
+                          foregroundColor: AppColors.white,
                           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                          shape: const RoundedRectangleBorder(borderRadius: AppRadius.rounded),
                           elevation: 0,
                         ),
                         icon: const Icon(Icons.send_rounded, size: 13),
@@ -364,7 +345,7 @@ class _InvoicePreviewDialogState extends State<InvoicePreviewDialog> {
                   child: Container(
                     padding: const EdgeInsets.all(AppSpacing.lg),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: AppColors.white,
                       border: Border.all(color: AppColors.navy900, width: 1.5),
                       borderRadius: AppRadius.roundedMd,
                     ),
@@ -399,14 +380,14 @@ class _InvoicePreviewDialogState extends State<InvoicePreviewDialog> {
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                               decoration: BoxDecoration(
-                                color: Colors.red.shade700,
+                                color: AppColors.brandOrange,
                                 borderRadius: AppRadius.roundedSm,
                               ),
                               child: const Text(
                                 'RedDoorz\nOFFICIAL PARTNER',
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
-                                  color: Colors.white,
+                                  color: AppColors.white,
                                   fontSize: 9,
                                   fontWeight: FontWeight.w800,
                                 ),
@@ -416,7 +397,7 @@ class _InvoicePreviewDialogState extends State<InvoicePreviewDialog> {
                         ),
 
                         const SizedBox(height: 12),
-                        const Divider(thickness: 1.5, color: Colors.black54),
+                        const Divider(thickness: 1.5, color: AppColors.border),
                         const SizedBox(height: 8),
 
                         // Metadata Grid
@@ -439,7 +420,7 @@ class _InvoicePreviewDialogState extends State<InvoicePreviewDialog> {
                                   const SizedBox(height: 4),
                                   Text('NAMA TAMU:', style: AppTypography.overline),
                                   Text(
-                                    widget.room.activeGuestName ?? 'Tamu Walk-in',
+                                    widget.room.activeGuestName ?? 'Tidak tercatat',
                                     style: AppTypography.bodySm.copyWith(
                                       fontWeight: FontWeight.w600,
                                     ),
@@ -574,7 +555,7 @@ class _InvoicePreviewDialogState extends State<InvoicePreviewDialog> {
                             ),
                           ),
 
-                        const Divider(thickness: 1.5, color: Colors.black54),
+                        const Divider(thickness: 1.5, color: AppColors.border),
 
                         // Grand Total
                         Padding(
@@ -610,19 +591,19 @@ class _InvoicePreviewDialogState extends State<InvoicePreviewDialog> {
                           decoration: BoxDecoration(
                             color: AppColors.statusSuccessBg,
                             borderRadius: AppRadius.roundedSm,
-                            border: Border.all(color: const Color(0xFF16A34A)),
+                            border: Border.all(color: AppColors.statusAvailable),
                           ),
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              const Icon(Icons.check_circle, size: 16, color: Color(0xFF16A34A)),
+                              const Icon(Icons.check_circle, size: 16, color: AppColors.statusAvailable),
                               const SizedBox(width: 8),
                               Flexible(
                                 child: Text(
                                   'STATUS: LUNAS (PAID) • Biaya sewa kamar dibayar saat check-in • Resepsionis: ${widget.receptionistName}',
                                   textAlign: TextAlign.center,
                                   style: AppTypography.caption.copyWith(
-                                    color: const Color(0xFF16A34A),
+                                    color: AppColors.statusAvailable,
                                     fontWeight: FontWeight.w700,
                                   ),
                                 ),
@@ -667,10 +648,10 @@ class _InvoicePreviewDialogState extends State<InvoicePreviewDialog> {
                       // WhatsApp Struk Dispatch CTA
                       ElevatedButton.icon(
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF25D366),
-                          foregroundColor: Colors.white,
+                          backgroundColor: AppColors.whatsapp,
+                          foregroundColor: AppColors.white,
                           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                          shape: RoundedRectangleBorder(borderRadius: AppRadius.rounded),
                           elevation: 0,
                         ),
                         icon: const Icon(Icons.chat_bubble_outline_rounded, size: 16),
