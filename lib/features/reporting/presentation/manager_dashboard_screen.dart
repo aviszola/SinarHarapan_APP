@@ -12,7 +12,8 @@ import '../../room_management/presentation/room_crud_dialog.dart';
 import '../../shared_widgets/app_button.dart';
 import '../../shared_widgets/app_feedback.dart';
 import '../../shared_widgets/app_header.dart';
-import '../../shared_widgets/metric_card.dart';
+import '../../shared_widgets/empty_state.dart';
+import '../../shared_widgets/kpi_tile.dart';
 import '../../shared_widgets/status_badge.dart';
 import '../data/reporting_repository.dart';
 import '../domain/audit_log_model.dart';
@@ -27,7 +28,7 @@ class ManagerDashboardScreen extends ConsumerStatefulWidget {
 }
 
 class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen> {
-  int _activeNavIndex = 0; // 0: Overview, 1: Inventory, 2: Reports, 3: Audit Trail
+  int _activeNavIndex = 0; // 0: Ringkasan, 1: Inventaris, 2: Laporan, 3: Audit Trail
 
   final ReportingRepository _reportingRepo = ReportingRepository();
   List<AuditLogModel> _auditLogs = [];
@@ -35,12 +36,23 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
   String _auditLogFilter = 'ALL';
   Map<String, dynamic>? _summaryData;
   bool _isLoadingSummary = false;
+  List<Map<String, dynamic>> _transactions = [];
+  bool _isLoadingTransactions = false;
+  DateTime _lastUpdated = DateTime.now();
 
   @override
   void initState() {
     super.initState();
-    _loadSummary();
-    _loadAuditLogs();
+    _loadAllDashboardData();
+  }
+
+  Future<void> _loadAllDashboardData() async {
+    _lastUpdated = DateTime.now();
+    await Future.wait([
+      _loadSummary(),
+      _loadAuditLogs(),
+      _loadTransactions(),
+    ]);
   }
 
   Future<void> _loadSummary() async {
@@ -61,10 +73,28 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
     if (mounted) setState(() => _isLoadingAuditLogs = false);
   }
 
+  Future<void> _loadTransactions() async {
+    setState(() => _isLoadingTransactions = true);
+    try {
+      final txs = await _reportingRepo.getTransactions();
+      if (mounted) setState(() => _transactions = txs);
+    } catch (_) {}
+    if (mounted) setState(() => _isLoadingTransactions = false);
+  }
+
   void _handleLogout() async {
-    await ref.read(authStateProvider.notifier).logout();
-    if (mounted) {
-      context.go('/login');
+    final user = ref.read(authStateProvider).user;
+    final confirmed = await AppFeedback.showLogout(context, user: user);
+    if (confirmed && mounted) {
+      await ref.read(authStateProvider.notifier).logout();
+      if (mounted) {
+        context.go('/login');
+        AppFeedback.showInfo(
+          context,
+          title: 'Sesi Berakhir',
+          message: 'Anda telah berhasil keluar dari sistem.',
+        );
+      }
     }
   }
 
@@ -473,17 +503,34 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
                           ),
 
                         Expanded(
-                          child: Text(
-                            _getTabTitle(_activeNavIndex, isMobile: isMobile),
-                            style: (isMobile ? AppTypography.bodyLg : AppTypography.h2).copyWith(
-                              color: AppColors.navy900,
-                              fontWeight: FontWeight.w700,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                _getTabTitle(_activeNavIndex, isMobile: isMobile),
+                                style: AppTextStyles.titleMedium.copyWith(
+                                  color: AppColors.brandNavyDark,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              Text(
+                                'Diperbarui ${DateFormat('HH.mm').format(_lastUpdated)}',
+                                style: AppTextStyles.caption.copyWith(
+                                  color: AppColors.textSecondary,
+                                  fontSize: 11,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-
+                        IconButton(
+                          tooltip: 'Segarkan Data',
+                          icon: const Icon(Icons.refresh_rounded, size: 18, color: AppColors.brandNavy),
+                          onPressed: _loadAllDashboardData,
+                        ),
                         const SizedBox(width: AppSpacing.xs),
 
                         // Quick Jump to Receptionist View
@@ -581,29 +628,15 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
   }
 
   String _getTabTitle(int index, {bool isMobile = false}) {
-    if (isMobile) {
-      switch (index) {
-        case 0:
-          return 'Analytics';
-        case 1:
-          return 'Inventaris';
-        case 2:
-          return 'Laporan';
-        case 3:
-          return 'Audit Trail';
-        default:
-          return 'Dashboard';
-      }
-    }
     switch (index) {
       case 0:
-        return 'Executive Analytics & Performance';
+        return 'Ringkasan';
       case 1:
-        return 'Manajemen Inventaris Kamar & Tarif';
+        return 'Inventaris Kamar';
       case 2:
-        return 'Rekapitulasi Transaksi & Ekspor Laporan';
+        return 'Laporan Keuangan';
       case 3:
-        return 'Audit Trail & Rekam Aktivitas Staf';
+        return 'Catatan Aktivitas';
       default:
         return 'Dashboard Manajer';
     }
@@ -641,10 +674,11 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
   ) {
     final summary = _summaryData;
     final totalCheckIn = summary?['totalCheckIn']?.toString() ?? '0';
-    final totalCheckOut = summary?['totalCheckOut']?.toString() ?? '0';
-    final occRateVal = summary?['occupancyRate'] != null
+    final occMonthlyRate = summary?['occupancyRate'] != null
         ? '${summary!['occupancyRate']}%'
-        : (occupancyRate > 0 ? '${occupancyRate.toStringAsFixed(1)}%' : '0.0%');
+        : '0%';
+    final todayOccPercent = totalRooms > 0 ? (occupiedRooms / totalRooms * 100).round() : 0;
+
     final rawRevenue = summary?['totalNetRevenue'];
     final num? parsedRevenue = rawRevenue == null
         ? null
@@ -653,7 +687,7 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
         ? currencyFormatter.format(parsedRevenue)
         : 'Rp 0';
 
-    // Channel composition dari summary (endpoint.md §8.1)
+    // Saluran Pemesanan dari backend summary
     final channels = summary?['channelComposition'] as Map<String, dynamic>?;
     final reddoorzCount = (channels?['reddoorz'] is num)
         ? (channels!['reddoorz'] as num).toInt()
@@ -672,24 +706,12 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
         ? (parsedRevenue * (walkInCount ?? 0) / totalChannels)
         : 0;
 
-    // Kalkulasi okupansi riil per lantai dari list rooms
-    final f1Rooms = rooms.where((r) => r.floor == 1).toList();
-    final f1Occ = f1Rooms.where((r) => r.isOccupied).length;
-    final f1Total = f1Rooms.isNotEmpty ? f1Rooms.length : 5;
-    final f1Ratio = f1Rooms.isNotEmpty ? f1Occ / f1Rooms.length : 0.0;
-    final f1Label = '${(f1Ratio * 100).toStringAsFixed(0)}% ($f1Occ/$f1Total Kamar)';
-
-    final f2Rooms = rooms.where((r) => r.floor == 2).toList();
-    final f2Occ = f2Rooms.where((r) => r.isOccupied).length;
-    final f2Total = f2Rooms.isNotEmpty ? f2Rooms.length : 5;
-    final f2Ratio = f2Rooms.isNotEmpty ? f2Occ / f2Rooms.length : 0.0;
-    final f2Label = '${(f2Ratio * 100).toStringAsFixed(0)}% ($f2Occ/$f2Total Kamar)';
-
-    final f3Rooms = rooms.where((r) => r.floor == 3).toList();
-    final f3Occ = f3Rooms.where((r) => r.isOccupied).length;
-    final f3Total = f3Rooms.isNotEmpty ? f3Rooms.length : 4;
-    final f3Ratio = f3Rooms.isNotEmpty ? f3Occ / f3Rooms.length : 0.0;
-    final f3Label = '${(f3Ratio * 100).toStringAsFixed(0)}% ($f3Occ/$f3Total Kamar)';
+    // Distribusi Lantai Berdasarkan Data Kamar Riil (Bukan Asumsi Hardcoded)
+    final Map<int, List<RoomModel>> roomsByFloor = {};
+    for (final r in rooms) {
+      roomsByFloor.putIfAbsent(r.floor, () => []).add(r);
+    }
+    final sortedFloors = roomsByFloor.keys.toList()..sort();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -699,64 +721,29 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
             padding: EdgeInsets.only(bottom: AppSpacing.sm),
             child: LinearProgressIndicator(minHeight: 2),
           ),
-        // KPI Cards Grid (design.md §6.7) - Responsive 4-card or 2x2 or 1-column layout
+
+        // 4 Kartu KPI Ringkas & Berjarak Rapi
         LayoutBuilder(
           builder: (context, constraints) {
-            final kpi1 = MetricCard(
-              title: 'Total Check-In (Bulan Berjalan)',
-              value: totalCheckIn,
-              trendText: summary != null ? 'Tamu terdaftar bulan ini' : 'Memuat data...',
-              isTrendPositive: true,
-              trailing: Container(
-                padding: const EdgeInsets.all(7),
-                decoration: BoxDecoration(
-                  color: AppColors.orange100,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: const Icon(Icons.login_rounded, size: 18, color: AppColors.orange800),
-              ),
-            );
-            final kpi2 = MetricCard(
-              title: 'Total Check-Out',
-              value: totalCheckOut,
-              trendText: summary != null ? 'Selesai menginap' : 'Memuat data...',
-              isTrendPositive: true,
-              trailing: Container(
-                padding: const EdgeInsets.all(7),
-                decoration: BoxDecoration(
-                  color: AppColors.navy50,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: const Icon(Icons.logout_rounded, size: 18, color: AppColors.navy700),
-              ),
-            );
-            final kpi3 = MetricCard(
-              title: 'Rasio Okupansi Realtime',
-              value: occRateVal,
-              trendText: '$occupiedRooms terisi dari $totalRooms total kamar',
-              isTrendPositive: true,
-              trailing: Container(
-                padding: const EdgeInsets.all(7),
-                decoration: BoxDecoration(
-                  color: AppColors.availableBg,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: const Icon(Icons.meeting_room_rounded, size: 18, color: AppColors.statusAvailable),
-              ),
-            );
-            final kpi4 = MetricCard(
-              title: 'Akumulasi Pendapatan Bersih',
+            final kpi1 = KpiTile(
+              label: 'Pendapatan Bersih Bulan Ini',
               value: totalNetRevenue,
-              trendText: summary != null ? 'Total pendapatan bersih bulan berjalan' : 'Memuat data...',
-              isTrendPositive: true,
-              trailing: Container(
-                padding: const EdgeInsets.all(7),
-                decoration: BoxDecoration(
-                  color: AppColors.navy50,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: const Icon(Icons.account_balance_wallet_rounded, size: 18, color: AppColors.navy900),
-              ),
+              subtitle: 'Berdasarkan transaksi selesai',
+            );
+            final kpi2 = KpiTile(
+              label: 'Okupansi Hari Ini',
+              value: '$todayOccPercent%',
+              subtitle: '$occupiedRooms dari $totalRooms kamar terisi saat ini',
+            );
+            final kpi3 = KpiTile(
+              label: 'Rata-rata Okupansi Bulanan',
+              value: occMonthlyRate,
+              subtitle: 'Akumulasi bulan berjalan',
+            );
+            final kpi4 = KpiTile(
+              label: 'Kedatangan Tamu (Check-In)',
+              value: '$totalCheckIn Tamu',
+              subtitle: 'Total check-in bulan ini',
             );
 
             if (constraints.maxWidth >= 980) {
@@ -809,55 +796,60 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
 
         const SizedBox(height: AppSpacing.lg),
 
-        // Complex Multi-metric Line Chart: Past vs Present (Bulan Berjalan vs Bulan Lalu)
-        ExecutiveTrendChart(currencyFormatter: currencyFormatter),
+        // Grafik Tren Bersih (Line Chart 2px tanpa spline meliuk/glow)
+        ExecutiveTrendChart(
+          currencyFormatter: currencyFormatter,
+          realTimeseriesData: _transactions,
+        ),
 
         const SizedBox(height: AppSpacing.lg),
 
-        // Channel Composition & Floor Occupancy
+        // Komposisi Saluran Pemesanan & Okupansi Riil Per Lantai
         LayoutBuilder(
           builder: (context, constraints) {
             final isStacked = constraints.maxWidth < 820;
 
             final channelCard = Container(
-              padding: const EdgeInsets.all(AppSpacing.lg),
+              padding: const EdgeInsets.all(AppSpacing.md),
               decoration: BoxDecoration(
                 color: AppColors.surface,
-                borderRadius: AppRadius.roundedLg,
-                border: Border.all(color: AppColors.border),
+                borderRadius: AppRadius.rounded,
+                border: Border.all(color: AppColors.border, width: 1),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'KOMPOSISI SALURAN PEMESANAN',
-                    style: AppTypography.overline,
+                    'Saluran Pemesanan Tamu',
+                    style: AppTextStyles.titleSmall.copyWith(
+                      color: AppColors.brandNavyDark,
+                    ),
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 2),
                   Text(
-                    'Rasio Penjualan Kamar: RedDoorz vs Walk-in Offline',
-                    style: AppTypography.bodySm.copyWith(color: AppColors.textSecondary),
+                    'Perbandingan tamu dari mitra RedDoorz vs walk-in offline',
+                    style: AppTextStyles.caption.copyWith(color: AppColors.textSecondary),
                   ),
-                  const SizedBox(height: AppSpacing.lg),
+                  const SizedBox(height: AppSpacing.md),
 
-                  // Clean Flat Bar Representation
+                  // Batang Proporsi Bersih
                   ClipRRect(
-                    borderRadius: AppRadius.roundedFull,
+                    borderRadius: AppRadius.roundedSm,
                     child: SizedBox(
-                      height: 24,
+                      height: 22,
                       child: Row(
                         children: [
                           Expanded(
                             flex: totalChannels > 0 ? reddoorzPct : 50,
                             child: Container(
-                              color: AppColors.orange600,
+                              color: AppColors.brandOrange,
                               alignment: Alignment.center,
                               child: Text(
                                 totalChannels > 0 ? 'RedDoorz $reddoorzPct%' : 'RedDoorz',
                                 style: const TextStyle(
                                   color: AppColors.white,
                                   fontSize: 11,
-                                  fontWeight: FontWeight.bold,
+                                  fontWeight: FontWeight.w700,
                                 ),
                               ),
                             ),
@@ -865,14 +857,14 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
                           Expanded(
                             flex: totalChannels > 0 ? walkInPct : 50,
                             child: Container(
-                              color: AppColors.navy700,
+                              color: AppColors.brandNavy,
                               alignment: Alignment.center,
                               child: Text(
                                 totalChannels > 0 ? 'Walk-in $walkInPct%' : 'Walk-in',
                                 style: const TextStyle(
                                   color: AppColors.white,
                                   fontSize: 11,
-                                  fontWeight: FontWeight.bold,
+                                  fontWeight: FontWeight.w700,
                                 ),
                               ),
                             ),
@@ -884,51 +876,33 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
 
                   const SizedBox(height: AppSpacing.md),
 
-                  Wrap(
-                    alignment: WrapAlignment.spaceAround,
-                    spacing: 16,
-                    runSpacing: 8,
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Container(width: 12, height: 12, color: AppColors.orange600),
-                          const SizedBox(width: 8),
-                          Flexible(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text('Mitra RedDoorz', style: AppTypography.caption),
-                                Text(
-                                  reddoorzCount != null
-                                      ? '$reddoorzCount Transaksi · ${currencyFormatter.format(reddoorzNominal)}'
-                                      : '0 Transaksi',
-                                  style: AppTypography.bodySm.copyWith(fontWeight: FontWeight.w700),
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ],
+                          Text('Mitra RedDoorz', style: AppTextStyles.caption),
+                          Text(
+                            reddoorzCount != null
+                                ? '$reddoorzCount Transaksi · ${currencyFormatter.format(reddoorzNominal)}'
+                                : '0 Transaksi',
+                            style: AppTextStyles.bodyMediumMedium.copyWith(
+                              fontWeight: FontWeight.w700,
                             ),
                           ),
                         ],
                       ),
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
-                          Container(width: 12, height: 12, color: AppColors.navy700),
-                          const SizedBox(width: 8),
-                          Flexible(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text('Walk-in Langsung', style: AppTypography.caption),
-                                Text(
-                                  walkInCount != null
-                                      ? '$walkInCount Transaksi · ${currencyFormatter.format(walkInNominal)}'
-                                      : '0 Transaksi',
-                                  style: AppTypography.bodySm.copyWith(fontWeight: FontWeight.w700),
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ],
+                          Text('Walk-in Langsung', style: AppTextStyles.caption),
+                          Text(
+                            walkInCount != null
+                                ? '$walkInCount Transaksi · ${currencyFormatter.format(walkInNominal)}'
+                                : '0 Transaksi',
+                            style: AppTextStyles.bodyMediumMedium.copyWith(
+                              fontWeight: FontWeight.w700,
                             ),
                           ),
                         ],
@@ -940,28 +914,45 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
             );
 
             final floorCard = Container(
-              padding: const EdgeInsets.all(AppSpacing.lg),
+              padding: const EdgeInsets.all(AppSpacing.md),
               decoration: BoxDecoration(
                 color: AppColors.surface,
-                borderRadius: AppRadius.roundedLg,
-                border: Border.all(color: AppColors.border),
+                borderRadius: AppRadius.rounded,
+                border: Border.all(color: AppColors.border, width: 1),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('TINGKAT OKUPANSI PER LANTAI', style: AppTypography.overline),
-                  const SizedBox(height: 4),
                   Text(
-                    'Distribusi Kepadatan Tamu Hotel Sinar Harapan',
-                    style: AppTypography.bodySm.copyWith(color: AppColors.textSecondary),
+                    'Hunian Berdasarkan Lantai',
+                    style: AppTextStyles.titleSmall.copyWith(
+                      color: AppColors.brandNavyDark,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    'Distribusi keterisian kamar aktif saat ini',
+                    style: AppTextStyles.caption.copyWith(color: AppColors.textSecondary),
                   ),
                   const SizedBox(height: AppSpacing.md),
 
-                  _buildFloorOccupancyRow('Lantai 1 (Kamar 101 - 105)', f1Ratio, f1Label),
-                  const SizedBox(height: 10),
-                  _buildFloorOccupancyRow('Lantai 2 (Kamar 201 - 205)', f2Ratio, f2Label),
-                  const SizedBox(height: 10),
-                  _buildFloorOccupancyRow('Lantai 3 (Kamar 301 - 304)', f3Ratio, f3Label),
+                  if (sortedFloors.isEmpty)
+                    const Text('Belum ada data kamar terdaftar', style: TextStyle(fontSize: 12))
+                  else
+                    for (final fl in sortedFloors) ...[
+                      Builder(
+                        builder: (context) {
+                          final fRooms = roomsByFloor[fl]!;
+                          final fOcc = fRooms.where((r) => r.isOccupied).length;
+                          final fRatio = fRooms.isNotEmpty ? fOcc / fRooms.length : 0.0;
+                          final fLabel = '${(fRatio * 100).toStringAsFixed(0)}% ($fOcc/${fRooms.length} Kamar)';
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 8),
+                            child: _buildFloorOccupancyRow('Lantai $fl', fRatio, fLabel),
+                          );
+                        },
+                      ),
+                    ],
                 ],
               ),
             );
@@ -979,9 +970,9 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
             return Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(flex: 5, child: channelCard),
+                Expanded(child: channelCard),
                 const SizedBox(width: AppSpacing.md),
-                Expanded(flex: 5, child: floorCard),
+                Expanded(child: floorCard),
               ],
             );
           },
@@ -1328,7 +1319,7 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
     return Container(
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: AppRadius.roundedLg,
+        borderRadius: AppRadius.rounded,
         border: Border.all(color: AppColors.border),
       ),
       child: Column(
@@ -1345,10 +1336,17 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Rekapitulasi Transaksi Periode September 2026', style: AppTypography.h3),
                     Text(
-                      'Data sensitif NIK & kontak tamu hanya dapat diakses & diunduh oleh peran Manajer (UU PDP).',
-                      style: AppTypography.caption,
+                      'Rekapitulasi Transaksi Pembayaran',
+                      style: AppTextStyles.titleSmall.copyWith(
+                        color: AppColors.brandNavyDark,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'Data transaksi resmi untuk pembukuan dan audit hotel.',
+                      style: AppTextStyles.caption.copyWith(color: AppColors.textSecondary),
                     ),
                   ],
                 ),
@@ -1377,210 +1375,116 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
           ),
           const Divider(height: 1),
 
-          LayoutBuilder(
-            builder: (context, constraints) {
-              final isMobile = constraints.maxWidth < 720;
-
-              if (isMobile) {
-                // Mobile Card View for Transactions
-                return ListView.separated(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: rooms.length,
-                  separatorBuilder: (_, _) => const Divider(height: 1),
-                  itemBuilder: (context, index) {
-                    final room = rooms[index];
-                    final hasGuest = room.activeGuestName != null;
-                    final invoice = room.invoiceNumber ?? 'INV/SH/20260924/${(index + 1).toString().padLeft(4, '0')}';
-                    final guest = room.activeGuestName ?? 'Tamu Walk-in';
-                    final phone = room.activeGuestPhone ?? '081234567890';
-                    final source = room.bookingSource ?? (index % 2 == 0 ? 'REDDOORZ' : 'WALK_IN');
-                    final total = room.basePricePerNight * (index % 3 + 1);
-
-                    return Padding(
-                      padding: const EdgeInsets.all(AppSpacing.md),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          if (_isLoadingTransactions)
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 48),
+              child: Center(
+                child: CircularProgressIndicator(color: AppColors.brandNavy),
+              ),
+            )
+          else if (_transactions.isEmpty)
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 40),
+              child: EmptyStateWidget(
+                icon: Icons.receipt_long_outlined,
+                title: 'Belum Ada Transaksi Tercatat',
+                message:
+                    'Belum ada transaksi pembayaran atau reservasi yang tersimpan di server untuk periode ini. Riwayat transaksi akan tercatat otomatis saat tamu melakukan pembayaran.',
+              ),
+            )
+          else
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final contentWidth = math.max(880.0, constraints.maxWidth);
+                return SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: SizedBox(
+                    width: contentWidth,
+                    child: Column(
+                      children: [
+                        // Header Tabel
+                        Container(
+                          color: AppColors.bgSubtle,
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                          child: Row(
                             children: [
-                              Text(invoice, style: AppTypography.caption.copyWith(fontWeight: FontWeight.w700, color: AppColors.navy900)),
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                                decoration: BoxDecoration(
-                                  color: hasGuest ? AppColors.statusErrorBg : AppColors.statusSuccessBg,
-                                  borderRadius: BorderRadius.circular(4),
-                                ),
-                                child: Text(
-                                  hasGuest ? 'Menginap' : 'Selesai',
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w700,
-                                    color: hasGuest ? AppColors.statusOccupied : AppColors.statusAvailable,
-                                  ),
-                                ),
-                              ),
+                              Expanded(flex: 2, child: Text('NO. INVOICE', style: AppTextStyles.badge)),
+                              Expanded(flex: 1, child: Text('KAMAR', style: AppTextStyles.badge)),
+                              Expanded(flex: 2, child: Text('NAMA TAMU', style: AppTextStyles.badge)),
+                              Expanded(flex: 2, child: Text('KANAL', style: AppTextStyles.badge)),
+                              Expanded(flex: 2, child: Text('TOTAL BIAYA', style: AppTextStyles.badge)),
+                              Expanded(flex: 2, child: Text('STATUS', style: AppTextStyles.badge)),
                             ],
                           ),
-                          const SizedBox(height: 6),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
+                        ),
+
+                        // Baris Transaksi Riil
+                        for (int i = 0; i < _transactions.length; i++) ...[
+                          const Divider(height: 1),
+                          Builder(
+                            builder: (context) {
+                              final tx = _transactions[i];
+                              final invoice = tx['invoiceNumber']?.toString() ?? '-';
+                              final roomNum = tx['roomNumber']?.toString() ?? '-';
+                              final guest = tx['guestName']?.toString() ?? 'Tamu';
+                              final channel = tx['bookingSource']?.toString() ?? 'WALK_IN';
+                              final rawAmt = tx['totalAmount'] ?? tx['amount'] ?? 0;
+                              final amt = rawAmt is num ? rawAmt : num.tryParse(rawAmt.toString()) ?? 0;
+                              final status = tx['paymentStatus']?.toString().toUpperCase() ?? 'LUNAS';
+
+                              return Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                child: Row(
                                   children: [
-                                    Text(guest, style: AppTypography.bodySm.copyWith(fontWeight: FontWeight.w700)),
-                                    const SizedBox(height: 2),
-                                    Text('Kamar ${room.roomNumber} (${room.roomType}) · WA: $phone', style: AppTypography.caption),
+                                    Expanded(
+                                      flex: 2,
+                                      child: Text(
+                                        invoice,
+                                        style: AppTextStyles.numberMedium.copyWith(fontSize: 13),
+                                      ),
+                                    ),
+                                    Expanded(
+                                      flex: 1,
+                                      child: Text('Kamar $roomNum', style: AppTextStyles.bodyMedium),
+                                    ),
+                                    Expanded(
+                                      flex: 2,
+                                      child: Text(guest, style: AppTextStyles.bodyMediumMedium),
+                                    ),
+                                    Expanded(
+                                      flex: 2,
+                                      child: Text(channel, style: AppTextStyles.caption),
+                                    ),
+                                    Expanded(
+                                      flex: 2,
+                                      child: Text(
+                                        currencyFormatter.format(amt),
+                                        style: AppTextStyles.numberMedium,
+                                      ),
+                                    ),
+                                    Expanded(
+                                      flex: 2,
+                                      child: Text(
+                                        status,
+                                        style: AppTextStyles.badge.copyWith(
+                                          color: status == 'LUNAS' || status == 'PAID'
+                                              ? AppColors.statusAvailableText
+                                              : AppColors.statusDirtyText,
+                                        ),
+                                      ),
+                                    ),
                                   ],
                                 ),
-                              ),
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.end,
-                                children: [
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                    decoration: BoxDecoration(
-                                      color: source == 'REDDOORZ' ? AppColors.orange100 : AppColors.navy100,
-                                      borderRadius: AppRadius.roundedSm,
-                                    ),
-                                    child: Text(
-                                      source,
-                                      style: AppTypography.overline.copyWith(
-                                        color: source == 'REDDOORZ' ? AppColors.orange800 : AppColors.navy700,
-                                        fontSize: 10,
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    currencyFormatter.format(total),
-                                    style: AppTypography.bodySm.copyWith(fontWeight: FontWeight.w800, color: AppColors.navy900),
-                                  ),
-                                ],
-                              ),
-                            ],
+                              );
+                            },
                           ),
                         ],
-                      ),
-                    );
-                  },
-                );
-              }
-
-              // Desktop Table View
-              final contentWidth = math.max(920.0, constraints.maxWidth);
-              return SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: SizedBox(
-                  width: contentWidth,
-                  child: Column(
-                    children: [
-                      // Table Header
-                      Container(
-                        color: AppColors.navy100,
-                        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: 10),
-                        child: Row(
-                          children: [
-                            Expanded(flex: 2, child: Text('NO. INVOICE', style: AppTypography.overline)),
-                            Expanded(flex: 1, child: Text('KAMAR', style: AppTypography.overline)),
-                            Expanded(flex: 2, child: Text('NAMA TAMU', style: AppTypography.overline)),
-                            Expanded(flex: 2, child: Text('WHATSAPP', style: AppTypography.overline)),
-                            Expanded(flex: 2, child: Text('KANAL', style: AppTypography.overline)),
-                            Expanded(flex: 2, child: Text('TOTAL BIAYA', style: AppTypography.overline)),
-                            Expanded(flex: 2, child: Text('STATUS', style: AppTypography.overline)),
-                          ],
-                        ),
-                      ),
-
-                      for (int index = 0; index < rooms.length; index++) ...[
-                        const Divider(height: 1),
-                        Builder(
-                          builder: (context) {
-                            final room = rooms[index];
-                            final hasGuest = room.activeGuestName != null;
-                            final invoice = room.invoiceNumber ?? 'INV/SH/20260924/${(index + 1).toString().padLeft(4, '0')}';
-                            final guest = room.activeGuestName ?? 'Tamu Walk-in';
-                            final phone = room.activeGuestPhone ?? '081234567890';
-                            final source = room.bookingSource ?? (index % 2 == 0 ? 'REDDOORZ' : 'WALK_IN');
-                            final total = room.basePricePerNight * (index % 3 + 1);
-
-                            return Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: 10),
-                              child: Row(
-                                children: [
-                                  Expanded(
-                                    flex: 2,
-                                    child: Text(
-                                      invoice,
-                                      style: AppTypography.caption.copyWith(fontWeight: FontWeight.w700),
-                                    ),
-                                  ),
-                                  Expanded(
-                                    flex: 1,
-                                    child: Text('Kamar ${room.roomNumber}', style: AppTypography.bodySm),
-                                  ),
-                                  Expanded(
-                                    flex: 2,
-                                    child: Text(
-                                      guest,
-                                      style: AppTypography.bodySm.copyWith(fontWeight: FontWeight.w600),
-                                    ),
-                                  ),
-                                  Expanded(
-                                    flex: 2,
-                                    child: Text(phone, style: AppTypography.caption),
-                                  ),
-                                  Expanded(
-                                    flex: 2,
-                                    child: Row(
-                                      children: [
-                                        Container(
-                                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                          decoration: BoxDecoration(
-                                            color: source == 'REDDOORZ' ? AppColors.orange100 : AppColors.navy100,
-                                            borderRadius: AppRadius.roundedSm,
-                                          ),
-                                          child: Text(
-                                            source,
-                                            style: AppTypography.overline.copyWith(
-                                              color: source == 'REDDOORZ' ? AppColors.orange800 : AppColors.navy700,
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  Expanded(
-                                    flex: 2,
-                                    child: Text(
-                                      currencyFormatter.format(total),
-                                      style: AppTypography.bodySm.copyWith(fontWeight: FontWeight.w700),
-                                    ),
-                                  ),
-                                  Expanded(
-                                    flex: 2,
-                                    child: Text(
-                                      hasGuest ? 'Menginap' : 'Selesai',
-                                      style: AppTypography.caption.copyWith(
-                                        color: hasGuest ? AppColors.statusOccupied : AppColors.statusAvailable,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            );
-                          },
-                        ),
                       ],
-                    ],
+                    ),
                   ),
-                ),
-              );
-            },
-          ),
+                );
+              },
+            ),
         ],
       ),
     );
