@@ -88,7 +88,7 @@ class _RoomCardState extends State<RoomCard> {
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        room.roomNumber,
+                                        'Kamar ${room.roomNumber}',
                                         style: AppTextStyles.titleSmall.copyWith(
                                           fontWeight: FontWeight.w700,
                                           color: AppColors.brandNavyDark,
@@ -183,7 +183,7 @@ class _RoomCardState extends State<RoomCard> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      room.roomNumber,
+                                      'Kamar ${room.roomNumber}',
                                       style: AppTextStyles.titleSmall.copyWith(
                                         fontWeight: FontWeight.w700,
                                         color: AppColors.brandNavyDark,
@@ -212,7 +212,13 @@ class _RoomCardState extends State<RoomCard> {
 
                           // Konten Spesifik Status
                           Expanded(
-                            child: _buildStatusSpecificContent(room),
+                            child: Align(
+                              alignment: Alignment.centerLeft,
+                              child: SingleChildScrollView(
+                                physics: const NeverScrollableScrollPhysics(),
+                                child: _buildStatusSpecificContent(room),
+                              ),
+                            ),
                           ),
 
                           const SizedBox(height: 8),
@@ -234,11 +240,13 @@ class _RoomCardState extends State<RoomCard> {
 
   Widget _buildStatusSpecificContent(RoomModel room) {
     if (room.isOccupied) {
-      final guestName = room.activeGuestName ?? 'Tamu Tanpa Nama';
+      final guestName = (room.activeGuestName != null && room.activeGuestName!.trim().isNotEmpty)
+          ? room.activeGuestName!
+          : '-';
       final isRedDoorz = room.bookingSource == 'REDDOORZ';
       final checkOutStr = room.expectedCheckOutTime != null
           ? DateFormat('d MMM, HH:mm', 'id').format(room.expectedCheckOutTime!)
-          : 'Belum ditentukan';
+          : '-';
 
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,

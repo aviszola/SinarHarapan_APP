@@ -120,7 +120,7 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('101'), findsOneWidget);
+      expect(find.text('Kamar 101'), findsOneWidget);
       expect(find.text('Check-in'), findsOneWidget);
       expect(tester.takeException(), isNull, reason: 'RoomCard compact mobile tidak boleh overflow');
     });
@@ -172,8 +172,8 @@ void main() {
 
       // Drawer hamburger button must be visible on mobile
       expect(find.byIcon(Icons.menu), findsOneWidget);
-      // Compact tab title 'Analytics' on mobile
-      expect(find.text('Analytics'), findsOneWidget);
+      // Compact tab title 'Ringkasan' on mobile
+      expect(find.text('Ringkasan'), findsOneWidget);
       expect(tester.takeException(), isNull, reason: 'ManagerDashboardScreen mobile tidak boleh overflow');
     });
   });

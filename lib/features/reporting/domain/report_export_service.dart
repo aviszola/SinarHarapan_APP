@@ -50,7 +50,6 @@ class ReportExportService {
     final list = <TransactionExportItem>[];
     for (int index = 0; index < rooms.length; index++) {
       final room = rooms[index];
-      final seqStr = (index + 1).toString().padLeft(4, '0');
 
       // Sesuai FR-OUT-03 & Tugas QA:
       // Hanya membaca nomor invoice yang sudah tersimpan di data transaksi/kamar.
@@ -76,16 +75,17 @@ class ReportExportService {
           invoice = room.invoiceNumber!;
         }
       } else {
-        // Fallback eksplisit untuk kamar kosong/demo tanpa transaksi riil
-        // Ditandai jelas dengan prefix 'SIM-INV' agar tidak membingungkan tim QA
-        invoice = 'SIM-INV/SH/20260924/$seqStr';
+        invoice = '-';
       }
 
-      final guest = room.activeGuestName ?? 'Tamu Walk-in';
-      final phone = room.activeGuestPhone ?? '081234567890';
-      final source = room.bookingSource ?? (index % 2 == 0 ? 'REDDOORZ' : 'WALK_IN');
-      final roomCost = room.basePricePerNight * (index % 3 + 1);
-      final extraCost = room.additionalCharges ?? (index % 4 == 0 ? 50000 : 0);
+      final guest = room.activeGuestName ?? '-';
+      final phone = room.activeGuestPhone ?? '-';
+      final source = room.bookingSource ?? '-';
+      final nights = (room.checkInTime != null && room.expectedCheckOutTime != null)
+          ? room.expectedCheckOutTime!.difference(room.checkInTime!).inDays.clamp(1, 30)
+          : 1;
+      final roomCost = room.basePricePerNight * nights;
+      final extraCost = room.additionalCharges ?? 0.0;
       final total = roomCost + extraCost;
       final status = room.isOccupied ? 'Menginap' : 'Selesai';
 
