@@ -630,13 +630,13 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
   String _getTabTitle(int index, {bool isMobile = false}) {
     switch (index) {
       case 0:
-        return 'Ringkasan';
+        return isMobile ? 'Analytics' : 'Ringkasan';
       case 1:
-        return 'Inventaris Kamar';
+        return isMobile ? 'Inventaris' : 'Inventaris Kamar';
       case 2:
-        return 'Laporan Keuangan';
+        return isMobile ? 'Laporan' : 'Laporan Keuangan';
       case 3:
-        return 'Catatan Aktivitas';
+        return isMobile ? 'Aktivitas' : 'Catatan Aktivitas';
       default:
         return 'Dashboard Manajer';
     }
@@ -876,8 +876,10 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
 
                   const SizedBox(height: AppSpacing.md),
 
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  Wrap(
+                    spacing: AppSpacing.md,
+                    runSpacing: AppSpacing.sm,
+                    alignment: WrapAlignment.spaceBetween,
                     children: [
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -894,7 +896,7 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
                         ],
                       ),
                       Column(
-                        crossAxisAlignment: CrossAxisAlignment.end,
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text('Walk-in Langsung', style: AppTextStyles.caption),
                           Text(

@@ -51,81 +51,182 @@ class _RoomCardState extends State<RoomCard> {
       cursor: room.isMaintenance ? SystemMouseCursors.basic : SystemMouseCursors.click,
       child: GestureDetector(
         onTap: widget.onTap,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 140),
-          decoration: BoxDecoration(
-            color: AppColors.surface,
-            borderRadius: AppRadius.rounded,
-            border: Border.all(
-              color: _isHovered ? AppColors.brandNavy : AppColors.border,
-              width: _isHovered ? 1.5 : 1,
-            ),
-            boxShadow: _isHovered ? AppElevation.subtle : AppElevation.none,
-          ),
-          clipBehavior: Clip.antiAlias,
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // Garis Status 4px di Sisi Kiri
-              Container(
-                width: 4,
-                color: _statusStripeColor,
-              ),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final isCompact = constraints.maxWidth < 180 || constraints.maxHeight < 150;
 
-              // Konten Kartu
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      // Header Kartu: Nomor Kamar & Status Badge
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            if (isCompact) {
+              return AnimatedContainer(
+                duration: const Duration(milliseconds: 140),
+                decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  borderRadius: AppRadius.rounded,
+                  border: Border.all(
+                    color: _isHovered ? AppColors.brandNavy : AppColors.border,
+                    width: _isHovered ? 1.5 : 1,
+                  ),
+                  boxShadow: _isHovered ? AppElevation.subtle : AppElevation.none,
+                ),
+                clipBehavior: Clip.antiAlias,
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Container(width: 4, color: _statusStripeColor),
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        room.roomNumber,
+                                        style: AppTextStyles.titleSmall.copyWith(
+                                          fontWeight: FontWeight.w700,
+                                          color: AppColors.brandNavyDark,
+                                          fontSize: 16,
+                                          fontFeatures: const [FontFeature.tabularFigures()],
+                                        ),
+                                        maxLines: 1,
+                                      ),
+                                      Text(
+                                        '${room.roomType} · Lt. ${room.floor}',
+                                        style: AppTextStyles.caption.copyWith(
+                                          color: AppColors.textSecondary,
+                                          fontSize: 11,
+                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(width: 4),
+                                StatusBadge(status: room.status, compact: true),
+                              ],
+                            ),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    room.isAvailable
+                                        ? _currFmt.format(room.basePricePerNight)
+                                        : (room.activeGuestName ?? _getStatusName(room.status)),
+                                    style: AppTextStyles.caption.copyWith(
+                                      fontWeight: FontWeight.w600,
+                                      color: room.isAvailable ? AppColors.brandNavy : AppColors.textPrimary,
+                                      fontSize: 11,
+                                      fontFeatures: const [FontFeature.tabularFigures()],
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                                const SizedBox(width: 6),
+                                _buildCompactActionButton(room),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }
+
+            return AnimatedContainer(
+              duration: const Duration(milliseconds: 140),
+              decoration: BoxDecoration(
+                color: AppColors.surface,
+                borderRadius: AppRadius.rounded,
+                border: Border.all(
+                  color: _isHovered ? AppColors.brandNavy : AppColors.border,
+                  width: _isHovered ? 1.5 : 1,
+                ),
+                boxShadow: _isHovered ? AppElevation.subtle : AppElevation.none,
+              ),
+              clipBehavior: Clip.antiAlias,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // Garis Status 4px di Sisi Kiri
+                  Container(
+                    width: 4,
+                    color: _statusStripeColor,
+                  ),
+
+                  // Konten Kartu
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                      child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Column(
+                          // Header Kartu: Nomor Kamar & Status Badge
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
-                                'Kamar ${room.roomNumber}',
-                                style: AppTextStyles.titleSmall.copyWith(
-                                  fontWeight: FontWeight.w700,
-                                  color: AppColors.brandNavyDark,
-                                  fontSize: 16,
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      room.roomNumber,
+                                      style: AppTextStyles.titleSmall.copyWith(
+                                        fontWeight: FontWeight.w700,
+                                        color: AppColors.brandNavyDark,
+                                        fontSize: 16,
+                                        fontFeatures: const [FontFeature.tabularFigures()],
+                                      ),
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      '${room.roomType} · Lt. ${room.floor}',
+                                      style: AppTextStyles.caption.copyWith(
+                                        color: AppColors.textSecondary,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ],
                                 ),
                               ),
-                              const SizedBox(height: 2),
-                              Text(
-                                '${room.roomType} · Lt. ${room.floor}',
-                                style: AppTextStyles.caption.copyWith(
-                                  color: AppColors.textSecondary,
-                                ),
-                              ),
+                              const SizedBox(width: 6),
+                              StatusBadge(status: room.status),
                             ],
                           ),
-                          StatusBadge(status: room.status),
+
+                          const SizedBox(height: 10),
+
+                          // Konten Spesifik Status
+                          Expanded(
+                            child: _buildStatusSpecificContent(room),
+                          ),
+
+                          const SizedBox(height: 8),
+
+                          // Tombol Aksi Cepat
+                          _buildActionButton(room),
                         ],
                       ),
-
-                      const SizedBox(height: 10),
-
-                      // Konten Spesifik Status
-                      Expanded(
-                        child: _buildStatusSpecificContent(room),
-                      ),
-
-                      const SizedBox(height: 8),
-
-                      // Tombol Aksi Cepat
-                      _buildActionButton(room),
-                    ],
+                    ),
                   ),
-                ),
+                ],
               ),
-            ],
-          ),
+            );
+          },
         ),
       ),
     );
@@ -377,5 +478,80 @@ class _RoomCardState extends State<RoomCard> {
         child: const Text('Detail Status', style: TextStyle(fontSize: 12)),
       ),
     );
+  }
+
+  Widget _buildCompactActionButton(RoomModel room) {
+    if (room.isAvailable) {
+      return SizedBox(
+        height: 26,
+        child: ElevatedButton(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppColors.brandOrange,
+            foregroundColor: AppColors.white,
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            shape: const RoundedRectangleBorder(borderRadius: AppRadius.roundedSm),
+          ),
+          onPressed: widget.onTap,
+          child: const Text('Check-in', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600)),
+        ),
+      );
+    }
+    if (room.isOccupied) {
+      return SizedBox(
+        height: 26,
+        child: OutlinedButton(
+          style: OutlinedButton.styleFrom(
+            foregroundColor: AppColors.statusOccupiedText,
+            side: const BorderSide(color: AppColors.statusOccupied),
+            backgroundColor: AppColors.statusOccupiedBg,
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            shape: const RoundedRectangleBorder(borderRadius: AppRadius.roundedSm),
+          ),
+          onPressed: widget.onTap,
+          child: const Text('Check-out', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600)),
+        ),
+      );
+    }
+    if (room.isDirty) {
+      return SizedBox(
+        height: 26,
+        child: OutlinedButton(
+          style: OutlinedButton.styleFrom(
+            foregroundColor: AppColors.statusDirtyText,
+            side: const BorderSide(color: AppColors.statusDirty),
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            shape: const RoundedRectangleBorder(borderRadius: AppRadius.roundedSm),
+          ),
+          onPressed: widget.onTap,
+          child: const Text('Bersihkan', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600)),
+        ),
+      );
+    }
+    return SizedBox(
+      height: 26,
+      child: OutlinedButton(
+        style: OutlinedButton.styleFrom(
+          foregroundColor: AppColors.textDisabled,
+          side: const BorderSide(color: AppColors.border),
+          padding: const EdgeInsets.symmetric(horizontal: 8),
+          shape: const RoundedRectangleBorder(borderRadius: AppRadius.roundedSm),
+        ),
+        onPressed: widget.onTap,
+        child: const Text('Detail', style: TextStyle(fontSize: 11)),
+      ),
+    );
+  }
+
+  String _getStatusName(RoomStatusType status) {
+    switch (status) {
+      case RoomStatusType.available:
+        return 'Tersedia';
+      case RoomStatusType.occupied:
+        return 'Terisi';
+      case RoomStatusType.dirty:
+        return 'Kotor';
+      case RoomStatusType.maintenance:
+        return 'Perawatan';
+    }
   }
 }

@@ -22,7 +22,7 @@ class MetricCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return KpiTile(
-      label: title,
+      label: title.toUpperCase(),
       value: value,
       subtitle: trendText,
       trailing: trailing,

@@ -47,12 +47,15 @@ class _ExecutiveTrendChartState extends State<ExecutiveTrendChart> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           // Header Kontrol: Sederhana (Satu periode, satu metrik)
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            crossAxisAlignment: CrossAxisAlignment.center,
+          Wrap(
+            alignment: WrapAlignment.spaceBetween,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: 12,
+            runSpacing: 12,
             children: [
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
                     _selectedMetric == ChartMetric.revenue
@@ -74,8 +77,9 @@ class _ExecutiveTrendChartState extends State<ExecutiveTrendChart> {
                   ),
                 ],
               ),
-              Row(
-                mainAxisSize: MainAxisSize.min,
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
                 children: [
                   // Pilihan Metrik
                   _buildSegmentedControl<ChartMetric>(
@@ -86,7 +90,6 @@ class _ExecutiveTrendChartState extends State<ExecutiveTrendChart> {
                     ],
                     onChanged: (val) => setState(() => _selectedMetric = val),
                   ),
-                  const SizedBox(width: 8),
                   // Pilihan Periode
                   _buildSegmentedControl<ChartPeriod>(
                     value: _selectedPeriod,

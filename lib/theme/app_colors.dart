@@ -56,7 +56,7 @@ class AppColors {
   // Terisi (Merah Tegas)
   static const Color statusOccupied = Color(0xFFDC2626);
   static const Color statusOccupiedBg = Color(0xFFFEE2E2);
-  static const Color statusOccupiedText = Color(0xFF991B1B);
+  static const Color statusOccupiedText = Color(0xFFB91C1C);
 
   // Kotor / Menunggu Pembersihan (Amber Hangat)
   static const Color statusDirty = Color(0xFFD97706);
@@ -66,7 +66,7 @@ class AppColors {
   // Perawatan / Maintenance (Abu-abu Netral)
   static const Color statusMaintenance = Color(0xFF6B7280);
   static const Color statusMaintenanceBg = Color(0xFFF3F4F6);
-  static const Color statusMaintenanceText = Color(0xFF374151);
+  static const Color statusMaintenanceText = Color(0xFF4B5563);
 
   // System alerts / Error
   static const Color error = Color(0xFFDC2626);
@@ -93,6 +93,9 @@ class AppColors {
   static const Color availableBg = statusAvailableBg;
   static const Color availableText = statusAvailableText;
   static const Color availableDark = statusAvailable;
+  static const Color statusSuccessBg = statusAvailableBg;
+  static const Color statusWarningBg = statusDirtyBg;
+  static const Color statusErrorBg = statusOccupiedBg;
   static const Color occupiedBg = statusOccupiedBg;
   static const Color occupiedText = statusOccupiedText;
   static const Color occupiedLight = Color(0xFFFCA5A5);

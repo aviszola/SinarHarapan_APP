@@ -22,14 +22,14 @@ class EmptyStateWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Container(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
                 color: AppColors.bgSubtle,
                 borderRadius: AppRadius.rounded,
@@ -37,11 +37,11 @@ class EmptyStateWidget extends StatelessWidget {
               ),
               child: Icon(
                 icon,
-                size: 28,
+                size: 24,
                 color: AppColors.textSecondary,
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 10),
             Text(
               title,
               style: AppTextStyles.titleSmall.copyWith(
@@ -49,7 +49,7 @@ class EmptyStateWidget extends StatelessWidget {
               ),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 6),
+            const SizedBox(height: 4),
             ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 380),
               child: Text(
@@ -61,7 +61,7 @@ class EmptyStateWidget extends StatelessWidget {
               ),
             ),
             if (action != null) ...[
-              const SizedBox(height: 20),
+              const SizedBox(height: 14),
               action!,
             ],
           ],

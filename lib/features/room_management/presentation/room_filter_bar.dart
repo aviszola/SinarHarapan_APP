@@ -230,16 +230,33 @@ class RoomFilterBar extends ConsumerWidget {
             children: [
               buildStatsLine(),
               const SizedBox(height: 10),
-              Row(
-                children: [
-                  Expanded(child: buildSearchField()),
-                  const SizedBox(width: 8),
-                  roomTypeDropdown,
-                  const SizedBox(width: 8),
-                  floorDropdown,
-                  const SizedBox(width: 8),
-                  statusDropdown,
-                ],
+              buildSearchField(),
+              const SizedBox(height: 8),
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: [
+                    roomTypeDropdown,
+                    const SizedBox(width: 8),
+                    floorDropdown,
+                    const SizedBox(width: 8),
+                    statusDropdown,
+                    if (hasActiveFilter) ...[
+                      const SizedBox(width: 8),
+                      OutlinedButton.icon(
+                        style: OutlinedButton.styleFrom(
+                          minimumSize: const Size(0, 36),
+                          padding: const EdgeInsets.symmetric(horizontal: 10),
+                          side: const BorderSide(color: AppColors.error),
+                          foregroundColor: AppColors.errorText,
+                        ),
+                        icon: const Icon(Icons.close_rounded, size: 14),
+                        label: const Text('Reset', style: TextStyle(fontSize: 12)),
+                        onPressed: () => notifier.state = const RoomFilterState(),
+                      ),
+                    ],
+                  ],
+                ),
               ),
             ],
           );
