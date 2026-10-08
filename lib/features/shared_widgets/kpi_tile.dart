@@ -47,7 +47,7 @@ class KpiTile extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
-              if (trailing != null) trailing!,
+              ?trailing,
             ],
           ),
           const SizedBox(height: 8),

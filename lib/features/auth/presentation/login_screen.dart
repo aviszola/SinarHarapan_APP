@@ -1,7 +1,10 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../../app/theme.dart';
+import '../../../theme/app_colors.dart';
+import '../../../theme/app_text_styles.dart';
+import '../../../theme/app_spacing.dart';
 import '../../shared_widgets/app_button.dart';
 import '../../shared_widgets/app_text_field.dart';
 import '../domain/user_model.dart';
@@ -14,15 +17,10 @@ class LoginScreen extends ConsumerStatefulWidget {
   ConsumerState<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends ConsumerState<LoginScreen>
-    with SingleTickerProviderStateMixin {
+class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
-
-  late final AnimationController _animCtrl;
-  late final Animation<double> _fadeIn;
-  late final Animation<Offset> _slideUp;
 
   @override
   void initState() {
@@ -32,21 +30,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
         ref.read(authStateProvider.notifier).clearError();
       }
     });
-    _animCtrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 600),
-    );
-    _fadeIn = CurvedAnimation(parent: _animCtrl, curve: Curves.easeOut);
-    _slideUp = Tween<Offset>(
-      begin: const Offset(0, 0.06),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(parent: _animCtrl, curve: Curves.easeOut));
-    _animCtrl.forward();
   }
 
   @override
   void dispose() {
-    _animCtrl.dispose();
     _usernameController.dispose();
     _passwordController.dispose();
     super.dispose();
@@ -85,287 +72,270 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
   Widget build(BuildContext context) {
     final authState = ref.watch(authStateProvider);
     final size = MediaQuery.of(context).size;
+    final isDesktop = size.width >= 900;
 
-    return Scaffold(
-      backgroundColor: AppColors.navy900,
-      resizeToAvoidBottomInset: true,
-      body: Row(
-        children: [
-          // ── Left Panel: Brand Identity ──────────────────────────
-          if (size.width > 900)
+    if (isDesktop) {
+      return Scaffold(
+        backgroundColor: AppColors.bg,
+        body: Row(
+          children: [
+            // Panel Kiri: Identitas Hotel yang Tenang & Kokoh
             Expanded(
               flex: 5,
               child: _LeftBrandPanel(),
             ),
 
-          // ── Right Panel: Login Form ─────────────────────────────
-          Expanded(
-            flex: size.width > 900 ? 4 : 10,
-            child: Container(
-              height: double.infinity,
-              color: AppColors.surface,
-              child: SafeArea(
+            // Panel Kanan: Form Login Proporsional
+            Expanded(
+              flex: 6,
+              child: Container(
+                height: double.infinity,
+                color: AppColors.bg,
                 child: Center(
-                  child: FadeTransition(
-                    opacity: _fadeIn,
-                    child: SlideTransition(
-                      position: _slideUp,
-                      child: SingleChildScrollView(
-                        physics: const ClampingScrollPhysics(),
-                        keyboardDismissBehavior:
-                            ScrollViewKeyboardDismissBehavior.onDrag,
-                        padding: EdgeInsets.symmetric(
-                          horizontal: size.width > 900 ? 48 : (size.width < 400 ? 20 : 28),
-                          vertical: size.width < 600 ? 20 : 40,
-                        ),
-                        child: ConstrainedBox(
-                          constraints: const BoxConstraints(maxWidth: 420),
-                          child: Form(
-                            key: _formKey,
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                                // Mobile-only logo
-                                if (size.width <= 900) ...[
-                                  _MobileLogo(),
-                                  const SizedBox(height: AppSpacing.lg),
-                                ],
-
-                                // Section heading
-                                Text(
-                                  'Masuk ke Sistem',
-                                  style: (size.width < 400 ? AppTypography.h2 : AppTypography.h1).copyWith(
-                                    color: AppColors.textPrimary,
-                                    letterSpacing: -0.5,
-                                  ),
-                                ),
-                                const SizedBox(height: AppSpacing.xs),
-                                Text(
-                                  'Masukkan kredensial akun staf Anda untuk melanjutkan.',
-                                  style: AppTypography.body.copyWith(
-                                    color: AppColors.textSecondary,
-                                    fontSize: size.width < 400 ? 13.5 : 15,
-                                  ),
-                                ),
-
-                                const SizedBox(height: AppSpacing.xl),
-
-                                // Error Banner
-                                if (authState.errorMessage != null) ...[
-                                  _ErrorBanner(message: authState.errorMessage!),
-                                  const SizedBox(height: AppSpacing.md),
-                                ],
-
-                                // Username
-                                AppTextField(
-                                  label: 'Nama Pengguna',
-                                  hint: 'resepsionis01 atau manager01',
-                                  controller: _usernameController,
-                                  prefixIcon: Icons.person_outline_rounded,
-                                  validator: (v) => (v == null || v.trim().isEmpty)
-                                      ? 'Nama pengguna wajib diisi'
-                                      : null,
-                                ),
-
-                                const SizedBox(height: AppSpacing.md),
-
-                                // Password
-                                AppTextField(
-                                  label: 'Kata Sandi',
-                                  hint: 'Masukkan kata sandi',
-                                  controller: _passwordController,
-                                  isPassword: true,
-                                  prefixIcon: Icons.lock_outline_rounded,
-                                  validator: (v) =>
-                                      (v == null || v.isEmpty) ? 'Kata sandi wajib diisi' : null,
-                                  onSubmitted: (_) => _handleLogin(),
-                                ),
-
-                                const SizedBox(height: AppSpacing.xl),
-
-                                // Primary CTA
-                                AppButton(
-                                  label: 'Masuk ke Sistem',
-                                  variant: AppButtonVariant.primary,
-                                  icon: Icons.login_rounded,
-                                  isLoading: authState.isLoading,
-                                  onPressed: _handleLogin,
-                                ),
-
-                                const SizedBox(height: AppSpacing.xl),
-
-                                // Divider
-                                _DividerLabel(label: 'Akses Cepat Evaluasi'),
-
-                                const SizedBox(height: AppSpacing.md),
-
-                                // Quick login buttons (stacked on narrow mobile screens)
-                                if (size.width < 380) ...[
-                                  AppButton(
-                                    label: 'Resepsionis',
-                                    variant: AppButtonVariant.outline,
-                                    icon: Icons.badge_outlined,
-                                    onPressed: authState.isLoading
-                                        ? null
-                                        : () => _handleQuickLogin(UserRole.receptionist),
-                                  ),
-                                  const SizedBox(height: AppSpacing.sm),
-                                  AppButton(
-                                    label: 'Manajer Hotel',
-                                    variant: AppButtonVariant.secondary,
-                                    icon: Icons.admin_panel_settings_outlined,
-                                    onPressed: authState.isLoading
-                                        ? null
-                                        : () => _handleQuickLogin(UserRole.manager),
-                                  ),
-                                ] else ...[
-                                  Row(
-                                    children: [
-                                      Expanded(
-                                        child: AppButton(
-                                          label: 'Resepsionis',
-                                          variant: AppButtonVariant.outline,
-                                          icon: Icons.badge_outlined,
-                                          onPressed: authState.isLoading
-                                              ? null
-                                              : () => _handleQuickLogin(UserRole.receptionist),
-                                        ),
-                                      ),
-                                      const SizedBox(width: AppSpacing.sm),
-                                      Expanded(
-                                        child: AppButton(
-                                          label: 'Manajer Hotel',
-                                          variant: AppButtonVariant.secondary,
-                                          icon: Icons.admin_panel_settings_outlined,
-                                          onPressed: authState.isLoading
-                                              ? null
-                                              : () => _handleQuickLogin(UserRole.manager),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ],
-
-                                const SizedBox(height: AppSpacing.xl),
-
-                                // Footer note
-                                Text(
-                                  'Hotel Sinar Harapan — RedDoorz Partner\nSistem manajemen properti v1.0',
-                                  style: AppTypography.caption.copyWith(
-                                    color: AppColors.textDisabled,
-                                  ),
-                                  textAlign: TextAlign.center,
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.symmetric(horizontal: 48, vertical: 36),
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 420),
+                      child: _buildFormCard(context, authState, isDesktop: true),
                     ),
                   ),
                 ),
               ),
             ),
+          ],
+        ),
+      );
+    }
+
+    // Layar Tablet / Mobile
+    return Scaffold(
+      backgroundColor: AppColors.bg,
+      body: SafeArea(
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 420),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _MobileBrandHeader(),
+                  const SizedBox(height: AppSpacing.md),
+                  _buildFormCard(context, authState, isDesktop: false),
+                  const SizedBox(height: AppSpacing.lg),
+                  Text(
+                    'Hotel Sinar Harapan · Frontdesk PMS v1.0',
+                    style: AppTextStyles.caption.copyWith(color: AppColors.textSecondary),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
+            ),
           ),
-        ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFormCard(
+    BuildContext context,
+    AuthState authState, {
+    required bool isDesktop,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(28),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: AppRadius.rounded,
+        border: Border.all(color: AppColors.border, width: 1),
+      ),
+      child: Form(
+        key: _formKey,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              'Masuk ke Sistem',
+              style: AppTextStyles.titleMedium.copyWith(
+                color: AppColors.brandNavyDark,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'Masukkan akun staf untuk membuka sistem PMS.',
+              style: AppTextStyles.bodyMedium.copyWith(
+                color: AppColors.textSecondary,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.lg),
+
+            // Inline Error Banner
+            if (authState.errorMessage != null) ...[
+              _ErrorBanner(message: authState.errorMessage!),
+              const SizedBox(height: AppSpacing.md),
+            ],
+
+            // Input Nama Pengguna
+            AppTextField(
+              label: 'Nama Pengguna',
+              hint: 'Contoh: resepsionis01',
+              controller: _usernameController,
+              prefixIcon: Icons.person_outline_rounded,
+              validator: (v) => (v == null || v.trim().isEmpty)
+                  ? 'Nama pengguna wajib diisi'
+                  : null,
+            ),
+            const SizedBox(height: AppSpacing.md),
+
+            // Input Kata Sandi
+            AppTextField(
+              label: 'Kata Sandi',
+              hint: 'Masukkan kata sandi staf',
+              controller: _passwordController,
+              isPassword: true,
+              prefixIcon: Icons.lock_outline_rounded,
+              validator: (v) =>
+                  (v == null || v.isEmpty) ? 'Kata sandi wajib diisi' : null,
+              onSubmitted: (_) => _handleLogin(),
+            ),
+            const SizedBox(height: AppSpacing.lg),
+
+            // Tombol Utama Masuk
+            AppButton(
+              label: 'Masuk ke Sistem',
+              variant: AppButtonVariant.primary,
+              icon: Icons.login_rounded,
+              isLoading: authState.isLoading,
+              onPressed: _handleLogin,
+            ),
+
+            // Akses Cepat Evaluasi (Hanya aktif dalam Mode Pengembangan / kDebugMode)
+            if (kDebugMode) ...[
+              const SizedBox(height: AppSpacing.lg),
+              const _DividerLabel(label: 'Mode Pengembangan'),
+              const SizedBox(height: AppSpacing.sm),
+              Row(
+                children: [
+                  Expanded(
+                    child: AppButton(
+                      label: 'Resepsionis',
+                      variant: AppButtonVariant.outline,
+                      icon: Icons.badge_outlined,
+                      onPressed: authState.isLoading
+                          ? null
+                          : () => _handleQuickLogin(UserRole.receptionist),
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                  Expanded(
+                    child: AppButton(
+                      label: 'Manajer Hotel',
+                      variant: AppButtonVariant.outline,
+                      icon: Icons.admin_panel_settings_outlined,
+                      onPressed: authState.isLoading
+                          ? null
+                          : () => _handleQuickLogin(UserRole.manager),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ],
+        ),
       ),
     );
   }
 }
 
-// ── Left Panel (desktop only) ──────────────────────────────────────
+// ── Left Panel (Desktop) ───────────────────────────────────────────
 class _LeftBrandPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: AppColors.navy900,
-      padding: const EdgeInsets.all(48),
+      color: AppColors.brandNavyDark,
+      padding: const EdgeInsets.symmetric(horizontal: 48, vertical: 48),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Logo mark
+          // Logo Mark SH
           Container(
-            width: 52,
-            height: 52,
+            width: 48,
+            height: 48,
             decoration: BoxDecoration(
-              color: AppColors.orange600,
-              borderRadius: AppRadius.roundedLg,
+              color: AppColors.brandOrange,
+              borderRadius: AppRadius.rounded,
             ),
             child: Center(
               child: Text(
                 'SH',
-                style: AppTypography.h2.copyWith(
+                style: AppTextStyles.titleMedium.copyWith(
                   color: AppColors.white,
                   fontWeight: FontWeight.w800,
-                  fontSize: 22,
+                  fontSize: 20,
                   letterSpacing: -0.5,
                 ),
               ),
             ),
           ),
-
-          const SizedBox(height: AppSpacing.md),
-
+          const SizedBox(height: 20),
           Text(
-            'Hotel Sinar\nHarapan',
-            style: AppTypography.h1.copyWith(
+            'Hotel Sinar Harapan',
+            style: AppTextStyles.titleLarge.copyWith(
               color: AppColors.white,
-              fontSize: 30,
               fontWeight: FontWeight.w700,
-              height: 1.25,
             ),
           ),
-
-          const SizedBox(height: AppSpacing.sm),
-
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: BoxDecoration(
-              color: AppColors.orange100,
-              borderRadius: AppRadius.roundedSm,
-              border: Border.all(color: AppColors.orange800.withAlpha(80)),
-            ),
-            child: Text(
-              'RedDoorz Partner',
-              style: AppTypography.overline.copyWith(
-                color: AppColors.orange800,
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
-                letterSpacing: 0.4,
-              ),
+          const SizedBox(height: 6),
+          Text(
+            'Frontdesk & Property Management System',
+            style: AppTextStyles.bodyMedium.copyWith(
+              color: AppColors.brandNavyTint.withAlpha(220),
             ),
           ),
-
           const Spacer(),
-
-          // Feature highlights
-          ..._buildFeatureList(),
-
+          // Modul Operasional Hotel
+          _ModuleItem(
+            icon: Icons.hotel_rounded,
+            title: 'Operasional Kamar',
+            subtitle: 'Pemantauan status 3 kamar, check-in, dan check-out cepat.',
+          ),
+          const SizedBox(height: 18),
+          _ModuleItem(
+            icon: Icons.document_scanner_outlined,
+            title: 'Verifikasi Tamu & KTP',
+            subtitle: 'Pencatatan data identitas tamu walk-in maupun channel.',
+          ),
+          const SizedBox(height: 18),
+          _ModuleItem(
+            icon: Icons.query_stats_rounded,
+            title: 'Laporan Keuangan',
+            subtitle: 'Rekapitulasi pendapatan harian dan riwayat transaksi.',
+          ),
           const Spacer(),
-
-          // Bottom tagline
+          // Status Keamanan Sistem
           Container(
-            padding: const EdgeInsets.all(AppSpacing.md),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
             decoration: BoxDecoration(
-              color: AppColors.navy700,
-              borderRadius: AppRadius.roundedLg,
-              border: Border.all(color: AppColors.white.withAlpha(20)),
+              color: AppColors.brandNavy,
+              borderRadius: AppRadius.rounded,
+              border: Border.all(color: AppColors.white.withAlpha(20), width: 1),
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            child: Row(
               children: [
-                Text(
-                  'Frontdesk & Property Management System',
-                  style: AppTypography.bodySm.copyWith(
-                    color: AppColors.white,
-                    fontWeight: FontWeight.w600,
-                  ),
+                const Icon(
+                  Icons.lock_outline_rounded,
+                  size: 16,
+                  color: AppColors.white,
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  'OCR KTP · Reservasi Walk-in & RedDoorz · Check-in/out · Laporan Manajer',
-                  style: AppTypography.caption.copyWith(
-                    color: AppColors.navy100.withAlpha(180),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    'Koneksi lokal aman untuk staf hotel.',
+                    style: AppTextStyles.caption.copyWith(
+                      color: AppColors.white,
+                      fontSize: 12,
+                    ),
                   ),
                 ),
               ],
@@ -375,82 +345,113 @@ class _LeftBrandPanel extends StatelessWidget {
       ),
     );
   }
-
-  List<Widget> _buildFeatureList() {
-    final features = [
-      (Icons.grid_view_rounded, 'Manajemen kamar real-time'),
-      (Icons.document_scanner_outlined, 'Scan KTP otomatis dengan OCR'),
-      (Icons.receipt_long_outlined, 'Invoice & laporan terformat'),
-      (Icons.chat_bubble_outline_rounded, 'Notifikasi WhatsApp otomatis'),
-    ];
-
-    return features.map((f) => Padding(
-      padding: const EdgeInsets.only(bottom: 16),
-      child: Row(
-        children: [
-          Container(
-            width: 36,
-            height: 36,
-            decoration: BoxDecoration(
-              color: AppColors.navy700,
-              borderRadius: AppRadius.roundedMd,
-            ),
-            child: Icon(f.$1, size: 18, color: AppColors.navy100),
-          ),
-          const SizedBox(width: 14),
-          Text(
-            f.$2,
-            style: AppTypography.body.copyWith(
-              color: AppColors.navy100.withAlpha(200),
-            ),
-          ),
-        ],
-      ),
-    )).toList();
-  }
 }
 
-// ── Mobile Logo ────────────────────────────────────────────────────
-class _MobileLogo extends StatelessWidget {
+class _ModuleItem extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String subtitle;
+
+  const _ModuleItem({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+  });
+
   @override
   Widget build(BuildContext context) {
     return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Container(
-          width: 44,
-          height: 44,
+          width: 36,
+          height: 36,
           decoration: BoxDecoration(
-            color: AppColors.navy900,
-            borderRadius: AppRadius.roundedLg,
+            color: AppColors.brandNavy,
+            borderRadius: AppRadius.rounded,
           ),
-          child: Center(
-            child: Text(
-              'SH',
-              style: AppTypography.h3.copyWith(
-                color: AppColors.white,
-                fontWeight: FontWeight.w800,
-                fontSize: 18,
-              ),
-            ),
-          ),
+          child: Icon(icon, size: 18, color: AppColors.white),
         ),
-        const SizedBox(width: 12),
+        const SizedBox(width: 14),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Hotel Sinar Harapan',
-                style: AppTypography.h3.copyWith(color: AppColors.textPrimary),
+                title,
+                style: AppTextStyles.titleSmall.copyWith(
+                  color: AppColors.white,
+                  fontSize: 14,
+                ),
               ),
+              const SizedBox(height: 2),
               Text(
-                'RedDoorz Partner · PMS',
-                style: AppTypography.caption,
+                subtitle,
+                style: AppTextStyles.caption.copyWith(
+                  color: AppColors.brandNavyTint.withAlpha(180),
+                  fontSize: 12,
+                ),
               ),
             ],
           ),
         ),
       ],
+    );
+  }
+}
+
+// ── Mobile Header ───────────────────────────────────────────────────
+class _MobileBrandHeader extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.brandNavyDark,
+        borderRadius: AppRadius.rounded,
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: AppColors.brandOrange,
+              borderRadius: AppRadius.rounded,
+            ),
+            child: Center(
+              child: Text(
+                'SH',
+                style: AppTextStyles.titleSmall.copyWith(
+                  color: AppColors.white,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Hotel Sinar Harapan',
+                  style: AppTextStyles.titleSmall.copyWith(
+                    color: AppColors.white,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                Text(
+                  'Frontdesk PMS',
+                  style: AppTextStyles.caption.copyWith(
+                    color: AppColors.brandNavyTint.withAlpha(200),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -463,23 +464,26 @@ class _ErrorBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
         color: AppColors.errorBg,
-        borderRadius: AppRadius.roundedMd,
-        border: Border.all(color: AppColors.error.withAlpha(60)),
+        borderRadius: AppRadius.rounded,
+        border: Border.all(color: AppColors.error.withAlpha(80), width: 1),
       ),
       child: Row(
         children: [
-          const Icon(Icons.error_outline_rounded,
-              size: 16, color: AppColors.errorText),
-          const SizedBox(width: AppSpacing.sm),
+          const Icon(
+            Icons.error_outline_rounded,
+            size: 18,
+            color: AppColors.errorText,
+          ),
+          const SizedBox(width: 10),
           Expanded(
             child: Text(
               message,
-              style: AppTypography.bodySm.copyWith(
+              style: AppTextStyles.caption.copyWith(
                 color: AppColors.errorText,
-                fontWeight: FontWeight.w500,
+                fontWeight: FontWeight.w600,
               ),
             ),
           ),
@@ -500,11 +504,13 @@ class _DividerLabel extends StatelessWidget {
       children: [
         const Expanded(child: Divider()),
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12),
+          padding: const EdgeInsets.symmetric(horizontal: 10),
           child: Text(
             label.toUpperCase(),
-            style: AppTypography.overline.copyWith(
+            style: AppTextStyles.caption.copyWith(
               color: AppColors.textDisabled,
+              fontWeight: FontWeight.w600,
+              fontSize: 11,
             ),
           ),
         ),
