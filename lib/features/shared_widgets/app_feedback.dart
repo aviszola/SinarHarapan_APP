@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../app/theme.dart';
+import '../auth/domain/user_model.dart';
+import 'app_logout_dialog.dart';
 
 enum FeedbackType {
   success,
@@ -11,6 +13,15 @@ enum FeedbackType {
 /// Helper profesional untuk Toast dan Notifikasi Melayang (SaaS Modern)
 class AppFeedback {
   AppFeedback._();
+
+  /// Menampilkan dialog konfirmasi logout eksplisit dan profesional (anti AI-slop)
+  static Future<bool> showLogout(
+    BuildContext context, {
+    UserModel? user,
+  }) {
+    return AppLogoutDialog.show(context, user: user);
+  }
+
 
   static void showSuccess(
     BuildContext context, {
