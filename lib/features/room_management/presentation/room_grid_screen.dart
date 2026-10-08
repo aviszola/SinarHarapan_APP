@@ -2,7 +2,9 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../../app/theme.dart';
+import '../../../theme/app_colors.dart';
+import '../../../theme/app_text_styles.dart';
+import '../../../theme/app_spacing.dart';
 import '../../../core/config/app_config.dart';
 import '../../auth/presentation/auth_controller.dart';
 import '../../checkout/presentation/check_out_dialog.dart';
@@ -10,6 +12,7 @@ import '../../reservation/presentation/active_guests_modal.dart';
 import '../../reservation/presentation/check_in_modal.dart';
 import '../../shared_widgets/app_feedback.dart';
 import '../../shared_widgets/app_header.dart';
+import '../../shared_widgets/empty_state.dart';
 import '../domain/room_model.dart';
 import 'room_card.dart';
 import 'room_controller.dart';
@@ -60,13 +63,13 @@ class _RoomGridScreenState extends ConsumerState<RoomGridScreen> {
     final confirmed = await AppConfirmationDialog.show(
       context,
       icon: Icons.cleaning_services_rounded,
-      iconColor: AppColors.orange600,
-      iconBgColor: AppColors.orange50,
+      iconColor: AppColors.statusDirty,
+      iconBgColor: AppColors.statusDirtyBg,
       title: 'Pembersihan Kamar ${room.roomNumber}',
       message:
-          'Kamar baru saja ditinggalkan tamu. Apakah housekeeping sudah selesai dan kamar siap dihuni kembali?',
-      confirmLabel: 'Tandai Tersedia',
-      cancelLabel: 'Nanti',
+          'Kamar baru saja selesai dihuni tamu. Apakah staf pembersih sudah selesai menyiapkan kamar untuk tamu berikutnya?',
+      confirmLabel: 'Tandai Siap Huni',
+      cancelLabel: 'Nanti Dulu',
     );
 
     if (confirmed == true && mounted) {
@@ -75,7 +78,7 @@ class _RoomGridScreenState extends ConsumerState<RoomGridScreen> {
         AppFeedback.showSuccess(
           context,
           title: 'Kamar Siap Huni',
-          message: 'Kamar ${room.roomNumber} kini berstatus Available.',
+          message: 'Kamar ${room.roomNumber} telah diperbarui ke status Tersedia.',
         );
       }
     }
@@ -87,9 +90,9 @@ class _RoomGridScreenState extends ConsumerState<RoomGridScreen> {
       icon: Icons.construction_rounded,
       iconColor: AppColors.textDisabled,
       iconBgColor: AppColors.surface,
-      title: 'Kamar ${room.roomNumber} Dalam Perbaikan',
+      title: 'Kamar ${room.roomNumber} Dalam Perawatan',
       message:
-          'Kamar ini sedang dinonaktifkan untuk renovasi/pemeliharaan. Pengaturan status dapat dilakukan melalui panel Manajer.',
+          'Kamar ini sedang dalam proses pemeliharaan fasilitas. Pengaturan kamar dapat diubah melalui menu pengaturan manajer.',
       cancelLabel: 'Tutup',
     );
   }
@@ -104,9 +107,18 @@ class _RoomGridScreenState extends ConsumerState<RoomGridScreen> {
   }
 
   void _handleLogout() async {
-    await ref.read(authStateProvider.notifier).logout();
-    if (mounted) {
-      context.go('/login');
+    final user = ref.read(authStateProvider).user;
+    final confirmed = await AppFeedback.showLogout(context, user: user);
+    if (confirmed && mounted) {
+      await ref.read(authStateProvider.notifier).logout();
+      if (mounted) {
+        context.go('/login');
+        AppFeedback.showInfo(
+          context,
+          title: 'Sesi Berakhir',
+          message: 'Anda telah berhasil keluar dari sistem.',
+        );
+      }
     }
   }
 
@@ -114,8 +126,9 @@ class _RoomGridScreenState extends ConsumerState<RoomGridScreen> {
   Widget build(BuildContext context) {
     final authState = ref.watch(authStateProvider);
     final userName  = authState.user?.fullName ?? 'Resepsionis';
-    final userRole  = authState.user?.isManager == true ? 'MANAGER' : 'RECEPTIONIST';
+    final userRole  = authState.user?.isManager == true ? 'MANAJER' : 'RESEPSIONIS';
 
+    final roomListAsync = ref.watch(roomListProvider);
     final filteredRooms = ref.watch(filteredRoomsProvider);
     final stats         = ref.watch(roomStatsProvider);
     final occupiedCount = stats[RoomStatusType.occupied] ?? 0;
@@ -123,22 +136,27 @@ class _RoomGridScreenState extends ConsumerState<RoomGridScreen> {
     return Scaffold(
       backgroundColor: AppColors.bg,
       body: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Banner DATA CONTOH jika mode mock aktif
+          // Banner Peringatan Mock Mode jika aktif
           if (AppConfig.useMock)
             Container(
               width: double.infinity,
-              color: AppColors.orange800,
+              color: AppColors.brandOrange,
               padding: const EdgeInsets.symmetric(vertical: 4),
               child: const Center(
                 child: Text(
-                  '⚠️ DATA CONTOH (MOCK MODE AKTIF) - JANGAN GUNAKAN UNTUK TRANSAKSI ASLI',
-                  style: TextStyle(color: AppColors.white, fontWeight: FontWeight.bold, fontSize: 11),
+                  'Mode Data Simulasi Aktif',
+                  style: TextStyle(
+                    color: AppColors.white,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 11,
+                  ),
                 ),
               ),
             ),
 
-          // ── Top Bar ─────────────────────────────────────────────
+          // Header Resepsionis Rapi
           ReceptionistTopBar(
             userName: userName,
             userRole: userRole,
@@ -146,38 +164,55 @@ class _RoomGridScreenState extends ConsumerState<RoomGridScreen> {
             fixedTime: widget.fixedTime,
             onLogout: _handleLogout,
             onOpenActiveGuests: _handleOpenActiveGuests,
-            // Sembunyikan portal Manajer jika login sebagai Resepsionis
             onOpenManagerPortal: authState.user?.isManager == true
                 ? () => context.go('/manager/dashboard')
                 : null,
           ),
 
-          // ── Unified Command Bar (Stats + Filters + Refresh) ───────
+          // Bar Filter & Ringkasan Okupansi
           RoomFilterBar(
             onRefresh: _handleRefresh,
             isRefreshing: _isRefreshing,
           ),
 
-          // ── Room Grid ─────────────────────────────────────────────
+          // Area Grid Kamar dengan Padding Konsisten
           Expanded(
-            child: RefreshIndicator(
-              onRefresh: _handleRefresh,
-              color: AppColors.navy700,
-              child: filteredRooms.isEmpty
-                  ? Center(
-                      child: AppEmptyState(
-                        icon: Icons.meeting_room_outlined,
-                        title: 'Tidak Ada Kamar Ditemukan',
-                        message:
-                            'Tidak ada unit kamar yang sesuai dengan filter atau kata kunci saat ini.',
-                        actionLabel: 'Reset Filter',
-                        onAction: () {
-                          ref.read(roomFilterProvider.notifier).state =
-                              const RoomFilterState();
+            child: roomListAsync.when(
+              loading: () => const _RoomGridSkeleton(),
+              error: (err, _) => Center(
+                child: EmptyStateWidget(
+                  icon: Icons.error_outline_rounded,
+                  title: 'Gagal Memuat Data Kamar',
+                  message: 'Terjadi kendala saat menghubungkan ke database: $err',
+                  action: ElevatedButton(
+                    onPressed: _handleRefresh,
+                    child: const Text('Coba Lagi'),
+                  ),
+                ),
+              ),
+              data: (_) {
+                if (filteredRooms.isEmpty) {
+                  return Center(
+                    child: EmptyStateWidget(
+                      icon: Icons.meeting_room_outlined,
+                      title: 'Tidak Ada Kamar yang Sesuai',
+                      message: 'Tidak ada unit kamar yang cocok dengan kriteria pencarian atau filter yang dipilih.',
+                      action: OutlinedButton(
+                        onPressed: () {
+                          ref.read(roomFilterProvider.notifier).state = const RoomFilterState();
                         },
+                        child: const Text('Reset Filter'),
                       ),
-                    )
-                  : _RoomGrid(rooms: filteredRooms, onTap: _handleRoomTap),
+                    ),
+                  );
+                }
+
+                return _RoomGrid(
+                  rooms: filteredRooms,
+                  onTap: _handleRoomTap,
+                  onRefresh: _handleRefresh,
+                );
+              },
             ),
           ),
         ],
@@ -186,86 +221,78 @@ class _RoomGridScreenState extends ConsumerState<RoomGridScreen> {
   }
 }
 
-// ── Room Grid (Organized by Floor) ───────────────────────────────────
+// ── Room Grid Berdasarkan Lantai dengan MaxCrossAxisExtent ───────────
 class _RoomGrid extends StatelessWidget {
   final List<RoomModel> rooms;
   final void Function(RoomModel) onTap;
+  final Future<void> Function() onRefresh;
 
-  const _RoomGrid({required this.rooms, required this.onTap});
+  const _RoomGrid({
+    required this.rooms,
+    required this.onTap,
+    required this.onRefresh,
+  });
 
   @override
   Widget build(BuildContext context) {
-    // Group rooms by floor for clear physical spatial awareness
+    // Kelompokkan kamar berdasarkan lantai
     final Map<int, List<RoomModel>> roomsByFloor = {};
     for (final r in rooms) {
       roomsByFloor.putIfAbsent(r.floor, () => []).add(r);
     }
     final sortedFloors = roomsByFloor.keys.toList()..sort();
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        int cols = 4;
-        if (constraints.maxWidth >= 1500) {
-          cols = 5;
-        } else if (constraints.maxWidth >= 1150) {
-          cols = 4;
-        } else if (constraints.maxWidth >= 820) {
-          cols = 3;
-        } else if (constraints.maxWidth >= 540) {
-          cols = 2;
-        } else {
-          cols = 1;
-        }
+    return RefreshIndicator(
+      onRefresh: onRefresh,
+      color: AppColors.brandNavy,
+      child: ListView.builder(
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+        itemCount: sortedFloors.length,
+        itemBuilder: (context, floorIndex) {
+          final floor = sortedFloors[floorIndex];
+          final floorRooms = roomsByFloor[floor]!;
 
-        final isCompact = constraints.maxWidth < 600;
-
-        return ListView.builder(
-          padding: EdgeInsets.symmetric(
-            horizontal: isCompact ? AppSpacing.sm + 4 : AppSpacing.lg,
-            vertical: AppSpacing.sm,
-          ),
-          physics: const BouncingScrollPhysics(),
-          itemCount: sortedFloors.length,
-          itemBuilder: (context, floorIndex) {
-            final floor = sortedFloors[floorIndex];
-            final floorRooms = roomsByFloor[floor]!;
-
-            return Column(
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 24),
+            child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // Header Lantai
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(4, 14, 4, 10),
+                  padding: const EdgeInsets.only(bottom: 12),
                   child: Row(
                     children: [
                       Container(
                         padding: const EdgeInsets.all(4),
-                        decoration: const BoxDecoration(
-                          color: AppColors.navy100,
+                        decoration: BoxDecoration(
+                          color: AppColors.brandNavyTint,
                           borderRadius: AppRadius.roundedSm,
                         ),
-                        child: const Icon(Icons.layers_rounded, size: 14, color: AppColors.navy700),
+                        child: const Icon(
+                          Icons.layers_rounded,
+                          size: 14,
+                          color: AppColors.brandNavy,
+                        ),
                       ),
                       const SizedBox(width: 8),
                       Text(
                         'Lantai $floor',
-                        style: AppTypography.h3.copyWith(
-                          fontSize: 15,
+                        style: AppTextStyles.titleSmall.copyWith(
+                          color: AppColors.brandNavyDark,
                           fontWeight: FontWeight.w700,
-                          color: AppColors.navy900,
                         ),
                       ),
                       const SizedBox(width: 8),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                         decoration: BoxDecoration(
-                          color: AppColors.navy50,
+                          color: AppColors.bgSubtle,
                           borderRadius: AppRadius.roundedSm,
-                          border: Border.all(color: AppColors.border),
+                          border: Border.all(color: AppColors.border, width: 1),
                         ),
                         child: Text(
-                          '${floorRooms.length} Unit',
-                          style: const TextStyle(
-                            fontSize: 11,
+                          '${floorRooms.length} Kamar',
+                          style: AppTextStyles.caption.copyWith(
                             fontWeight: FontWeight.w600,
                             color: AppColors.textSecondary,
                           ),
@@ -274,14 +301,16 @@ class _RoomGrid extends StatelessWidget {
                     ],
                   ),
                 ),
+
+                // Grid Kamar Responsif (MaxCrossAxisExtent 280-300px)
                 GridView.builder(
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
-                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: cols,
-                    crossAxisSpacing: isCompact ? 8 : AppSpacing.md,
-                    mainAxisSpacing: isCompact ? 8 : AppSpacing.md,
-                    mainAxisExtent: isCompact ? (cols == 1 ? 120 : 134) : 132,
+                  gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                    maxCrossAxisExtent: 290,
+                    mainAxisExtent: 156,
+                    crossAxisSpacing: 14,
+                    mainAxisSpacing: 14,
                   ),
                   itemCount: floorRooms.length,
                   itemBuilder: (context, index) {
@@ -291,13 +320,73 @@ class _RoomGrid extends StatelessWidget {
                     );
                   },
                 ),
-                const SizedBox(height: 8),
               ],
-            );
-          },
-        );
-      },
+            ),
+          );
+        },
+      ),
     );
   }
 }
 
+// ── Skeleton Loader untuk Transisi Halus ────────────────────────────
+class _RoomGridSkeleton extends StatelessWidget {
+  const _RoomGridSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: const [
+              SkeletonBox(width: 80, height: 20),
+              SizedBox(width: 8),
+              SkeletonBox(width: 50, height: 16),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Expanded(
+            child: GridView.builder(
+              physics: const NeverScrollableScrollPhysics(),
+              gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                maxCrossAxisExtent: 290,
+                mainAxisExtent: 156,
+                crossAxisSpacing: 14,
+                mainAxisSpacing: 14,
+              ),
+              itemCount: 3,
+              itemBuilder: (context, index) {
+                return Container(
+                  decoration: BoxDecoration(
+                    color: AppColors.surface,
+                    borderRadius: AppRadius.rounded,
+                    border: Border.all(color: AppColors.border, width: 1),
+                  ),
+                  padding: const EdgeInsets.all(14),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: const [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          SkeletonBox(width: 70, height: 16),
+                          SkeletonBox(width: 55, height: 18),
+                        ],
+                      ),
+                      SkeletonBox(width: 120, height: 14),
+                      SkeletonBox(width: double.infinity, height: 32),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}

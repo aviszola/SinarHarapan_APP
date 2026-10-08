@@ -85,7 +85,7 @@ class _ReceptionistTopBarState extends State<ReceptionistTopBar> {
               _VDivider(),
               SizedBox(width: isTablet ? AppSpacing.md : AppSpacing.lg),
 
-              // ── Live Date + Clock ──────────────────────────────────
+              // ── Tanggal & Waktu Terbaca Rapi ──────────────────────
               Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -94,17 +94,18 @@ class _ReceptionistTopBarState extends State<ReceptionistTopBar> {
                     timeStr,
                     style: GoogleFonts.plusJakartaSans(
                       color: AppColors.white,
-                      fontSize: isTablet ? 16 : 19,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: 1.5,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 0.5,
+                      fontFeatures: const [FontFeature.tabularFigures()],
                     ),
                   ),
                   if (!isTablet)
                     Text(
                       dateStr,
-                      style: AppTypography.caption.copyWith(
-                        color: AppColors.navy100.withAlpha(160),
-                        fontSize: 12,
+                      style: AppTextStyles.caption.copyWith(
+                        color: AppColors.brandNavyTint.withAlpha(180),
+                        fontSize: 11.5,
                       ),
                     ),
                 ],
@@ -212,15 +213,15 @@ class _BrandMark extends StatelessWidget {
         Container(
           width: 38,
           height: 38,
-          decoration: BoxDecoration(
-            color: AppColors.orange600,
-            borderRadius: AppRadius.roundedMd,
+          decoration: const BoxDecoration(
+            color: AppColors.brandOrange,
+            borderRadius: AppRadius.roundedSm,
           ),
           child: const Center(
             child: Text(
               'SH',
               style: TextStyle(
-                color: AppColors.navy900,
+                color: AppColors.white,
                 fontWeight: FontWeight.w800,
                 fontSize: 16,
                 letterSpacing: -0.3,
@@ -236,42 +237,18 @@ class _BrandMark extends StatelessWidget {
             children: [
               Text(
                 'Sinar Harapan',
-                style: AppTypography.h3.copyWith(
+                style: AppTextStyles.titleSmall.copyWith(
                   color: AppColors.white,
                   fontWeight: FontWeight.w700,
-                  fontSize: 16,
+                  fontSize: 15,
                 ),
               ),
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 6,
-                      vertical: 2,
-                    ),
-                    decoration: const BoxDecoration(
-                      color: AppColors.orange100,
-                      borderRadius: AppRadius.roundedSm,
-                    ),
-                    child: const Text(
-                      'RedDoorz',
-                      style: TextStyle(
-                        color: AppColors.orange800,
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 0.3,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 5),
-                  Text(
-                    'PMS',
-                    style: AppTypography.caption.copyWith(
-                      color: AppColors.navy100.withAlpha(140),
-                      fontSize: 11,
-                    ),
-                  ),
-                ],
+              Text(
+                'PMS Frontdesk',
+                style: AppTextStyles.caption.copyWith(
+                  color: AppColors.brandNavyTint.withAlpha(180),
+                  fontSize: 11,
+                ),
               ),
             ],
           ),

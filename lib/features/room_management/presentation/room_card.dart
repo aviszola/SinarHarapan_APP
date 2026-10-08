@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import '../../../app/theme.dart';
+import '../../../theme/app_colors.dart';
+import '../../../theme/app_text_styles.dart';
+import '../../../theme/app_spacing.dart';
 import '../../shared_widgets/status_badge.dart';
 import '../domain/room_model.dart';
 
-/// Room Card — compact grid tile per design.md §6.2.
-/// Background: always white. Color accent: 4px left stripe only.
-/// Hover: border → navy500, light card shadow. No fill color changes.
+/// Kartu Kamar Hotel — Didesain ergonomis untuk kecepatan frontdesk.
+/// - Terisi: Nama tamu (ellipsis + tooltip), tanggal check-out, tombol Check-out.
+/// - Tersedia: Tipe kamar, harga per malam (tabular figures), tombol Check-in.
 class RoomCard extends StatefulWidget {
   final RoomModel room;
   final VoidCallback onTap;
@@ -21,8 +23,8 @@ class RoomCard extends StatefulWidget {
   State<RoomCard> createState() => _RoomCardState();
 }
 
-class _RoomCardState extends State<RoomCard> with SingleTickerProviderStateMixin {
-  bool _hovered = false;
+class _RoomCardState extends State<RoomCard> {
+  bool _isHovered = false;
 
   static final _currFmt = NumberFormat.currency(
     locale: 'id_ID',
@@ -30,349 +32,350 @@ class _RoomCardState extends State<RoomCard> with SingleTickerProviderStateMixin
     decimalDigits: 0,
   );
 
-  Color get _stripeColor {
-    switch (widget.room.status) {
-      case RoomStatusType.available:
-        return AppColors.statusAvailable;
-      case RoomStatusType.occupied:
-        return AppColors.statusOccupied;
-      case RoomStatusType.dirty:
-        return AppColors.statusDirty;
-      case RoomStatusType.maintenance:
-        return AppColors.statusMaintenance;
-    }
+  Color get _statusStripeColor {
+    return switch (widget.room.status) {
+      RoomStatusType.available => AppColors.statusAvailable,
+      RoomStatusType.occupied => AppColors.statusOccupied,
+      RoomStatusType.dirty => AppColors.statusDirty,
+      RoomStatusType.maintenance => AppColors.statusMaintenance,
+    };
   }
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final isCompact = constraints.maxWidth < 210;
+    final room = widget.room;
 
-        return MouseRegion(
-          onEnter: (_) => setState(() => _hovered = true),
-          onExit:  (_) => setState(() => _hovered = false),
-          cursor: widget.room.isMaintenance
-              ? SystemMouseCursors.basic
-              : SystemMouseCursors.click,
-          child: GestureDetector(
-            onTap: widget.onTap,
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 160),
-              curve: Curves.easeOut,
-              decoration: BoxDecoration(
-                color: AppColors.surface,
-                borderRadius: AppRadius.roundedLg,
-                border: Border.all(
-                  color: _hovered ? AppColors.navy500 : AppColors.border,
-                  width: _hovered ? 1.5 : 1,
-                ),
-                boxShadow: _hovered ? AppElevation.card : AppElevation.none,
+    return MouseRegion(
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      cursor: room.isMaintenance ? SystemMouseCursors.basic : SystemMouseCursors.click,
+      child: GestureDetector(
+        onTap: widget.onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 140),
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: AppRadius.rounded,
+            border: Border.all(
+              color: _isHovered ? AppColors.brandNavy : AppColors.border,
+              width: _isHovered ? 1.5 : 1,
+            ),
+            boxShadow: _isHovered ? AppElevation.subtle : AppElevation.none,
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Garis Status 4px di Sisi Kiri
+              Container(
+                width: 4,
+                color: _statusStripeColor,
               ),
-              clipBehavior: Clip.antiAlias,
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  // 4px status stripe — only color signal (design.md §6.2)
-                  AnimatedContainer(
-                    duration: const Duration(milliseconds: 160),
-                    width: _hovered ? 5 : 4,
-                    color: _stripeColor,
-                  ),
 
-                  // Card Body
-                  Expanded(
-                    child: Padding(
-                      padding: EdgeInsets.fromLTRB(
-                        isCompact ? 10 : 14,
-                        isCompact ? 10 : 12,
-                        isCompact ? 10 : 12,
-                        isCompact ? 10 : 12,
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+              // Konten Kartu
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      // Header Kartu: Nomor Kamar & Status Badge
+                      Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // Row 1: Room number + Status badge
-                          Row(
+                          Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              // Room number & type
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      widget.room.roomNumber,
-                                      style: AppTypography.h2.copyWith(
-                                        color: AppColors.navy900,
-                                        fontWeight: FontWeight.w800,
-                                        letterSpacing: -0.4,
-                                        fontSize: isCompact ? 18.5 : 21,
-                                      ),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                    const SizedBox(height: 2),
-                                    Text(
-                                      '${widget.room.roomType} · Lt. ${widget.room.floor}',
-                                      style: AppTypography.caption.copyWith(
-                                        color: AppColors.textSecondary,
-                                        fontSize: isCompact ? 11.5 : 12.5,
-                                      ),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ],
+                              Text(
+                                'Kamar ${room.roomNumber}',
+                                style: AppTextStyles.titleSmall.copyWith(
+                                  fontWeight: FontWeight.w700,
+                                  color: AppColors.brandNavyDark,
+                                  fontSize: 16,
                                 ),
                               ),
-
-                              const SizedBox(width: 4),
-                              StatusBadge(
-                                status: widget.room.status,
-                                compact: isCompact,
+                              const SizedBox(height: 2),
+                              Text(
+                                '${room.roomType} · Lt. ${room.floor}',
+                                style: AppTextStyles.caption.copyWith(
+                                  color: AppColors.textSecondary,
+                                ),
                               ),
                             ],
                           ),
-
-                          // Row 2: Contextual info & Quick Action Pill
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              Expanded(child: _buildContextRow(isCompact: isCompact)),
-                              const SizedBox(width: 6),
-                              _buildActionPill(isCompact: isCompact),
-                            ],
-                          ),
+                          StatusBadge(status: room.status),
                         ],
                       ),
+
+                      const SizedBox(height: 10),
+
+                      // Konten Spesifik Status
+                      Expanded(
+                        child: _buildStatusSpecificContent(room),
+                      ),
+
+                      const SizedBox(height: 8),
+
+                      // Tombol Aksi Cepat
+                      _buildActionButton(room),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStatusSpecificContent(RoomModel room) {
+    if (room.isOccupied) {
+      final guestName = room.activeGuestName ?? 'Tamu Tanpa Nama';
+      final isRedDoorz = room.bookingSource == 'REDDOORZ';
+      final checkOutStr = room.expectedCheckOutTime != null
+          ? DateFormat('d MMM, HH:mm', 'id').format(room.expectedCheckOutTime!)
+          : 'Belum ditentukan';
+
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          // Nama Tamu dengan Ellipsis & Tooltip
+          Row(
+            children: [
+              const Icon(
+                Icons.person_outline_rounded,
+                size: 15,
+                color: AppColors.textSecondary,
+              ),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Tooltip(
+                  message: guestName,
+                  child: Text(
+                    guestName,
+                    style: AppTextStyles.bodyMediumMedium.copyWith(
+                      color: AppColors.textPrimary,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ),
+              if (isRedDoorz) ...[
+                const SizedBox(width: 4),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: AppColors.brandOrangeTint,
+                    borderRadius: AppRadius.roundedSm,
+                  ),
+                  child: Text(
+                    'RD',
+                    style: AppTextStyles.badge.copyWith(
+                      color: AppColors.brandOrange,
+                      fontSize: 10,
                     ),
                   ),
-                ],
-              ),
-            ),
+                ),
+              ],
+            ],
           ),
-        );
-      },
-    );
-  }
-
-  Widget _buildActionPill({bool isCompact = false}) {
-    final padding = EdgeInsets.symmetric(
-      horizontal: isCompact ? 7 : 9,
-      vertical: isCompact ? 3.5 : 4.5,
-    );
-    final fontSize = isCompact ? 10.5 : 11.5;
-    final iconSize = isCompact ? 12.0 : 14.0;
-
-    switch (widget.room.status) {
-      case RoomStatusType.available:
-        return AnimatedContainer(
-          duration: const Duration(milliseconds: 150),
-          padding: padding,
-          decoration: BoxDecoration(
-            color: _hovered ? AppColors.orange600 : AppColors.navy100,
-            borderRadius: AppRadius.roundedSm,
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
+          const SizedBox(height: 4),
+          // Tanggal Check-out
+          Row(
             children: [
-              Icon(
-                Icons.add_rounded,
-                size: iconSize,
-                color: _hovered ? AppColors.navy900 : AppColors.navy700,
+              const Icon(
+                Icons.event_outlined,
+                size: 14,
+                color: AppColors.textMuted,
               ),
-              const SizedBox(width: 3),
-              Text(
-                'Check-in',
-                style: TextStyle(
-                  fontSize: fontSize,
-                  fontWeight: FontWeight.w700,
-                  color: _hovered ? AppColors.navy900 : AppColors.navy700,
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  'Keluar: $checkOutStr',
+                  style: AppTextStyles.caption.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
             ],
           ),
-        );
-
-      case RoomStatusType.occupied:
-        return AnimatedContainer(
-          duration: const Duration(milliseconds: 150),
-          padding: padding,
-          decoration: BoxDecoration(
-            color: _hovered ? AppColors.occupiedText : AppColors.occupiedBg,
-            borderRadius: AppRadius.roundedSm,
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                Icons.logout_rounded,
-                size: iconSize,
-                color: _hovered ? AppColors.white : AppColors.occupiedText,
-              ),
-              const SizedBox(width: 3),
-              Text(
-                'Check-out',
-                style: TextStyle(
-                  fontSize: fontSize,
-                  fontWeight: FontWeight.w700,
-                  color: _hovered ? AppColors.white : AppColors.occupiedText,
-                ),
-              ),
-            ],
-          ),
-        );
-
-      case RoomStatusType.dirty:
-        return AnimatedContainer(
-          duration: const Duration(milliseconds: 150),
-          padding: padding,
-          decoration: BoxDecoration(
-            color: _hovered ? AppColors.dirtyText : AppColors.dirtyBg,
-            borderRadius: AppRadius.roundedSm,
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                Icons.check_rounded,
-                size: iconSize,
-                color: _hovered ? AppColors.white : AppColors.dirtyText,
-              ),
-              const SizedBox(width: 3),
-              Text(
-                'Bersihkan',
-                style: TextStyle(
-                  fontSize: fontSize,
-                  fontWeight: FontWeight.w700,
-                  color: _hovered ? AppColors.white : AppColors.dirtyText,
-                ),
-              ),
-            ],
-          ),
-        );
-
-      case RoomStatusType.maintenance:
-        return Container(
-          padding: EdgeInsets.symmetric(horizontal: isCompact ? 6 : 8, vertical: isCompact ? 3 : 4),
-          decoration: BoxDecoration(
-            color: AppColors.maintenanceBg,
-            borderRadius: AppRadius.roundedSm,
-          ),
-          child: Text(
-            'Perbaikan',
-            style: TextStyle(
-              fontSize: fontSize,
-              fontWeight: FontWeight.w600,
-              color: AppColors.maintenanceText,
-            ),
-          ),
-        );
+        ],
+      );
     }
-  }
 
-  Widget _buildContextRow({bool isCompact = false}) {
-    final fontSize = isCompact ? 11.5 : 13.0;
-
-    if (widget.room.isOccupied && widget.room.activeGuestName != null) {
-      final isRD = widget.room.bookingSource == 'REDDOORZ';
-      return Row(
+    if (room.isAvailable) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            isRD ? Icons.hotel_class_rounded : Icons.person_rounded,
-            size: isCompact ? 12 : 14,
-            color: isRD ? AppColors.orange800 : AppColors.navy500,
-          ),
-          const SizedBox(width: 4),
-          Expanded(
-            child: Text(
-              widget.room.activeGuestName!,
-              style: AppTypography.bodySm.copyWith(
-                fontWeight: FontWeight.w700,
-                fontSize: fontSize,
-                color: AppColors.textPrimary,
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
+          Text(
+            'Tarif Per Malam',
+            style: AppTextStyles.caption.copyWith(
+              color: AppColors.textMuted,
             ),
           ),
-          if (isRD) ...[
-            const SizedBox(width: 3),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
-              decoration: const BoxDecoration(
-                color: AppColors.orange100,
-                borderRadius: AppRadius.roundedSm,
+          const SizedBox(height: 2),
+          Text(
+            _currFmt.format(room.basePricePerNight),
+            style: AppTextStyles.numberLarge.copyWith(
+              color: AppColors.brandNavy,
+              fontSize: 17,
+            ),
+          ),
+        ],
+      );
+    }
+
+    if (room.isDirty) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Row(
+            children: [
+              const Icon(
+                Icons.cleaning_services_outlined,
+                size: 15,
+                color: AppColors.statusDirtyText,
               ),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  'Perlu pembersihan staf',
+                  style: AppTextStyles.caption.copyWith(
+                    color: AppColors.statusDirtyText,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 2),
+          Text(
+            'Kamar selesai dihuni tamu.',
+            style: AppTextStyles.caption.copyWith(color: AppColors.textSecondary),
+          ),
+        ],
+      );
+    }
+
+    // Status Maintenance
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Row(
+          children: [
+            const Icon(
+              Icons.construction_outlined,
+              size: 15,
+              color: AppColors.statusMaintenanceText,
+            ),
+            const SizedBox(width: 6),
+            Expanded(
               child: Text(
-                'RD',
-                style: TextStyle(
-                  color: AppColors.orange800,
-                  fontSize: 9.0,
-                  fontWeight: FontWeight.w800,
+                'Perawatan fasilitas',
+                style: AppTextStyles.caption.copyWith(
+                  color: AppColors.statusMaintenanceText,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
             ),
           ],
-        ],
-      );
-    }
+        ),
+        const SizedBox(height: 2),
+        Text(
+          'Tidak dapat dipesan sementara.',
+          style: AppTextStyles.caption.copyWith(color: AppColors.textSecondary),
+        ),
+      ],
+    );
+  }
 
-    if (widget.room.isDirty) {
-      return Row(
-        children: [
-          Icon(Icons.cleaning_services_outlined,
-              size: isCompact ? 12 : 14, color: AppColors.dirtyText),
-          const SizedBox(width: 4),
-          Expanded(
-            child: Text(
-              'Perlu dibersihkan',
-              style: AppTypography.caption.copyWith(
-                color: AppColors.dirtyText,
-                fontWeight: FontWeight.w600,
-                fontSize: isCompact ? 11 : 12,
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
+  Widget _buildActionButton(RoomModel room) {
+    if (room.isAvailable) {
+      return SizedBox(
+        width: double.infinity,
+        height: 34,
+        child: ElevatedButton.icon(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppColors.brandOrange,
+            foregroundColor: AppColors.white,
+            padding: EdgeInsets.zero,
+            shape: const RoundedRectangleBorder(
+              borderRadius: AppRadius.roundedSm,
             ),
           ),
-        ],
+          onPressed: widget.onTap,
+          icon: const Icon(Icons.login_rounded, size: 14),
+          label: const Text('Check-in', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+        ),
       );
     }
 
-    if (widget.room.isMaintenance) {
-      return Row(
-        children: [
-          Icon(Icons.build_circle_outlined,
-              size: isCompact ? 12 : 14, color: AppColors.textDisabled),
-          const SizedBox(width: 4),
-          Expanded(
-            child: Text(
-              'Fasilitas off',
-              style: AppTypography.caption.copyWith(
-                color: AppColors.textDisabled,
-                fontSize: isCompact ? 11 : 12,
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
+    if (room.isOccupied) {
+      return SizedBox(
+        width: double.infinity,
+        height: 34,
+        child: OutlinedButton.icon(
+          style: OutlinedButton.styleFrom(
+            foregroundColor: AppColors.statusOccupiedText,
+            side: const BorderSide(color: AppColors.statusOccupied),
+            backgroundColor: AppColors.statusOccupiedBg.withAlpha(80),
+            padding: EdgeInsets.zero,
+            shape: const RoundedRectangleBorder(
+              borderRadius: AppRadius.roundedSm,
             ),
           ),
-        ],
+          onPressed: widget.onTap,
+          icon: const Icon(Icons.logout_rounded, size: 14),
+          label: const Text('Check-out', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+        ),
       );
     }
 
-    // Available: show price
-    return Text(
-      '${_currFmt.format(widget.room.basePricePerNight)}/mlm',
-      style: AppTypography.bodySm.copyWith(
-        color: AppColors.navy700,
-        fontWeight: FontWeight.w700,
-        fontSize: fontSize,
+    if (room.isDirty) {
+      return SizedBox(
+        width: double.infinity,
+        height: 34,
+        child: OutlinedButton.icon(
+          style: OutlinedButton.styleFrom(
+            foregroundColor: AppColors.statusDirtyText,
+            side: const BorderSide(color: AppColors.statusDirty),
+            padding: EdgeInsets.zero,
+            shape: const RoundedRectangleBorder(
+              borderRadius: AppRadius.roundedSm,
+            ),
+          ),
+          onPressed: widget.onTap,
+          icon: const Icon(Icons.check_rounded, size: 14),
+          label: const Text('Tandai Siap', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+        ),
+      );
+    }
+
+    return SizedBox(
+      width: double.infinity,
+      height: 34,
+      child: OutlinedButton(
+        style: OutlinedButton.styleFrom(
+          foregroundColor: AppColors.textDisabled,
+          side: const BorderSide(color: AppColors.border),
+          padding: EdgeInsets.zero,
+          shape: const RoundedRectangleBorder(
+            borderRadius: AppRadius.roundedSm,
+          ),
+        ),
+        onPressed: widget.onTap,
+        child: const Text('Detail Status', style: TextStyle(fontSize: 12)),
       ),
-      maxLines: 1,
-      overflow: TextOverflow.ellipsis,
     );
   }
 }
