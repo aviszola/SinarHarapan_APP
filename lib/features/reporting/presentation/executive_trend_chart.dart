@@ -29,12 +29,85 @@ class _ExecutiveTrendChartState extends State<ExecutiveTrendChart> {
   ChartMetric _selectedMetric = ChartMetric.revenue;
   ChartPeriod _selectedPeriod = ChartPeriod.week;
 
+  List<Map<String, dynamic>> _deriveRevenueSeries(
+      List<Map<String, dynamic>> transactions, int daysCount) {
+    if (transactions.isEmpty) return [];
+
+    final Map<String, double> revenueByDate = {};
+
+    for (final tx in transactions) {
+      final status = (tx['paymentStatus'] ?? tx['payment_status'] ?? '')
+          .toString()
+          .toUpperCase();
+      if (status.isNotEmpty &&
+          status != 'PAID' &&
+          status != 'LUNAS' &&
+          status != 'BERHASIL') {
+        continue;
+      }
+
+      final rawDate = tx['createdAt'] ??
+          tx['created_at'] ??
+          tx['checkInTime'] ??
+          tx['check_in_time'] ??
+          tx['date'];
+      if (rawDate == null) continue;
+
+      DateTime? dt;
+      if (rawDate is DateTime) {
+        dt = rawDate;
+      } else {
+        dt = DateTime.tryParse(rawDate.toString());
+      }
+      if (dt == null) continue;
+
+      final key = DateFormat('yyyy-MM-dd').format(dt);
+      final rawAmt =
+          tx['totalAmount'] ?? tx['total_amount'] ?? tx['amount'] ?? 0;
+      final amt = (rawAmt is num)
+          ? rawAmt.toDouble()
+          : (double.tryParse(rawAmt.toString()) ?? 0.0);
+
+      revenueByDate[key] = (revenueByDate[key] ?? 0.0) + amt;
+    }
+
+    if (revenueByDate.isEmpty) return [];
+
+    final sortedKeys = revenueByDate.keys.toList()..sort();
+    final selectedKeys = sortedKeys.length > daysCount
+        ? sortedKeys.sublist(sortedKeys.length - daysCount)
+        : sortedKeys;
+
+    return selectedKeys.map((k) {
+      final dt = DateTime.parse(k);
+      final label = DateFormat('d MMM', 'id').format(dt);
+      return {
+        'label': label,
+        'value': revenueByDate[k] ?? 0.0,
+        'date': k,
+      };
+    }).toList();
+  }
+
   @override
   Widget build(BuildContext context) {
-    // Hotel Sinar Harapan memiliki 3 kamar.
-    // Jika tidak ada data time-series backend yang valid, tampilkan empty state jujur.
-    final data = widget.realTimeseriesData;
-    final hasRealData = data != null && data.isNotEmpty;
+    final rawData = widget.realTimeseriesData ?? [];
+    final daysCount = _selectedPeriod == ChartPeriod.week ? 7 : 30;
+
+    List<Map<String, dynamic>> chartData = [];
+    bool hasData = false;
+    String emptyMessage = '';
+
+    if (_selectedMetric == ChartMetric.revenue) {
+      chartData = _deriveRevenueSeries(rawData, daysCount);
+      hasData = chartData.isNotEmpty;
+      emptyMessage =
+          'Belum ada transaksi pendapatan pada periode ${_selectedPeriod == ChartPeriod.week ? "7 hari terakhir" : "30 hari berjalan"}. Rekapitulasi dapat dilihat pada kartu di atas.';
+    } else {
+      hasData = false;
+      emptyMessage =
+          'Data histori tingkat hunian per hari membutuhkan agregasi snapshot harian dari backend. Rata-rata hunian bulan ini tetap dapat dipantau pada kartu ringkasan di atas.';
+    }
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -109,13 +182,14 @@ class _ExecutiveTrendChartState extends State<ExecutiveTrendChart> {
           // Area Grafik atau Empty State Jujur
           SizedBox(
             height: 220,
-            child: hasRealData
-                ? _buildCleanLineChart(data)
-                : const EmptyStateWidget(
+            child: hasData
+                ? _buildCleanLineChart(chartData)
+                : EmptyStateWidget(
                     icon: Icons.show_chart_rounded,
-                    title: 'Data Tren Belum Tersedia',
-                    message:
-                        'Backend belum mengembalikan log transaksi harian untuk rentang waktu ini. Laporan ringkasan tetap dapat dilihat pada kartu di atas.',
+                    title: _selectedMetric == ChartMetric.revenue
+                        ? 'Data Pendapatan Belum Ada'
+                        : 'Histori Okupansi Belum Tersedia',
+                    message: emptyMessage,
                   ),
           ),
         ],
@@ -126,17 +200,26 @@ class _ExecutiveTrendChartState extends State<ExecutiveTrendChart> {
   Widget _buildCleanLineChart(List<Map<String, dynamic>> data) {
     // Garis tegas 2px, tanpa gradient tebal, horizontal gridlines halus saja
     final spots = <FlSpot>[];
+    double maxVal = 0;
     for (int i = 0; i < data.length; i++) {
       final val = (data[i]['value'] as num?)?.toDouble() ?? 0.0;
+      if (val > maxVal) maxVal = val;
       spots.add(FlSpot(i.toDouble(), val));
     }
 
+    final maxY = maxVal > 0 ? (maxVal * 1.25) : 1000000.0;
+    final chartSpots = spots.length == 1
+        ? [spots[0], FlSpot(1, spots[0].y)]
+        : spots;
+
     return LineChart(
       LineChartData(
+        minY: 0,
+        maxY: maxY,
         gridData: FlGridData(
           show: true,
           drawVerticalLine: false,
-          horizontalInterval: _selectedMetric == ChartMetric.revenue ? 500000 : 33.3,
+          horizontalInterval: _selectedMetric == ChartMetric.revenue ? (maxY / 4) : 25.0,
           getDrawingHorizontalLine: (value) => const FlLine(
             color: AppColors.border,
             strokeWidth: 1,
@@ -194,7 +277,7 @@ class _ExecutiveTrendChartState extends State<ExecutiveTrendChart> {
         ),
         lineBarsData: [
           LineChartBarData(
-            spots: spots,
+            spots: chartSpots,
             isCurved: false, // Garis tegas, bukan spline meliuk tidak wajar
             color: AppColors.brandNavy,
             barWidth: 2,

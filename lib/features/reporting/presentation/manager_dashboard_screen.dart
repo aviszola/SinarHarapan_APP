@@ -21,14 +21,25 @@ import '../domain/report_export_service.dart';
 import 'executive_trend_chart.dart';
 
 class ManagerDashboardScreen extends ConsumerStatefulWidget {
-  const ManagerDashboardScreen({super.key});
+  final int initialTabIndex;
+  final Map<String, dynamic>? initialSummaryData;
+  final List<AuditLogModel>? initialAuditLogs;
+  final List<Map<String, dynamic>>? initialTransactions;
+
+  const ManagerDashboardScreen({
+    super.key,
+    this.initialTabIndex = 0,
+    this.initialSummaryData,
+    this.initialAuditLogs,
+    this.initialTransactions,
+  });
 
   @override
   ConsumerState<ManagerDashboardScreen> createState() => _ManagerDashboardScreenState();
 }
 
 class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen> {
-  int _activeNavIndex = 0; // 0: Ringkasan, 1: Inventaris, 2: Laporan, 3: Audit Trail
+  late int _activeNavIndex; // 0: Ringkasan, 1: Inventaris, 2: Laporan, 3: Audit Trail
 
   final ReportingRepository _reportingRepo = ReportingRepository();
   List<AuditLogModel> _auditLogs = [];
@@ -43,16 +54,28 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
   @override
   void initState() {
     super.initState();
+    _activeNavIndex = widget.initialTabIndex;
+    if (widget.initialSummaryData != null) {
+      _summaryData = widget.initialSummaryData;
+    }
+    if (widget.initialAuditLogs != null) {
+      _auditLogs = widget.initialAuditLogs!;
+    }
+    if (widget.initialTransactions != null) {
+      _transactions = widget.initialTransactions!;
+    }
     _loadAllDashboardData();
   }
 
   Future<void> _loadAllDashboardData() async {
     _lastUpdated = DateTime.now();
-    await Future.wait([
-      _loadSummary(),
-      _loadAuditLogs(),
-      _loadTransactions(),
-    ]);
+    if (widget.initialSummaryData == null && widget.initialAuditLogs == null && widget.initialTransactions == null) {
+      await Future.wait([
+        _loadSummary(),
+        _loadAuditLogs(),
+        _loadTransactions(),
+      ]);
+    }
   }
 
   Future<void> _loadSummary() async {
@@ -352,7 +375,7 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
                     color: AppColors.navy50,
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: AppRadius.rounded,
                     border: Border.all(color: AppColors.border),
                   ),
                   child: Column(
@@ -630,13 +653,13 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
   String _getTabTitle(int index, {bool isMobile = false}) {
     switch (index) {
       case 0:
-        return isMobile ? 'Analytics' : 'Ringkasan';
+        return 'Ringkasan';
       case 1:
-        return isMobile ? 'Inventaris' : 'Inventaris Kamar';
+        return 'Inventaris Kamar';
       case 2:
-        return isMobile ? 'Laporan' : 'Laporan Keuangan';
+        return 'Laporan Keuangan';
       case 3:
-        return isMobile ? 'Aktivitas' : 'Catatan Aktivitas';
+        return 'Catatan Aktivitas';
       default:
         return 'Dashboard Manajer';
     }
@@ -677,7 +700,8 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
     final occMonthlyRate = summary?['occupancyRate'] != null
         ? '${summary!['occupancyRate']}%'
         : '0%';
-    final todayOccPercent = totalRooms > 0 ? (occupiedRooms / totalRooms * 100).round() : 0;
+    final operationalRooms = rooms.where((r) => !r.isMaintenance).length;
+    final todayOccPercent = operationalRooms > 0 ? (occupiedRooms / operationalRooms * 100).round() : 0;
 
     final rawRevenue = summary?['totalNetRevenue'];
     final num? parsedRevenue = rawRevenue == null
@@ -733,12 +757,12 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
             final kpi2 = KpiTile(
               label: 'Okupansi Hari Ini',
               value: '$todayOccPercent%',
-              subtitle: '$occupiedRooms dari $totalRooms kamar terisi saat ini',
+              subtitle: '$occupiedRooms dari $operationalRooms kamar operasional aktif',
             );
             final kpi3 = KpiTile(
-              label: 'Rata-rata Okupansi Bulanan',
+              label: 'Okupansi Bulan Ini',
               value: occMonthlyRate,
-              subtitle: 'Akumulasi bulan berjalan',
+              subtitle: 'Penyebut: $operationalRooms kamar aktif × hari periode',
             );
             final kpi4 = KpiTile(
               label: 'Kedatangan Tamu (Check-In)',
@@ -827,7 +851,7 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    'Perbandingan tamu dari mitra RedDoorz vs walk-in offline',
+                    'Perbandingan pemesanan Mitra RedDoorz vs Langsung',
                     style: AppTextStyles.caption.copyWith(color: AppColors.textSecondary),
                   ),
                   const SizedBox(height: AppSpacing.md),
@@ -860,7 +884,7 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
                               color: AppColors.brandNavy,
                               alignment: Alignment.center,
                               child: Text(
-                                totalChannels > 0 ? 'Walk-in $walkInPct%' : 'Walk-in',
+                                totalChannels > 0 ? 'Langsung $walkInPct%' : 'Langsung',
                                 style: const TextStyle(
                                   color: AppColors.white,
                                   fontSize: 11,
@@ -898,7 +922,7 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Walk-in Langsung', style: AppTextStyles.caption),
+                          Text('Pemesanan Langsung', style: AppTextStyles.caption),
                           Text(
                             walkInCount != null
                                 ? '$walkInCount Transaksi · ${currencyFormatter.format(walkInNominal)}'
@@ -1428,11 +1452,17 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
                               final tx = _transactions[i];
                               final invoice = tx['invoiceNumber']?.toString() ?? '-';
                               final roomNum = tx['roomNumber']?.toString() ?? '-';
-                              final guest = tx['guestName']?.toString() ?? 'Tamu';
-                              final channel = tx['bookingSource']?.toString() ?? 'WALK_IN';
+                              final guest = tx['guestName'] != null && tx['guestName'].toString().trim().isNotEmpty
+                                  ? tx['guestName'].toString()
+                                  : '-';
+                              final channel = tx['bookingSource'] != null && tx['bookingSource'].toString().trim().isNotEmpty
+                                  ? tx['bookingSource'].toString()
+                                  : '-';
                               final rawAmt = tx['totalAmount'] ?? tx['amount'] ?? 0;
                               final amt = rawAmt is num ? rawAmt : num.tryParse(rawAmt.toString()) ?? 0;
-                              final status = tx['paymentStatus']?.toString().toUpperCase() ?? 'LUNAS';
+                              final status = tx['paymentStatus'] != null && tx['paymentStatus'].toString().trim().isNotEmpty
+                                  ? tx['paymentStatus'].toString().toUpperCase()
+                                  : '-';
 
                               return Padding(
                                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -1539,7 +1569,14 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
                         children: [
                           const Icon(Icons.history_toggle_off_rounded, size: 22, color: AppColors.navy900),
                           const SizedBox(width: 8),
-                          Text('Rekam Jejak Operasional & Audit Trail', style: AppTypography.h3),
+                          Expanded(
+                            child: Text(
+                              'Rekam Jejak Operasional & Audit Trail',
+                              style: AppTypography.h3,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
                         ],
                       ),
                       const SizedBox(height: 4),
@@ -1649,7 +1686,7 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
                                   padding: const EdgeInsets.all(7),
                                   decoration: BoxDecoration(
                                     color: parsed.iconBg,
-                                    borderRadius: BorderRadius.circular(8),
+                                    borderRadius: AppRadius.rounded,
                                   ),
                                   child: Icon(parsed.icon, size: 16, color: parsed.iconColor),
                                 ),
@@ -1751,7 +1788,7 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
                             height: 38,
                             decoration: BoxDecoration(
                               color: parsed.iconBg,
-                              borderRadius: BorderRadius.circular(10),
+                              borderRadius: AppRadius.rounded,
                             ),
                             child: Icon(parsed.icon, size: 19, color: parsed.iconColor),
                           ),
