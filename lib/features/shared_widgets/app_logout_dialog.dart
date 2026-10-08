@@ -53,9 +53,9 @@ class AppLogoutDialog extends StatelessWidget {
       surfaceTintColor: Colors.transparent,
       elevation: 0,
       insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: const BorderSide(color: AppColors.border, width: 1.5),
+      shape: const RoundedRectangleBorder(
+        borderRadius: AppRadius.rounded,
+        side: BorderSide(color: AppColors.border, width: 1),
       ),
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 440),
@@ -74,7 +74,7 @@ class AppLogoutDialog extends StatelessWidget {
                     height: 44,
                     decoration: BoxDecoration(
                       color: AppColors.errorBg,
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: AppRadius.rounded,
                       border: Border.all(
                         color: AppColors.error.withAlpha(50),
                         width: 1,

@@ -314,7 +314,7 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
             autoCloseTimer?.cancel();
           },
           child: AlertDialog(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            shape: const RoundedRectangleBorder(borderRadius: AppRadius.rounded),
             title: Row(
               children: [
                 Container(
@@ -1171,7 +1171,7 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
                                   color: room.isMaintenance ? AppColors.statusAvailable : AppColors.textSecondary,
                                 ),
                                 label: Text(
-                                  room.isMaintenance ? 'Aktifkan' : 'Maintenance',
+                                  room.isMaintenance ? 'Aktifkan' : 'Perawatan',
                                   style: const TextStyle(fontSize: 12),
                                 ),
                                 onPressed: room.isOccupied ? null : () => _handleToggleMaintenance(room),
@@ -1284,7 +1284,7 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
                                       ),
                                       const SizedBox(width: 4),
                                       AppButton(
-                                        label: room.isMaintenance ? 'Aktifkan' : 'Maintenance',
+                                        label: room.isMaintenance ? 'Aktifkan' : 'Perawatan',
                                         variant: AppButtonVariant.outline,
                                         icon: Icons.build_circle_outlined,
                                         onPressed: room.isOccupied ? null : () => _handleToggleMaintenance(room),

@@ -284,9 +284,9 @@ class AppConfirmationDialog extends StatelessWidget {
 
     return Dialog(
       backgroundColor: AppColors.surface,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: const BorderSide(color: AppColors.border),
+      shape: const RoundedRectangleBorder(
+        borderRadius: AppRadius.rounded,
+        side: BorderSide(color: AppColors.border, width: 1),
       ),
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 420),

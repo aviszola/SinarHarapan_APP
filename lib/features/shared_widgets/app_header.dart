@@ -793,60 +793,40 @@ class _SidebarNavItemState extends State<_SidebarNavItem> {
           margin: const EdgeInsets.only(bottom: 2),
           decoration: BoxDecoration(
             color: isActive
-                ? AppColors.navy700.withAlpha(180)
+                ? AppColors.brandNavy
                 : (_hovered
-                      ? AppColors.navy700.withAlpha(80)
-                      : Colors.transparent),
-            borderRadius: AppRadius.roundedMd,
+                    ? AppColors.brandNavy.withAlpha(100)
+                    : Colors.transparent),
+            borderRadius: AppRadius.rounded,
           ),
-          child: Stack(
-            children: [
-              // Active indicator stripe (left 3px, per design.md)
-              if (isActive)
-                Positioned(
-                  left: 0,
-                  top: 8,
-                  bottom: 8,
-                  child: Container(
-                    width: 3,
-                    decoration: BoxDecoration(
-                      color: AppColors.orange600,
-                      borderRadius: AppRadius.roundedFull,
-                    ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 14,
+              vertical: 10,
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  isActive ? widget.activeIcon : widget.inactiveIcon,
+                  size: 19,
+                  color: isActive
+                      ? AppColors.white
+                      : (_hovered ? AppColors.white.withAlpha(200) : AppColors.brandNavyTint.withAlpha(160)),
+                ),
+                const SizedBox(width: 12),
+                Text(
+                  widget.label,
+                  style: AppTextStyles.bodyMedium.copyWith(
+                    color: isActive
+                        ? AppColors.white
+                        : (_hovered ? AppColors.white.withAlpha(200) : AppColors.brandNavyTint.withAlpha(180)),
+                    fontWeight: isActive
+                        ? FontWeight.w600
+                        : FontWeight.w400,
                   ),
                 ),
-
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 10,
-                ),
-                child: Row(
-                  children: [
-                    Icon(
-                      isActive ? widget.activeIcon : widget.inactiveIcon,
-                      size: 21,
-                      color: isActive
-                          ? AppColors.white
-                          : (_hovered ? AppColors.white.withAlpha(180) : AppColors.white.withAlpha(100)),
-                    ),
-                    const SizedBox(width: 12),
-                    Text(
-                      widget.label,
-                      style: AppTypography.body.copyWith(
-                        color: isActive
-                            ? AppColors.white
-                            : (_hovered ? AppColors.white.withAlpha(180) : AppColors.white.withAlpha(140)),
-                        fontWeight: isActive
-                            ? FontWeight.w600
-                            : FontWeight.w400,
-                        fontSize: 15,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

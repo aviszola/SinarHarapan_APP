@@ -78,7 +78,7 @@ class _RoomCrudDialogState extends ConsumerState<RoomCrudDialog> {
                 .toList();
 
             return AlertDialog(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              shape: const RoundedRectangleBorder(borderRadius: AppRadius.rounded),
               title: Row(
                 children: [
                   Container(
