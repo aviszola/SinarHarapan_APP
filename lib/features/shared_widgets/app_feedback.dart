@@ -154,7 +154,7 @@ class AppFeedback {
         ),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: AppRadius.rounded,
           side: BorderSide(color: borderColor, width: 1.5),
         ),
         content: Row(
@@ -164,7 +164,7 @@ class AppFeedback {
               padding: const EdgeInsets.all(7),
               decoration: BoxDecoration(
                 color: iconBg,
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: AppRadius.rounded,
               ),
               child: Icon(icon, size: 18, color: iconColor),
             ),
@@ -337,7 +337,7 @@ class AppConfirmationDialog extends StatelessWidget {
                       side: const BorderSide(color: AppColors.border),
                       foregroundColor: AppColors.navy900,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: AppRadius.rounded,
                       ),
                     ),
                     onPressed: () => Navigator.of(context).pop(false),
@@ -351,7 +351,7 @@ class AppConfirmationDialog extends StatelessWidget {
                       foregroundColor: AppColors.surface,
                       elevation: 0,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: AppRadius.rounded,
                       ),
                     ),
                     onPressed: () => Navigator.of(context).pop(true),
@@ -432,7 +432,7 @@ class AppEmptyState extends StatelessWidget {
                   side: const BorderSide(color: AppColors.border),
                   foregroundColor: AppColors.navy700,
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: AppRadius.rounded,
                   ),
                 ),
                 icon: const Icon(Icons.refresh_rounded, size: 16),
@@ -495,7 +495,7 @@ class AppInlineBanner extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
         color: bg,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: AppRadius.rounded,
         border: Border.all(color: border),
       ),
       child: Row(

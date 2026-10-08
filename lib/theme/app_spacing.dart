@@ -24,19 +24,19 @@ class AppRadius {
   /// Radius seragam 8px untuk seluruh card, modal, button, dan input
   static const double radius = 8.0;
   
-  /// Radius kecil untuk status badge / tags (6px)
-  static const double small = 6.0;
+  /// Radius kecil disamakan ke 8px sesuai aturan sistem
+  static const double small = 8.0;
 
-  // BorderRadius instances seragam
+  // BorderRadius instances seragam 8px
   static const BorderRadius rounded = BorderRadius.all(Radius.circular(radius));
-  static const BorderRadius roundedSm = BorderRadius.all(Radius.circular(small));
+  static const BorderRadius roundedSm = BorderRadius.all(Radius.circular(radius));
   static const BorderRadius roundedMd = BorderRadius.all(Radius.circular(radius));
   static const BorderRadius roundedLg = BorderRadius.all(Radius.circular(radius)); // Disamakan ke 8px
   static const BorderRadius roundedXl = BorderRadius.all(Radius.circular(radius)); // Disamakan ke 8px
   static const BorderRadius roundedFull = BorderRadius.all(Radius.circular(999.0));
 
   // Legacy compat
-  static const double sm = small;
+  static const double sm = radius;
   static const double md = radius;
   static const double lg = radius;
   static const double xl = radius;

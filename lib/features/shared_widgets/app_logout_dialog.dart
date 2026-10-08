@@ -133,7 +133,7 @@ class AppLogoutDialog extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                 decoration: BoxDecoration(
                   color: AppColors.bg,
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: AppRadius.rounded,
                   border: Border.all(color: AppColors.border, width: 1),
                 ),
                 child: Row(
@@ -190,7 +190,7 @@ class AppLogoutDialog extends StatelessWidget {
                       ),
                       decoration: BoxDecoration(
                         color: isManager ? AppColors.orange100 : AppColors.navy50,
-                        borderRadius: BorderRadius.circular(6),
+                        borderRadius: AppRadius.rounded,
                         border: Border.all(
                           color: isManager
                               ? AppColors.orange800.withAlpha(40)
@@ -221,7 +221,7 @@ class AppLogoutDialog extends StatelessWidget {
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
                   color: AppColors.navy50,
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: AppRadius.rounded,
                   border: Border.all(
                     color: AppColors.navy100,
                     width: 1,
@@ -269,7 +269,7 @@ class AppLogoutDialog extends StatelessWidget {
                             width: 1.5,
                           ),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius: AppRadius.rounded,
                           ),
                           padding: const EdgeInsets.symmetric(horizontal: 16),
                         ),
@@ -294,7 +294,7 @@ class AppLogoutDialog extends StatelessWidget {
                           foregroundColor: AppColors.white,
                           elevation: 0,
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius: AppRadius.rounded,
                           ),
                           padding: const EdgeInsets.symmetric(horizontal: 16),
                         ),

@@ -607,26 +607,32 @@ class ManagerSidebar extends StatelessWidget {
                               ),
                             ),
                             const SizedBox(width: 10),
-                            Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Sinar Harapan',
-                                  style: AppTypography.h3.copyWith(
-                                    color: AppColors.white,
-                                    fontSize: 15.5,
-                                    fontWeight: FontWeight.w700,
+                            Expanded(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Sinar Harapan',
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: AppTypography.h3.copyWith(
+                                      color: AppColors.white,
+                                      fontSize: 15.5,
+                                      fontWeight: FontWeight.w700,
+                                    ),
                                   ),
-                                ),
-                                Text(
-                                  'Manager Portal',
-                                  style: AppTypography.caption.copyWith(
-                                    color: AppColors.navy100.withAlpha(140),
-                                    fontSize: 11,
+                                  Text(
+                                    'Manager Portal',
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: AppTypography.caption.copyWith(
+                                      color: AppColors.navy100.withAlpha(140),
+                                      fontSize: 11,
+                                    ),
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
                           ],
                         ),
@@ -814,15 +820,19 @@ class _SidebarNavItemState extends State<_SidebarNavItem> {
                       : (_hovered ? AppColors.white.withAlpha(200) : AppColors.brandNavyTint.withAlpha(160)),
                 ),
                 const SizedBox(width: 12),
-                Text(
-                  widget.label,
-                  style: AppTextStyles.bodyMedium.copyWith(
-                    color: isActive
-                        ? AppColors.white
-                        : (_hovered ? AppColors.white.withAlpha(200) : AppColors.brandNavyTint.withAlpha(180)),
-                    fontWeight: isActive
-                        ? FontWeight.w600
-                        : FontWeight.w400,
+                Expanded(
+                  child: Text(
+                    widget.label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTextStyles.bodyMedium.copyWith(
+                      color: isActive
+                          ? AppColors.white
+                          : (_hovered ? AppColors.white.withAlpha(200) : AppColors.brandNavyTint.withAlpha(180)),
+                      fontWeight: isActive
+                          ? FontWeight.w600
+                          : FontWeight.w400,
+                    ),
                   ),
                 ),
               ],

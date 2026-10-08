@@ -308,7 +308,7 @@ class _RoomGrid extends StatelessWidget {
                   physics: const NeverScrollableScrollPhysics(),
                   gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
                     maxCrossAxisExtent: 290,
-                    mainAxisExtent: 156,
+                    mainAxisExtent: 184,
                     crossAxisSpacing: 14,
                     mainAxisSpacing: 14,
                   ),

@@ -145,7 +145,7 @@ class _ActiveGuestsModalState extends State<ActiveGuestsModal> {
                           switch (waStatus) {
                             case 'DELIVERED':
                             case 'READ':
-                              waColor = const Color(0xFF16A34A);
+                              waColor = AppColors.statusAvailable;
                               break;
                             case 'SENT':
                               waColor = AppColors.navy700;
@@ -185,7 +185,7 @@ class _ActiveGuestsModalState extends State<ActiveGuestsModal> {
                                             child: Text(
                                               room.roomNumber,
                                               style: const TextStyle(
-                                                color: Colors.white,
+                                                color: AppColors.white,
                                                 fontWeight: FontWeight.bold,
                                                 fontSize: 15,
                                               ),
@@ -197,11 +197,11 @@ class _ActiveGuestsModalState extends State<ActiveGuestsModal> {
                                               crossAxisAlignment: CrossAxisAlignment.start,
                                               children: [
                                                 Text(
-                                                  room.activeGuestName ?? 'Tamu',
+                                                  room.activeGuestName ?? '-',
                                                   style: AppTypography.bodySm.copyWith(fontWeight: FontWeight.w700),
                                                 ),
                                                 Text(
-                                                  'WA: ${room.activeGuestPhone ?? "-"} · ${room.bookingSource ?? "WALK_IN"}',
+                                                  'WA: ${room.activeGuestPhone ?? "-"} · ${room.bookingSource == "REDDOORZ" ? "RedDoorz" : "Langsung"}',
                                                   style: AppTypography.caption,
                                                 ),
                                               ],
@@ -209,7 +209,7 @@ class _ActiveGuestsModalState extends State<ActiveGuestsModal> {
                                           ),
                                           IconButton(
                                             tooltip: 'Chat WhatsApp Langsung',
-                                            icon: const Icon(Icons.chat_bubble_outline, color: Color(0xFF16A34A), size: 20),
+                                            icon: const Icon(Icons.chat_bubble_outline, color: AppColors.statusAvailable, size: 20),
                                             onPressed: () => _handleDirectWa(room),
                                           ),
                                         ],
@@ -230,7 +230,7 @@ class _ActiveGuestsModalState extends State<ActiveGuestsModal> {
                                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                                             decoration: BoxDecoration(
                                               color: waColor.withAlpha(20),
-                                              borderRadius: BorderRadius.circular(6),
+                                              borderRadius: AppRadius.roundedSm,
                                               border: Border.all(color: waColor.withAlpha(60)),
                                             ),
                                             child: Row(
@@ -302,7 +302,7 @@ class _ActiveGuestsModalState extends State<ActiveGuestsModal> {
                                         child: Text(
                                           room.roomNumber,
                                           style: const TextStyle(
-                                            color: Colors.white,
+                                            color: AppColors.white,
                                             fontWeight: FontWeight.bold,
                                             fontSize: 16,
                                           ),
@@ -317,13 +317,13 @@ class _ActiveGuestsModalState extends State<ActiveGuestsModal> {
                                         crossAxisAlignment: CrossAxisAlignment.start,
                                         children: [
                                           Text(
-                                            room.activeGuestName ?? 'Tamu',
+                                            room.activeGuestName ?? '-',
                                             style: AppTypography.bodySm.copyWith(fontWeight: FontWeight.w700),
                                             maxLines: 1,
                                             overflow: TextOverflow.ellipsis,
                                           ),
                                           Text(
-                                            'WA: ${room.activeGuestPhone ?? "-"} • ${room.bookingSource ?? "WALK_IN"}',
+                                            'WA: ${room.activeGuestPhone ?? "-"} • ${room.bookingSource == "REDDOORZ" ? "RedDoorz" : "Langsung"}',
                                             style: AppTypography.caption,
                                             maxLines: 1,
                                             overflow: TextOverflow.ellipsis,
@@ -360,7 +360,7 @@ class _ActiveGuestsModalState extends State<ActiveGuestsModal> {
                                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                                       decoration: BoxDecoration(
                                         color: waColor.withAlpha(20),
-                                        borderRadius: BorderRadius.circular(6),
+                                        borderRadius: AppRadius.roundedSm,
                                         border: Border.all(color: waColor.withAlpha(60)),
                                       ),
                                       child: Row(
@@ -383,7 +383,7 @@ class _ActiveGuestsModalState extends State<ActiveGuestsModal> {
 
                                     IconButton(
                                       tooltip: 'Buka Chat WhatsApp',
-                                      icon: const Icon(Icons.chat_bubble_outline, color: Color(0xFF16A34A)),
+                                      icon: const Icon(Icons.chat_bubble_outline, color: AppColors.statusAvailable),
                                       onPressed: () => _handleDirectWa(room),
                                     ),
                                     const SizedBox(width: AppSpacing.xs),

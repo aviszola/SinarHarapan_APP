@@ -363,22 +363,22 @@ class _CheckOutDialogState extends ConsumerState<CheckOutDialog> {
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 Text(
-                                  _currentRoom.activeGuestName ?? 'Tamu Walk-in',
+                                  _currentRoom.activeGuestName ?? 'Tidak tercatat',
                                   style: AppTypography.h3.copyWith(fontWeight: FontWeight.w700),
                                 ),
                                 Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                                   decoration: BoxDecoration(
                                     color: _currentRoom.bookingSource == 'REDDOORZ'
-                                        ? Colors.red.shade100
+                                        ? AppColors.brandOrangeTint
                                         : AppColors.navy100,
                                     borderRadius: AppRadius.roundedSm,
                                   ),
                                   child: Text(
-                                    _currentRoom.bookingSource ?? 'WALK_IN',
+                                    _currentRoom.bookingSource == 'REDDOORZ' ? 'RedDoorz' : 'Langsung',
                                     style: AppTypography.overline.copyWith(
                                       color: _currentRoom.bookingSource == 'REDDOORZ'
-                                          ? Colors.red.shade800
+                                          ? AppColors.brandOrange
                                           : AppColors.navy700,
                                     ),
                                   ),
@@ -536,7 +536,7 @@ class _CheckOutDialogState extends ConsumerState<CheckOutDialog> {
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                         decoration: BoxDecoration(
                           color: AppColors.whatsapp.withValues(alpha: 0.08),
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: AppRadius.rounded,
                           border: Border.all(
                             color: AppColors.statusAvailable.withValues(alpha: 0.3),
                           ),
@@ -617,7 +617,7 @@ class _CheckOutDialogState extends ConsumerState<CheckOutDialog> {
           height: 48,
           decoration: BoxDecoration(
             color: AppColors.surface,
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: AppRadius.rounded,
             border: Border.all(
               color: _isCustomLateFee ? AppColors.navy700 : AppColors.border,
               width: _isCustomLateFee ? 1.5 : 1,
@@ -630,7 +630,7 @@ class _CheckOutDialogState extends ConsumerState<CheckOutDialog> {
               isExpanded: true,
               icon: const Icon(Icons.keyboard_arrow_down_rounded, color: AppColors.navy700, size: 20),
               dropdownColor: AppColors.surface,
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: AppRadius.rounded,
               items: [
                 DropdownMenuItem<int>(
                   value: 0,
@@ -732,7 +732,7 @@ class _CheckOutDialogState extends ConsumerState<CheckOutDialog> {
           height: 48,
           decoration: BoxDecoration(
             color: AppColors.surface,
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: AppRadius.rounded,
             border: Border.all(
               color: _isCustomMinibarFee ? AppColors.navy700 : AppColors.border,
               width: _isCustomMinibarFee ? 1.5 : 1,
@@ -745,7 +745,7 @@ class _CheckOutDialogState extends ConsumerState<CheckOutDialog> {
               isExpanded: true,
               icon: const Icon(Icons.keyboard_arrow_down_rounded, color: AppColors.navy700, size: 20),
               dropdownColor: AppColors.surface,
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: AppRadius.rounded,
               items: [
                 DropdownMenuItem<int>(
                   value: 0,
@@ -867,7 +867,7 @@ class _CheckOutDialogState extends ConsumerState<CheckOutDialog> {
           height: 48,
           decoration: BoxDecoration(
             color: AppColors.surface,
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: AppRadius.rounded,
             border: Border.all(
               color: _isCustomDamageFee ? AppColors.navy700 : AppColors.border,
               width: _isCustomDamageFee ? 1.5 : 1,
@@ -880,7 +880,7 @@ class _CheckOutDialogState extends ConsumerState<CheckOutDialog> {
               isExpanded: true,
               icon: const Icon(Icons.keyboard_arrow_down_rounded, color: AppColors.navy700, size: 20),
               dropdownColor: AppColors.surface,
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: AppRadius.rounded,
               items: [
                 DropdownMenuItem<int>(
                   value: 0,
@@ -966,7 +966,7 @@ class _CheckOutDialogState extends ConsumerState<CheckOutDialog> {
       height: 44,
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: AppRadius.rounded,
         border: Border.all(color: AppColors.navy700, width: 1.5),
       ),
       padding: const EdgeInsets.symmetric(horizontal: 10),
