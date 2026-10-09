@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:sinarharapan_app/features/auth/domain/user_model.dart';
 import 'package:sinarharapan_app/features/shared_widgets/app_feedback.dart';
 import 'package:sinarharapan_app/features/shared_widgets/app_logout_dialog.dart';
+import 'package:sinarharapan_app/theme/app_icons.dart';
 
 void main() {
   group('AppLogoutDialog Anti-Slop Verification Tests', () {
@@ -39,7 +40,7 @@ void main() {
       // Verify Header
       expect(find.text('Keluar dari Sistem?'), findsOneWidget);
       expect(find.text('Konfirmasi pengakhiran sesi kerja aktif'), findsOneWidget);
-      expect(find.byIcon(Icons.logout_rounded), findsNWidgets(2)); // Header icon + button icon
+      expect(find.byIcon(AppIcons.logout), findsNWidgets(2)); // Header icon + button icon
 
       // Verify User Details Card
       expect(find.text('Siti Rahmawati'), findsOneWidget);
@@ -139,7 +140,7 @@ void main() {
       expect(find.byType(AppLogoutDialog), findsOneWidget);
 
       // Tap close icon button
-      await tester.tap(find.byIcon(Icons.close_rounded));
+      await tester.tap(find.byIcon(AppIcons.close));
       await tester.pumpAndSettle();
 
       expect(find.byType(AppLogoutDialog), findsNothing);

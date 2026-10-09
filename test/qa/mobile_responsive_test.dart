@@ -10,6 +10,7 @@ import 'package:sinarharapan_app/features/room_management/presentation/room_card
 import 'package:sinarharapan_app/features/room_management/presentation/room_filter_bar.dart';
 import 'package:sinarharapan_app/features/shared_widgets/app_header.dart';
 import 'package:sinarharapan_app/features/shared_widgets/metric_card.dart';
+import 'package:sinarharapan_app/theme/app_icons.dart';
 
 void main() {
   setUpAll(() async {
@@ -171,7 +172,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // Drawer hamburger button must be visible on mobile
-      expect(find.byIcon(Icons.menu), findsOneWidget);
+      expect(find.byIcon(AppIcons.menu), findsOneWidget);
       // Compact tab title 'Ringkasan' on mobile
       expect(find.text('Ringkasan'), findsOneWidget);
       expect(tester.takeException(), isNull, reason: 'ManagerDashboardScreen mobile tidak boleh overflow');

@@ -886,12 +886,16 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
                                     ),
                                   ),
                                   const SizedBox(width: 6),
-                                  const Text(
-                                    'RedDoorz',
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w600,
-                                      color: Color(0xFF9A3412),
+                                  const Expanded(
+                                    child: Text(
+                                      'RedDoorz',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600,
+                                        color: Color(0xFF9A3412),
+                                      ),
+                                      overflow: TextOverflow.ellipsis,
+                                      maxLines: 1,
                                     ),
                                   ),
                                 ],
@@ -943,12 +947,16 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
                                     ),
                                   ),
                                   const SizedBox(width: 6),
-                                  const Text(
-                                    'Langsung (Walk-In)',
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w600,
-                                      color: Color(0xFF1E40AF),
+                                  const Expanded(
+                                    child: Text(
+                                      'Langsung (Walk-In)',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600,
+                                        color: Color(0xFF1E40AF),
+                                      ),
+                                      overflow: TextOverflow.ellipsis,
+                                      maxLines: 1,
                                     ),
                                   ),
                                 ],
