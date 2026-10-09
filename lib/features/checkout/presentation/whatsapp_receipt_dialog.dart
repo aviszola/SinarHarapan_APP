@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../app/theme.dart';
+import '../../../theme/app_icons.dart';
 import '../../room_management/domain/room_model.dart';
 import '../../shared_widgets/app_button.dart';
 import '../../shared_widgets/app_feedback.dart';
@@ -315,17 +316,9 @@ class _WhatsAppReceiptDialogState extends State<WhatsAppReceiptDialog> {
               // Header
               Row(
                 children: [
-                  Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: AppColors.whatsapp.withValues(alpha: 0.15),
-                      borderRadius: AppRadius.rounded,
-                    ),
-                    child: const Icon(
-                      Icons.image_outlined,
-                      color: AppColors.whatsapp,
-                      size: 24,
-                    ),
+                  const AppIcon.large(
+                    AppIcons.image,
+                    color: AppColors.whatsapp,
                   ),
                   const SizedBox(width: 14),
                   Expanded(
@@ -380,8 +373,8 @@ class _WhatsAppReceiptDialogState extends State<WhatsAppReceiptDialog> {
                     ),
                   ),
                   IconButton(
-                    icon: const Icon(
-                      Icons.close,
+                    icon: const AppIcon.medium(
+                      AppIcons.close,
                       color: AppColors.textSecondary,
                     ),
                     onPressed: () => Navigator.of(context).pop(),
@@ -400,7 +393,6 @@ class _WhatsAppReceiptDialogState extends State<WhatsAppReceiptDialog> {
                   scrollPhysics: const ClampingScrollPhysics(),
                   onChanged: (_) => setState(() {}),
                   decoration: InputDecoration(
-                    prefixIcon: const Icon(Icons.phone_android, size: 20),
                     labelText: 'Nomor WhatsApp Penerima',
                     hintText: '0812xxxxxxxx atau 62812xxxxxxxx',
                     filled: true,
@@ -427,11 +419,11 @@ class _WhatsAppReceiptDialogState extends State<WhatsAppReceiptDialog> {
                       horizontal: 12,
                       vertical: 10,
                     ),
-                    shape: RoundedRectangleBorder(
+                    shape: const RoundedRectangleBorder(
                       borderRadius: AppRadius.rounded,
                     ),
                   ),
-                  icon: const Icon(Icons.download_rounded, size: 16),
+                  icon: const AppIcon.small(AppIcons.download),
                   label: const Text('Simpan Foto PNG ke Perangkat'),
                   onPressed: () => _handleSaveReceiptImage(invoiceNumber),
                 ),
@@ -446,7 +438,6 @@ class _WhatsAppReceiptDialogState extends State<WhatsAppReceiptDialog> {
                         scrollPhysics: const ClampingScrollPhysics(),
                         onChanged: (_) => setState(() {}),
                         decoration: InputDecoration(
-                          prefixIcon: const Icon(Icons.phone_android, size: 20),
                           labelText: 'Nomor WhatsApp Penerima',
                           hintText: '0812xxxxxxxx atau 62812xxxxxxxx',
                           filled: true,
@@ -474,11 +465,11 @@ class _WhatsAppReceiptDialogState extends State<WhatsAppReceiptDialog> {
                           horizontal: 12,
                           vertical: 12,
                         ),
-                        shape: RoundedRectangleBorder(
+                        shape: const RoundedRectangleBorder(
                           borderRadius: AppRadius.rounded,
                         ),
                       ),
-                      icon: const Icon(Icons.download_rounded, size: 16),
+                      icon: const AppIcon.small(AppIcons.download),
                       label: const Text('Simpan Foto PNG'),
                       onPressed: () => _handleSaveReceiptImage(invoiceNumber),
                     ),
@@ -513,9 +504,8 @@ class _WhatsAppReceiptDialogState extends State<WhatsAppReceiptDialog> {
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Icon(
-                                Icons.photo_size_select_actual_outlined,
-                                size: 15,
+                              AppIcon.small(
+                                AppIcons.image,
                                 color: _selectedViewTab == 0
                                     ? AppColors.white
                                     : AppColors.textSecondary,
@@ -552,9 +542,8 @@ class _WhatsAppReceiptDialogState extends State<WhatsAppReceiptDialog> {
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Icon(
-                                Icons.notes_rounded,
-                                size: 15,
+                              AppIcon.small(
+                                AppIcons.note,
                                 color: _selectedViewTab == 1
                                     ? AppColors.white
                                     : AppColors.textSecondary,
@@ -655,9 +644,8 @@ class _WhatsAppReceiptDialogState extends State<WhatsAppReceiptDialog> {
                   ),
                   child: Row(
                     children: [
-                      const Icon(
-                        Icons.check_circle,
-                        size: 16,
+                      const AppIcon.small(
+                        AppIcons.check,
                         color: AppColors.statusAvailable,
                       ),
                       const SizedBox(width: 8),
@@ -690,9 +678,8 @@ class _WhatsAppReceiptDialogState extends State<WhatsAppReceiptDialog> {
                   ),
                   child: Row(
                     children: [
-                      const Icon(
-                        Icons.folder_outlined,
-                        size: 13,
+                      const AppIcon.small(
+                        AppIcons.folder,
                         color: AppColors.navy700,
                       ),
                       const SizedBox(width: 6),
@@ -740,12 +727,12 @@ class _WhatsAppReceiptDialogState extends State<WhatsAppReceiptDialog> {
                             horizontal: 14,
                             vertical: 11,
                           ),
-                          shape: RoundedRectangleBorder(
+                          shape: const RoundedRectangleBorder(
                             borderRadius: AppRadius.rounded,
                           ),
                           elevation: 0,
                         ),
-                        icon: const Icon(Icons.open_in_new, size: 16),
+                        icon: const AppIcon.small(AppIcons.openInNew),
                         label: Text(
                           isMobile ? 'Buka WA' : 'Kirim via WhatsApp (wa.me)',
                           style: const TextStyle(
@@ -768,7 +755,7 @@ class _WhatsAppReceiptDialogState extends State<WhatsAppReceiptDialog> {
                                   ? 'Kirim Otomatis'
                                   : 'Kirim Foto Otomatis (API)'),
                         variant: AppButtonVariant.primary,
-                        icon: _isSendingApi ? null : Icons.send_rounded,
+                        icon: _isSendingApi ? null : AppIcons.send,
                         onPressed: _isSendingApi
                             ? null
                             : () => _handleSendViaGateway(

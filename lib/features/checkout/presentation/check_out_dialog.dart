@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../../app/theme.dart';
+import '../../../theme/app_icons.dart';
 import '../../../core/network/api_client.dart';
 import '../../room_management/domain/room_model.dart';
 import '../../room_management/presentation/room_controller.dart';
@@ -179,17 +180,9 @@ class _CheckOutDialogState extends ConsumerState<CheckOutDialog> {
       context: context,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: AppRadius.roundedLg),
-        title: Row(
-          children: [
-            const Icon(Icons.receipt_outlined, color: AppColors.navy700),
-            const SizedBox(width: 8),
-            const Expanded(
-              child: Text(
-                'Tanda Terima Biaya Tambahan',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-              ),
-            ),
-          ],
+        title: const Text(
+          'Tanda Terima Biaya Tambahan',
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
@@ -254,7 +247,7 @@ class _CheckOutDialogState extends ConsumerState<CheckOutDialog> {
               backgroundColor: AppColors.navy700,
               foregroundColor: AppColors.white,
             ),
-            icon: const Icon(Icons.print_outlined, size: 16),
+            icon: const AppIcon.small(AppIcons.print),
             label: const Text('Cetak Struk'),
             onPressed: () {
               Navigator.of(ctx).pop();
@@ -333,7 +326,8 @@ class _CheckOutDialogState extends ConsumerState<CheckOutDialog> {
                     ),
                   ),
                   IconButton(
-                    icon: const Icon(Icons.close, color: AppColors.textSecondary),
+                    tooltip: 'Tutup',
+                    icon: const AppIcon.medium(AppIcons.close, color: AppColors.textSecondary),
                     onPressed: () => Navigator.of(context).pop(),
                   ),
                 ],
@@ -412,7 +406,7 @@ class _CheckOutDialogState extends ConsumerState<CheckOutDialog> {
                           ),
                           child: Row(
                             children: [
-                              Icon(Icons.warning_amber_rounded, color: AppColors.statusDirty, size: 20),
+                              const AppIcon.medium(AppIcons.warning, color: AppColors.statusDirty),
                               const SizedBox(width: 8),
                               Expanded(
                                 child: Text(
@@ -584,7 +578,7 @@ class _CheckOutDialogState extends ConsumerState<CheckOutDialog> {
                         ? 'Selesaikan Check-Out & Cetak Struk Tambahan'
                         : 'Selesaikan Check-Out (Tanpa Biaya)',
                     variant: AppButtonVariant.primary,
-                    icon: _additionalTotal > 0 ? Icons.receipt_long_rounded : Icons.check_circle_outline_rounded,
+                    icon: _additionalTotal > 0 ? AppIcons.receipt : AppIcons.check,
                     onPressed: _handleConfirmCheckOut,
                   ),
                 ],
@@ -628,7 +622,7 @@ class _CheckOutDialogState extends ConsumerState<CheckOutDialog> {
             child: DropdownButton<int>(
               value: selectedValue,
               isExpanded: true,
-              icon: const Icon(Icons.keyboard_arrow_down_rounded, color: AppColors.navy700, size: 20),
+              icon: const AppIcon.medium(AppIcons.chevronDown, color: AppColors.navy700),
               dropdownColor: AppColors.surface,
               borderRadius: AppRadius.rounded,
               items: [
@@ -636,7 +630,7 @@ class _CheckOutDialogState extends ConsumerState<CheckOutDialog> {
                   value: 0,
                   child: Row(
                     children: [
-                      const Icon(Icons.check_circle_outline, size: 18, color: AppColors.statusAvailable),
+                      const AppIcon.small(AppIcons.check, color: AppColors.statusAvailable),
                       const SizedBox(width: 8),
                       Text('Bebas Denda (Rp 0)', style: AppTypography.bodySm.copyWith(color: AppColors.navy900)),
                     ],
@@ -646,7 +640,7 @@ class _CheckOutDialogState extends ConsumerState<CheckOutDialog> {
                   value: 50000,
                   child: Row(
                     children: [
-                      const Icon(Icons.access_time_rounded, size: 18, color: AppColors.navy700),
+                      const AppIcon.small(AppIcons.clock, color: AppColors.navy700),
                       const SizedBox(width: 8),
                       Text('+1 Jam — Rp 50.000', style: AppTypography.bodySm.copyWith(color: AppColors.navy900)),
                     ],
@@ -656,7 +650,7 @@ class _CheckOutDialogState extends ConsumerState<CheckOutDialog> {
                   value: 100000,
                   child: Row(
                     children: [
-                      const Icon(Icons.access_time_rounded, size: 18, color: AppColors.navy700),
+                      const AppIcon.small(AppIcons.clock, color: AppColors.navy700),
                       const SizedBox(width: 8),
                       Text('+2 Jam — Rp 100.000', style: AppTypography.bodySm.copyWith(color: AppColors.navy900)),
                     ],
@@ -666,7 +660,7 @@ class _CheckOutDialogState extends ConsumerState<CheckOutDialog> {
                   value: 150000,
                   child: Row(
                     children: [
-                      const Icon(Icons.access_time_rounded, size: 18, color: AppColors.navy700),
+                      const AppIcon.small(AppIcons.clock, color: AppColors.navy700),
                       const SizedBox(width: 8),
                       Text('+3 Jam — Rp 150.000', style: AppTypography.bodySm.copyWith(color: AppColors.navy900)),
                     ],
@@ -676,7 +670,7 @@ class _CheckOutDialogState extends ConsumerState<CheckOutDialog> {
                   value: -1,
                   child: Row(
                     children: [
-                      const Icon(Icons.edit_note_rounded, size: 18, color: AppColors.orange600),
+                      const AppIcon.small(AppIcons.edit, color: AppColors.orange600),
                       const SizedBox(width: 8),
                       Text(
                         _isCustomLateFee ? 'Isi Sendiri (Rp $fee)' : 'Isi Sendiri (Manual)...',
@@ -743,7 +737,7 @@ class _CheckOutDialogState extends ConsumerState<CheckOutDialog> {
             child: DropdownButton<int>(
               value: selectedValue,
               isExpanded: true,
-              icon: const Icon(Icons.keyboard_arrow_down_rounded, color: AppColors.navy700, size: 20),
+              icon: const AppIcon.medium(AppIcons.chevronDown, color: AppColors.navy700),
               dropdownColor: AppColors.surface,
               borderRadius: AppRadius.rounded,
               items: [
@@ -751,7 +745,7 @@ class _CheckOutDialogState extends ConsumerState<CheckOutDialog> {
                   value: 0,
                   child: Row(
                     children: [
-                      const Icon(Icons.check_circle_outline, size: 18, color: AppColors.statusAvailable),
+                      const AppIcon.small(AppIcons.check, color: AppColors.statusAvailable),
                       const SizedBox(width: 8),
                       Text('Tidak Ada (Rp 0)', style: AppTypography.bodySm.copyWith(color: AppColors.navy900)),
                     ],
@@ -761,7 +755,7 @@ class _CheckOutDialogState extends ConsumerState<CheckOutDialog> {
                   value: 5000,
                   child: Row(
                     children: [
-                      const Icon(Icons.local_drink_outlined, size: 18, color: AppColors.navy700),
+                      const AppIcon.small(AppIcons.drink, color: AppColors.navy700),
                       const SizedBox(width: 8),
                       Text('Air Mineral — Rp 5.000', style: AppTypography.bodySm.copyWith(color: AppColors.navy900)),
                     ],
@@ -771,7 +765,7 @@ class _CheckOutDialogState extends ConsumerState<CheckOutDialog> {
                   value: 10000,
                   child: Row(
                     children: [
-                      const Icon(Icons.local_drink_outlined, size: 18, color: AppColors.navy700),
+                      const AppIcon.small(AppIcons.drink, color: AppColors.navy700),
                       const SizedBox(width: 8),
                       Text('2x Air Mineral — Rp 10.000', style: AppTypography.bodySm.copyWith(color: AppColors.navy900)),
                     ],
@@ -781,7 +775,7 @@ class _CheckOutDialogState extends ConsumerState<CheckOutDialog> {
                   value: 15000,
                   child: Row(
                     children: [
-                      const Icon(Icons.fastfood_outlined, size: 18, color: AppColors.navy700),
+                      const AppIcon.small(AppIcons.food, color: AppColors.navy700),
                       const SizedBox(width: 8),
                       Text('Snack / Camilan — Rp 15.000', style: AppTypography.bodySm.copyWith(color: AppColors.navy900)),
                     ],
@@ -791,7 +785,7 @@ class _CheckOutDialogState extends ConsumerState<CheckOutDialog> {
                   value: 25000,
                   child: Row(
                     children: [
-                      const Icon(Icons.local_laundry_service_outlined, size: 18, color: AppColors.navy700),
+                      const AppIcon.small(AppIcons.clean, color: AppColors.navy700),
                       const SizedBox(width: 8),
                       Text('Laundry Standar — Rp 25.000', style: AppTypography.bodySm.copyWith(color: AppColors.navy900)),
                     ],
@@ -801,7 +795,7 @@ class _CheckOutDialogState extends ConsumerState<CheckOutDialog> {
                   value: 40000,
                   child: Row(
                     children: [
-                      const Icon(Icons.local_bar_outlined, size: 18, color: AppColors.navy700),
+                      const AppIcon.small(AppIcons.drink, color: AppColors.navy700),
                       const SizedBox(width: 8),
                       Text('Minibar + Laundry — Rp 40.000', style: AppTypography.bodySm.copyWith(color: AppColors.navy900)),
                     ],
@@ -811,7 +805,7 @@ class _CheckOutDialogState extends ConsumerState<CheckOutDialog> {
                   value: -1,
                   child: Row(
                     children: [
-                      const Icon(Icons.edit_note_rounded, size: 18, color: AppColors.orange600),
+                      const AppIcon.small(AppIcons.edit, color: AppColors.orange600),
                       const SizedBox(width: 8),
                       Text(
                         _isCustomMinibarFee ? 'Isi Sendiri (Rp $fee)' : 'Isi Sendiri (Manual)...',
@@ -878,7 +872,7 @@ class _CheckOutDialogState extends ConsumerState<CheckOutDialog> {
             child: DropdownButton<int>(
               value: selectedValue,
               isExpanded: true,
-              icon: const Icon(Icons.keyboard_arrow_down_rounded, color: AppColors.navy700, size: 20),
+              icon: const AppIcon.medium(AppIcons.chevronDown, color: AppColors.navy700),
               dropdownColor: AppColors.surface,
               borderRadius: AppRadius.rounded,
               items: [
@@ -886,7 +880,7 @@ class _CheckOutDialogState extends ConsumerState<CheckOutDialog> {
                   value: 0,
                   child: Row(
                     children: [
-                      const Icon(Icons.check_circle_outline, size: 18, color: AppColors.statusAvailable),
+                      const AppIcon.small(AppIcons.check, color: AppColors.statusAvailable),
                       const SizedBox(width: 8),
                       Text('Tidak Ada Kerusakan (Rp 0)', style: AppTypography.bodySm.copyWith(color: AppColors.navy900)),
                     ],
@@ -896,7 +890,7 @@ class _CheckOutDialogState extends ConsumerState<CheckOutDialog> {
                   value: 50000,
                   child: Row(
                     children: [
-                      const Icon(Icons.vpn_key_outlined, size: 18, color: AppColors.navy700),
+                      const AppIcon.small(AppIcons.key, color: AppColors.navy700),
                       const SizedBox(width: 8),
                       Text('Hilang Kunci / Kartu — Rp 50.000', style: AppTypography.bodySm.copyWith(color: AppColors.navy900)),
                     ],
@@ -906,7 +900,7 @@ class _CheckOutDialogState extends ConsumerState<CheckOutDialog> {
                   value: 100000,
                   child: Row(
                     children: [
-                      const Icon(Icons.cleaning_services_outlined, size: 18, color: AppColors.navy700),
+                      const AppIcon.small(AppIcons.clean, color: AppColors.navy700),
                       const SizedBox(width: 8),
                       Text('Noda Sprei / Handuk Rusak — Rp 100.000', style: AppTypography.bodySm.copyWith(color: AppColors.navy900)),
                     ],
@@ -916,7 +910,7 @@ class _CheckOutDialogState extends ConsumerState<CheckOutDialog> {
                   value: 200000,
                   child: Row(
                     children: [
-                      const Icon(Icons.handyman_outlined, size: 18, color: AppColors.navy700),
+                      const AppIcon.small(AppIcons.maintenance, color: AppColors.navy700),
                       const SizedBox(width: 8),
                       Text('Peralatan Kamar Rusak — Rp 200.000', style: AppTypography.bodySm.copyWith(color: AppColors.navy900)),
                     ],
@@ -926,7 +920,7 @@ class _CheckOutDialogState extends ConsumerState<CheckOutDialog> {
                   value: -1,
                   child: Row(
                     children: [
-                      const Icon(Icons.edit_note_rounded, size: 18, color: AppColors.orange600),
+                      const AppIcon.small(AppIcons.edit, color: AppColors.orange600),
                       const SizedBox(width: 8),
                       Text(
                         _isCustomDamageFee ? 'Isi Sendiri (Rp $fee)' : 'Isi Sendiri (Manual)...',

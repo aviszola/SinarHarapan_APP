@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../app/theme.dart';
+import '../../../theme/app_icons.dart';
 import '../../checkout/presentation/check_out_dialog.dart';
 import '../../room_management/domain/room_model.dart';
 import '../../shared_widgets/app_button.dart';
@@ -94,25 +95,18 @@ class _ActiveGuestsModalState extends State<ActiveGuestsModal> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Expanded(
-                    child: Row(
-                      children: [
-                        const Icon(Icons.mark_chat_read_outlined, color: AppColors.navy700, size: 24),
-                        const SizedBox(width: 10),
-                        Flexible(
-                          child: Text(
-                            'Monitor Tamu Aktif & WhatsApp',
-                            style: (isMobile ? AppTypography.bodyLg : AppTypography.h2).copyWith(
-                              color: AppColors.navy900,
-                              fontWeight: FontWeight.w700,
-                            ),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
+                    child: Text(
+                      'Monitor Tamu Aktif & WhatsApp',
+                      style: (isMobile ? AppTypography.bodyLg : AppTypography.h2).copyWith(
+                        color: AppColors.navy900,
+                        fontWeight: FontWeight.w700,
+                      ),
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
                   IconButton(
-                    icon: const Icon(Icons.close, color: AppColors.textSecondary),
+                    tooltip: 'Tutup',
+                    icon: const AppIcon.medium(AppIcons.close, color: AppColors.textSecondary),
                     onPressed: () => Navigator.of(context).pop(),
                   ),
                 ],
@@ -209,7 +203,7 @@ class _ActiveGuestsModalState extends State<ActiveGuestsModal> {
                                           ),
                                           IconButton(
                                             tooltip: 'Chat WhatsApp Langsung',
-                                            icon: const Icon(Icons.chat_bubble_outline, color: AppColors.statusAvailable, size: 20),
+                                            icon: const AppIcon.medium(AppIcons.chat, color: AppColors.statusAvailable),
                                             onPressed: () => _handleDirectWa(room),
                                           ),
                                         ],
@@ -236,7 +230,7 @@ class _ActiveGuestsModalState extends State<ActiveGuestsModal> {
                                             child: Row(
                                               mainAxisSize: MainAxisSize.min,
                                               children: [
-                                                Icon(Icons.check_circle_rounded, size: 13, color: waColor),
+                                                AppIcon.small(AppIcons.success, color: waColor),
                                                 const SizedBox(width: 4),
                                                 Text(
                                                   'WA: $waStatus',
@@ -258,14 +252,14 @@ class _ActiveGuestsModalState extends State<ActiveGuestsModal> {
                                           AppButton(
                                             label: isResending ? 'Mengirim...' : 'Kirim Ulang WA',
                                             variant: AppButtonVariant.outline,
-                                            icon: Icons.send_rounded,
+                                            icon: AppIcons.send,
                                             isLoading: isResending,
                                             onPressed: isResending ? null : () => _handleResendWa(room),
                                           ),
                                           AppButton(
                                             label: 'Check-Out',
                                             variant: AppButtonVariant.primary,
-                                            icon: Icons.receipt_long_rounded,
+                                            icon: AppIcons.checkOut,
                                             onPressed: () {
                                               Navigator.of(context).pop();
                                               showDialog(
@@ -366,7 +360,7 @@ class _ActiveGuestsModalState extends State<ActiveGuestsModal> {
                                       child: Row(
                                         mainAxisSize: MainAxisSize.min,
                                         children: [
-                                          Icon(Icons.check_circle_rounded, size: 14, color: waColor),
+                                          AppIcon.small(AppIcons.success, color: waColor),
                                           const SizedBox(width: 5),
                                           Text(
                                             'WA: $waStatus',
@@ -383,7 +377,7 @@ class _ActiveGuestsModalState extends State<ActiveGuestsModal> {
 
                                     IconButton(
                                       tooltip: 'Buka Chat WhatsApp',
-                                      icon: const Icon(Icons.chat_bubble_outline, color: AppColors.statusAvailable),
+                                      icon: const AppIcon.medium(AppIcons.chat, color: AppColors.statusAvailable),
                                       onPressed: () => _handleDirectWa(room),
                                     ),
                                     const SizedBox(width: AppSpacing.xs),
@@ -394,7 +388,7 @@ class _ActiveGuestsModalState extends State<ActiveGuestsModal> {
                                         AppButton(
                                           label: isResending ? 'Mengirim...' : 'Kirim Ulang WA',
                                           variant: AppButtonVariant.outline,
-                                          icon: Icons.send_rounded,
+                                          icon: AppIcons.send,
                                           isLoading: isResending,
                                           onPressed: isResending ? null : () => _handleResendWa(room),
                                         ),
@@ -402,7 +396,7 @@ class _ActiveGuestsModalState extends State<ActiveGuestsModal> {
                                         AppButton(
                                           label: 'Check-Out',
                                           variant: AppButtonVariant.primary,
-                                          icon: Icons.receipt_long_rounded,
+                                          icon: AppIcons.checkOut,
                                           onPressed: () {
                                             Navigator.of(context).pop();
                                             showDialog(
