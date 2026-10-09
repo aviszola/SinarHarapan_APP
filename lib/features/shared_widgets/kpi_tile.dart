@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../theme/app_colors.dart';
+import '../../theme/app_spacing.dart';
 import '../../theme/app_text_styles.dart';
 
 /// Kartu Ringkasan KPI — Tanpa filler teks, tanpa ikon dekoratif di setiap label.
@@ -28,15 +29,9 @@ class KpiTile extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFE2E8F0), width: 1),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.02),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        borderRadius: AppRadius.rounded,
+        border: Border.all(color: AppColors.border, width: 1),
+        boxShadow: AppElevation.none,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -51,7 +46,7 @@ class KpiTile extends StatelessWidget {
                   label,
                   style: AppTextStyles.caption.copyWith(
                     fontWeight: FontWeight.w600,
-                    color: const Color(0xFF64748B),
+                    color: AppColors.textSecondary,
                     fontSize: 12,
                     letterSpacing: 0.2,
                   ),
@@ -69,7 +64,7 @@ class KpiTile extends StatelessWidget {
             child: Text(
               value,
               style: AppTextStyles.numberHero.copyWith(
-                color: const Color(0xFF0F172A),
+                color: AppColors.navy900,
                 fontSize: 25,
                 fontWeight: FontWeight.w800,
                 letterSpacing: -0.5,
@@ -81,10 +76,11 @@ class KpiTile extends StatelessWidget {
             Text(
               subtitle!,
               style: AppTextStyles.caption.copyWith(
-                color: const Color(0xFF94A3B8),
+                color: AppColors.textMuted,
                 fontSize: 11.5,
+                height: 1.3,
               ),
-              maxLines: 1,
+              maxLines: 2,
               overflow: TextOverflow.ellipsis,
             ),
           ],

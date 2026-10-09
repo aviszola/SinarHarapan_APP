@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:ui' as ui;
+import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -93,6 +94,16 @@ class _FakeRoomRepo extends RoomRepository {
 void main() {
   setUpAll(() async {
     await initializeDateFormatting('id_ID', null);
+    final fontFile = File('build/unit_test_assets/packages/lucide_icons_flutter/assets/lucide.ttf');
+    if (fontFile.existsSync()) {
+      final bytes = fontFile.readAsBytesSync();
+      final fontData = ByteData.view(bytes.buffer);
+      for (final family in ['packages/lucide_icons_flutter/Lucide', 'Lucide']) {
+        final loader = FontLoader(family);
+        loader.addFont(Future.value(fontData));
+        await loader.load();
+      }
+    }
   });
 
   final outputDir = Directory(r'c:\Sinar Harapan APP\sinarharapan_app\docs\screenshots\icons');
@@ -249,10 +260,10 @@ void main() {
     tester.view.resetDevicePixelRatio();
   }
 
-  testWidgets('Capture visual screenshots for widths 1280 and 1920', (tester) async {
-    for (final width in [1280.0, 1920.0]) {
+  testWidgets('Capture visual screenshots for widths 360, 1280, and 1920', (tester) async {
+    for (final width in [360.0, 1280.0, 1920.0]) {
       final wInt = width.toInt();
-      final height = 900.0;
+      final height = width < 500 ? 800.0 : 900.0;
 
       // 1. Login Screen
       await captureScreen(

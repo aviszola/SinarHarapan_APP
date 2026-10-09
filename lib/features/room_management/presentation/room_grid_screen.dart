@@ -361,11 +361,12 @@ class _RoomGridSkeleton extends StatelessWidget {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          SkeletonBox(width: 70, height: 16),
-                          SkeletonBox(width: 55, height: 18),
+                          Flexible(child: SkeletonBox(width: 55, height: 16)),
+                          SizedBox(width: 6),
+                          SkeletonBox(width: 44, height: 18),
                         ],
                       ),
-                      SkeletonBox(width: 120, height: 14),
+                      SkeletonBox(width: 80, height: 14),
                       SkeletonBox(width: double.infinity, height: 32),
                     ],
                   ),

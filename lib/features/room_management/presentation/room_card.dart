@@ -82,59 +82,46 @@ class _RoomCardState extends State<RoomCard> {
                           children: [
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                              crossAxisAlignment: CrossAxisAlignment.center,
                               children: [
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        'Kamar ${room.roomNumber}',
-                                        style: AppTextStyles.titleSmall.copyWith(
-                                          fontWeight: FontWeight.w700,
-                                          color: AppColors.brandNavyDark,
-                                          fontSize: 16,
-                                          fontFeatures: const [FontFeature.tabularFigures()],
-                                        ),
-                                        maxLines: 1,
-                                      ),
-                                      Text(
-                                        '${room.roomType} · Lt. ${room.floor}',
-                                        style: AppTextStyles.caption.copyWith(
-                                          color: AppColors.textSecondary,
-                                          fontSize: 11,
-                                        ),
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ],
+                                Text(
+                                  'Kamar ${room.roomNumber}',
+                                  style: AppTextStyles.titleSmall.copyWith(
+                                    fontWeight: FontWeight.w700,
+                                    color: AppColors.brandNavyDark,
+                                    fontSize: 15,
+                                    fontFeatures: const [FontFeature.tabularFigures()],
                                   ),
+                                  maxLines: 1,
                                 ),
-                                const SizedBox(width: 4),
                                 StatusBadge(status: room.status, compact: true),
                               ],
                             ),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Expanded(
-                                  child: Text(
-                                    room.isAvailable
-                                        ? _currFmt.format(room.basePricePerNight)
-                                        : (room.activeGuestName ?? _getStatusName(room.status)),
-                                    style: AppTextStyles.caption.copyWith(
-                                      fontWeight: FontWeight.w600,
-                                      color: room.isAvailable ? AppColors.brandNavy : AppColors.textPrimary,
-                                      fontSize: 11,
-                                      fontFeatures: const [FontFeature.tabularFigures()],
-                                    ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                                const SizedBox(width: 6),
-                                _buildCompactActionButton(room),
-                              ],
+                            Text(
+                              '${room.roomType} · Lt. ${room.floor}',
+                              style: AppTextStyles.caption.copyWith(
+                                color: AppColors.textSecondary,
+                                fontSize: 11,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            Text(
+                              room.isAvailable
+                                  ? _currFmt.format(room.basePricePerNight)
+                                  : (room.activeGuestName ?? _getStatusName(room.status)),
+                              style: AppTextStyles.caption.copyWith(
+                                fontWeight: FontWeight.w700,
+                                color: room.isAvailable ? AppColors.brandNavy : AppColors.textPrimary,
+                                fontSize: 12,
+                                fontFeatures: const [FontFeature.tabularFigures()],
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            SizedBox(
+                              width: double.infinity,
+                              child: _buildCompactActionButton(room),
                             ),
                           ],
                         ),
@@ -488,7 +475,7 @@ class _RoomCardState extends State<RoomCard> {
   Widget _buildCompactActionButton(RoomModel room) {
     if (room.isAvailable) {
       return SizedBox(
-        height: 26,
+        height: 30,
         child: ElevatedButton(
           style: ElevatedButton.styleFrom(
             backgroundColor: AppColors.brandOrange,
@@ -497,13 +484,13 @@ class _RoomCardState extends State<RoomCard> {
             shape: const RoundedRectangleBorder(borderRadius: AppRadius.roundedSm),
           ),
           onPressed: widget.onTap,
-          child: const Text('Check-in', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600)),
+          child: const Text('Check-in', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600)),
         ),
       );
     }
     if (room.isOccupied) {
       return SizedBox(
-        height: 26,
+        height: 30,
         child: OutlinedButton(
           style: OutlinedButton.styleFrom(
             foregroundColor: AppColors.statusOccupiedText,
@@ -513,13 +500,13 @@ class _RoomCardState extends State<RoomCard> {
             shape: const RoundedRectangleBorder(borderRadius: AppRadius.roundedSm),
           ),
           onPressed: widget.onTap,
-          child: const Text('Check-out', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600)),
+          child: const Text('Check-out', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600)),
         ),
       );
     }
     if (room.isDirty) {
       return SizedBox(
-        height: 26,
+        height: 30,
         child: OutlinedButton(
           style: OutlinedButton.styleFrom(
             foregroundColor: AppColors.statusDirtyText,
@@ -528,12 +515,12 @@ class _RoomCardState extends State<RoomCard> {
             shape: const RoundedRectangleBorder(borderRadius: AppRadius.roundedSm),
           ),
           onPressed: widget.onTap,
-          child: const Text('Bersihkan', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600)),
+          child: const Text('Bersihkan', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600)),
         ),
       );
     }
     return SizedBox(
-      height: 26,
+      height: 30,
       child: OutlinedButton(
         style: OutlinedButton.styleFrom(
           foregroundColor: AppColors.textDisabled,
@@ -542,7 +529,7 @@ class _RoomCardState extends State<RoomCard> {
           shape: const RoundedRectangleBorder(borderRadius: AppRadius.roundedSm),
         ),
         onPressed: widget.onTap,
-        child: const Text('Detail', style: TextStyle(fontSize: 11)),
+        child: const Text('Detail', style: TextStyle(fontSize: 11.5)),
       ),
     );
   }

@@ -49,37 +49,40 @@ class StatusBadge extends StatelessWidget {
     final s = _style;
     final label = customLabel ?? s.label;
 
-    return Container(
-      padding: compact
-          ? const EdgeInsets.all(5)
-          : const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: s.bg,
-        borderRadius: AppRadius.roundedSm,
-        border: Border.all(color: s.fg.withAlpha(40), width: 1),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 6,
-            height: 6,
-            decoration: BoxDecoration(
-              color: s.fg,
-              shape: BoxShape.circle,
-            ),
-          ),
-          if (!compact) ...[
-            const SizedBox(width: 6),
-            Text(
-              label,
-              style: AppTextStyles.badge.copyWith(
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Container(
+        padding: compact
+            ? const EdgeInsets.all(5)
+            : const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        decoration: BoxDecoration(
+          color: s.bg,
+          borderRadius: AppRadius.roundedSm,
+          border: Border.all(color: s.fg.withAlpha(40), width: 1),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 6,
+              height: 6,
+              decoration: BoxDecoration(
                 color: s.fg,
-                fontSize: 12,
+                shape: BoxShape.circle,
               ),
             ),
+            if (!compact) ...[
+              const SizedBox(width: 6),
+              Text(
+                label,
+                style: AppTextStyles.badge.copyWith(
+                  color: s.fg,
+                  fontSize: 12,
+                ),
+              ),
+            ],
           ],
-        ],
+        ),
       ),
     );
   }

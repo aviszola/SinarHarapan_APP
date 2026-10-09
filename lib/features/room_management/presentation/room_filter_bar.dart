@@ -179,7 +179,7 @@ class RoomFilterBar extends ConsumerWidget {
                 Expanded(child: buildStatsLine()),
                 const SizedBox(width: 16),
                 // Kontrol Filter Rata Kanan
-                buildSearchField(width: 180),
+                buildSearchField(width: 240),
                 const SizedBox(width: 8),
                 roomTypeDropdown,
                 const SizedBox(width: 8),
