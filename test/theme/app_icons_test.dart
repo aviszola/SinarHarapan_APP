@@ -1,66 +1,70 @@
+import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 void main() {
-  test('PhosphorIcons names test', () {
-    expect(PhosphorIcons.bed, isNotNull);
-    expect(PhosphorIcons.user, isNotNull);
-    expect(PhosphorIcons.signIn, isNotNull);
-    expect(PhosphorIcons.signOut, isNotNull);
-    expect(PhosphorIcons.receipt, isNotNull);
-    expect(PhosphorIcons.chartBar, isNotNull);
-    expect(PhosphorIcons.chartLine, isNotNull);
-    expect(PhosphorIcons.chartPieSlice, isNotNull);
-    expect(PhosphorIcons.clockCounterClockwise, isNotNull);
-    expect(PhosphorIcons.magnifyingGlass, isNotNull);
-    expect(PhosphorIcons.funnel, isNotNull);
-    expect(PhosphorIcons.arrowsClockwise, isNotNull);
-    expect(PhosphorIcons.arrowCounterClockwise, isNotNull);
-    expect(PhosphorIcons.lock, isNotNull);
-    expect(PhosphorIcons.eye, isNotNull);
-    expect(PhosphorIcons.eyeSlash, isNotNull);
-    expect(PhosphorIcons.plus, isNotNull);
-    expect(PhosphorIcons.x, isNotNull);
-    expect(PhosphorIcons.check, isNotNull);
-    expect(PhosphorIcons.checkCircle, isNotNull);
-    expect(PhosphorIcons.warning, isNotNull);
-    expect(PhosphorIcons.warningCircle, isNotNull);
-    expect(PhosphorIcons.info, isNotNull);
-    expect(PhosphorIcons.question, isNotNull);
-    expect(PhosphorIcons.trash, isNotNull);
-    expect(PhosphorIcons.pencilSimple, isNotNull);
-    expect(PhosphorIcons.calendar, isNotNull);
-    expect(PhosphorIcons.clock, isNotNull);
-    expect(PhosphorIcons.downloadSimple, isNotNull);
-    expect(PhosphorIcons.printer, isNotNull);
-    expect(PhosphorIcons.filePdf, isNotNull);
-    expect(PhosphorIcons.fileXls, isNotNull);
-    expect(PhosphorIcons.fileText, isNotNull);
-    expect(PhosphorIcons.folder, isNotNull);
-    expect(PhosphorIcons.camera, isNotNull);
-    expect(PhosphorIcons.image, isNotNull);
-    expect(PhosphorIcons.chatCircleDots, isNotNull);
-    expect(PhosphorIcons.phone, isNotNull);
-    expect(PhosphorIcons.mapPin, isNotNull);
-    expect(PhosphorIcons.identificationCard, isNotNull);
-    expect(PhosphorIcons.shieldCheck, isNotNull);
-    expect(PhosphorIcons.key, isNotNull);
-    expect(PhosphorIcons.broom, isNotNull);
-    expect(PhosphorIcons.wrench, isNotNull);
-    expect(PhosphorIcons.caretDown, isNotNull);
-    expect(PhosphorIcons.tray, isNotNull);
-    expect(PhosphorIcons.arrowSquareOut, isNotNull);
-    expect(PhosphorIcons.note, isNotNull);
-    expect(PhosphorIcons.qrCode, isNotNull);
-    expect(PhosphorIcons.paperPlaneRight, isNotNull);
-    expect(PhosphorIcons.wallet, isNotNull);
-    expect(PhosphorIcons.creditCard, isNotNull);
-    expect(PhosphorIcons.sparkle, isNotNull);
-    expect(PhosphorIcons.list, isNotNull);
-    expect(PhosphorIcons.stack, isNotNull);
-    expect(PhosphorIcons.forkKnife, isNotNull);
-    expect(PhosphorIcons.beerBottle, isNotNull);
-    expect(PhosphorIcons.drop, isNotNull);
-    expect(PhosphorIcons.tag, isNotNull);
+  test('LucideIcons comprehensive test', () {
+    const list = [
+      LucideIcons.layoutDashboard,
+      LucideIcons.bed,
+      LucideIcons.user,
+      LucideIcons.barChart3,
+      LucideIcons.history,
+      LucideIcons.userCheck,
+      LucideIcons.logIn,
+      LucideIcons.logOut,
+      LucideIcons.receipt,
+      LucideIcons.key,
+      LucideIcons.creditCard,
+      LucideIcons.wallet,
+      LucideIcons.search,
+      LucideIcons.filter,
+      LucideIcons.refreshCw,
+      LucideIcons.rotateCcw,
+      LucideIcons.plus,
+      LucideIcons.pencil,
+      LucideIcons.trash2,
+      LucideIcons.x,
+      LucideIcons.check,
+      LucideIcons.externalLink,
+      LucideIcons.send,
+      LucideIcons.download,
+      LucideIcons.printer,
+      LucideIcons.fileText,
+      LucideIcons.fileSpreadsheet,
+      LucideIcons.folder,
+      LucideIcons.image,
+      LucideIcons.camera,
+      LucideIcons.lock,
+      LucideIcons.eye,
+      LucideIcons.eyeOff,
+      LucideIcons.shieldCheck,
+      LucideIcons.wrench,
+      LucideIcons.sparkles,
+      LucideIcons.star,
+      LucideIcons.info,
+      LucideIcons.alertTriangle,
+      LucideIcons.alertCircle,
+      LucideIcons.checkCircle2,
+      LucideIcons.helpCircle,
+      LucideIcons.inbox,
+      LucideIcons.clock,
+      LucideIcons.calendar,
+      LucideIcons.messageSquare,
+      LucideIcons.phone,
+      LucideIcons.mapPin,
+      LucideIcons.stickyNote,
+      LucideIcons.qrCode,
+      LucideIcons.menu,
+      LucideIcons.chevronDown,
+      LucideIcons.layers,
+      LucideIcons.utensils,
+      LucideIcons.coffee,
+      LucideIcons.terminal,
+      LucideIcons.tag,
+    ];
+    for (final icon in list) {
+      expect(icon, isA<IconData>());
+    }
   });
 }

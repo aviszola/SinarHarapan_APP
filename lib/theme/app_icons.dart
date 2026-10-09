@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'app_colors.dart';
 
 /// Standar ukuran ikon aplikasi:
@@ -13,87 +13,87 @@ abstract final class AppIconSize {
 }
 
 /// Satu pintu gerbang untuk semua ikon dalam aplikasi Sinar Harapan.
-/// Menggunakan Phosphor Icons dengan bobot outline reguler yang konsisten.
+/// Menggunakan Lucide Icons dengan bobot outline reguler yang konsisten.
 /// Seluruh konstanta dinamai berdasarkan FUNGSI bisnis aplikasi hotel/PMS.
 abstract final class AppIcons {
   // --- Navigasi & Modul Utama ---
-  static const IconData dashboard = PhosphorIcons.chartLine;
-  static const IconData room = PhosphorIcons.bed;
-  static const IconData guest = PhosphorIcons.user;
-  static const IconData report = PhosphorIcons.chartBar;
-  static const IconData audit = PhosphorIcons.clockCounterClockwise;
-  static const IconData reception = PhosphorIcons.identificationCard;
+  static const IconData dashboard = LucideIcons.layoutDashboard;
+  static const IconData room = LucideIcons.bed;
+  static const IconData guest = LucideIcons.user;
+  static const IconData report = LucideIcons.barChart3;
+  static const IconData audit = LucideIcons.history;
+  static const IconData reception = LucideIcons.userCheck;
 
   // --- Operasional Reservasi & Kasir ---
-  static const IconData checkIn = PhosphorIcons.signIn;
-  static const IconData checkOut = PhosphorIcons.signOut;
-  static const IconData invoice = PhosphorIcons.receipt;
-  static const IconData receipt = PhosphorIcons.receipt;
-  static const IconData key = PhosphorIcons.key;
-  static const IconData payment = PhosphorIcons.creditCard;
-  static const IconData wallet = PhosphorIcons.wallet;
+  static const IconData checkIn = LucideIcons.logIn;
+  static const IconData checkOut = LucideIcons.logOut;
+  static const IconData invoice = LucideIcons.receipt;
+  static const IconData receipt = LucideIcons.receipt;
+  static const IconData key = LucideIcons.key;
+  static const IconData payment = LucideIcons.creditCard;
+  static const IconData wallet = LucideIcons.wallet;
 
   // --- Aksi & Kontrol ---
-  static const IconData search = PhosphorIcons.magnifyingGlass;
-  static const IconData filter = PhosphorIcons.funnel;
-  static const IconData refresh = PhosphorIcons.arrowsClockwise;
-  static const IconData reset = PhosphorIcons.arrowCounterClockwise;
-  static const IconData add = PhosphorIcons.plus;
-  static const IconData edit = PhosphorIcons.pencilSimple;
-  static const IconData delete = PhosphorIcons.trash;
-  static const IconData close = PhosphorIcons.x;
-  static const IconData check = PhosphorIcons.check;
-  static const IconData clear = PhosphorIcons.x;
-  static const IconData logout = PhosphorIcons.signOut;
-  static const IconData login = PhosphorIcons.signIn;
-  static const IconData openInNew = PhosphorIcons.arrowSquareOut;
-  static const IconData send = PhosphorIcons.paperPlaneRight;
-  static const IconData download = PhosphorIcons.downloadSimple;
-  static const IconData print = PhosphorIcons.printer;
+  static const IconData search = LucideIcons.search;
+  static const IconData filter = LucideIcons.filter;
+  static const IconData refresh = LucideIcons.refreshCw;
+  static const IconData reset = LucideIcons.rotateCcw;
+  static const IconData add = LucideIcons.plus;
+  static const IconData edit = LucideIcons.pencil;
+  static const IconData delete = LucideIcons.trash2;
+  static const IconData close = LucideIcons.x;
+  static const IconData check = LucideIcons.check;
+  static const IconData clear = LucideIcons.x;
+  static const IconData logout = LucideIcons.logOut;
+  static const IconData login = LucideIcons.logIn;
+  static const IconData openInNew = LucideIcons.externalLink;
+  static const IconData send = LucideIcons.send;
+  static const IconData download = LucideIcons.download;
+  static const IconData print = LucideIcons.printer;
 
   // --- Ekspor & Berkas ---
-  static const IconData pdf = PhosphorIcons.filePdf;
-  static const IconData excel = PhosphorIcons.fileXls;
-  static const IconData document = PhosphorIcons.fileText;
-  static const IconData folder = PhosphorIcons.folder;
-  static const IconData image = PhosphorIcons.image;
-  static const IconData camera = PhosphorIcons.camera;
+  static const IconData pdf = LucideIcons.fileText;
+  static const IconData excel = LucideIcons.fileSpreadsheet;
+  static const IconData document = LucideIcons.fileText;
+  static const IconData folder = LucideIcons.folder;
+  static const IconData image = LucideIcons.image;
+  static const IconData camera = LucideIcons.camera;
 
   // --- Autentikasi & Keamanan ---
-  static const IconData lock = PhosphorIcons.lock;
-  static const IconData eye = PhosphorIcons.eye;
-  static const IconData eyeOff = PhosphorIcons.eyeSlash;
-  static const IconData shield = PhosphorIcons.shieldCheck;
+  static const IconData lock = LucideIcons.lock;
+  static const IconData eye = LucideIcons.eye;
+  static const eyeOff = LucideIcons.eyeOff;
+  static const IconData shield = LucideIcons.shieldCheck;
 
   // --- Pemeliharaan & Status Kamar ---
-  static const IconData maintenance = PhosphorIcons.wrench;
-  static const IconData cleaning = PhosphorIcons.sparkle;
-  static const IconData broom = PhosphorIcons.broom;
-  static const IconData star = PhosphorIcons.star;
+  static const IconData maintenance = LucideIcons.wrench;
+  static const IconData cleaning = LucideIcons.sparkles;
+  static const IconData broom = LucideIcons.sparkles;
+  static const IconData star = LucideIcons.star;
 
   // --- Indikator & Feedback ---
-  static const IconData info = PhosphorIcons.info;
-  static const IconData warning = PhosphorIcons.warning;
-  static const IconData error = PhosphorIcons.warningCircle;
-  static const IconData success = PhosphorIcons.checkCircle;
-  static const IconData help = PhosphorIcons.question;
-  static const IconData emptyState = PhosphorIcons.tray;
-  static const IconData clock = PhosphorIcons.clock;
-  static const IconData calendar = PhosphorIcons.calendar;
+  static const IconData info = LucideIcons.info;
+  static const IconData warning = LucideIcons.alertTriangle;
+  static const IconData error = LucideIcons.alertCircle;
+  static const IconData success = LucideIcons.checkCircle2;
+  static const IconData help = LucideIcons.helpCircle;
+  static const IconData emptyState = LucideIcons.inbox;
+  static const IconData clock = LucideIcons.clock;
+  static const IconData calendar = LucideIcons.calendar;
 
   // --- Komunikasi & Lainnya ---
-  static const IconData chat = PhosphorIcons.chatCircleDots;
-  static const IconData phone = PhosphorIcons.phone;
-  static const IconData location = PhosphorIcons.mapPin;
-  static const IconData note = PhosphorIcons.note;
-  static const IconData qrCode = PhosphorIcons.qrCode;
-  static const IconData menu = PhosphorIcons.list;
-  static const IconData dropdown = PhosphorIcons.caretDown;
-  static const IconData layers = PhosphorIcons.stack;
-  static const IconData food = PhosphorIcons.forkKnife;
-  static const IconData drink = PhosphorIcons.drop;
-  static const IconData terminal = PhosphorIcons.terminal;
-  static const IconData tag = PhosphorIcons.tag;
+  static const IconData chat = LucideIcons.messageSquare;
+  static const IconData phone = LucideIcons.phone;
+  static const IconData location = LucideIcons.mapPin;
+  static const IconData note = LucideIcons.stickyNote;
+  static const IconData qrCode = LucideIcons.qrCode;
+  static const IconData menu = LucideIcons.menu;
+  static const IconData dropdown = LucideIcons.chevronDown;
+  static const IconData layers = LucideIcons.layers;
+  static const IconData food = LucideIcons.utensils;
+  static const IconData drink = LucideIcons.coffee;
+  static const IconData terminal = LucideIcons.terminal;
+  static const IconData tag = LucideIcons.tag;
 }
 
 /// Widget standar untuk merender ikon di seluruh aplikasi.
@@ -112,12 +112,7 @@ class AppIcon extends StatelessWidget {
     this.color,
     this.tooltip,
     this.semanticLabel,
-  }) : assert(
-          size == AppIconSize.small ||
-              size == AppIconSize.medium ||
-              size == AppIconSize.large,
-          'Ukuran AppIcon harus salah satu dari: 16 (small), 20 (medium), atau 24 (large)',
-        );
+  });
 
   const AppIcon.small(
     this.icon, {

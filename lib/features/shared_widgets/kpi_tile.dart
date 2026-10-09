@@ -2,16 +2,13 @@ import 'package:flutter/material.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_text_styles.dart';
 
-/// Kartu Ringkasan KPI — Tanpa filler teks, tanpa ikon tren palsu.
+/// Kartu Ringkasan KPI — Tanpa filler teks, tanpa ikon dekoratif di setiap label.
 /// Menampilkan label ringkas, angka dengan Tabular Figures, dan keterangan opsional.
 class KpiTile extends StatelessWidget {
   final String label;
   final String value;
   final String? subtitle;
   final Widget? trailing;
-  final IconData? icon;
-  final Color? iconColor;
-  final Color? iconBgColor;
 
   const KpiTile({
     super.key,
@@ -19,9 +16,10 @@ class KpiTile extends StatelessWidget {
     required this.value,
     this.subtitle,
     this.trailing,
-    this.icon,
-    this.iconColor,
-    this.iconBgColor,
+    // Parameter kompatibilitas lama tidak dipakai lagi sesuai aturan non-dekoratif
+    IconData? icon,
+    Color? iconColor,
+    Color? iconBgColor,
   });
 
   @override
@@ -61,23 +59,7 @@ class KpiTile extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
-              if (trailing != null)
-                trailing!
-              else if (icon != null)
-                Container(
-                  width: 32,
-                  height: 32,
-                  decoration: BoxDecoration(
-                    color: iconBgColor ?? const Color(0xFFF1F5F9),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  alignment: Alignment.center,
-                  child: Icon(
-                    icon,
-                    size: 17,
-                    color: iconColor ?? AppColors.brandNavy,
-                  ),
-                ),
+              ?trailing,
             ],
           ),
           const SizedBox(height: 10),
@@ -111,4 +93,3 @@ class KpiTile extends StatelessWidget {
     );
   }
 }
-
