@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../../app/theme.dart';
+import '../../../theme/app_icons.dart';
 import '../../auth/presentation/auth_controller.dart';
 import '../../room_management/domain/room_model.dart';
 import '../../room_management/presentation/room_controller.dart';
@@ -158,7 +159,7 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
       confirmLabel: 'Hapus Unit Kamar',
       cancelLabel: 'Batal',
       isDestructive: true,
-      icon: Icons.delete_forever_rounded,
+      icon: AppIcons.delete,
     );
 
     if (!confirmed || !mounted) return;
@@ -340,17 +341,9 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
             shape: const RoundedRectangleBorder(borderRadius: AppRadius.rounded),
             title: Row(
               children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: isExcel ? AppColors.availableBg : AppColors.errorBg,
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    isExcel ? Icons.table_chart : Icons.picture_as_pdf,
-                    color: isExcel ? AppColors.statusAvailable : AppColors.orange600,
-                    size: 24,
-                  ),
+                AppIcon.large(
+                  isExcel ? AppIcons.excel : AppIcons.pdf,
+                  color: isExcel ? AppColors.statusAvailable : AppColors.orange600,
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -383,9 +376,8 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
                     children: [
                       Row(
                         children: [
-                          Icon(
-                            isExcel ? Icons.file_present_outlined : Icons.description_outlined,
-                            size: 16,
+                          AppIcon.small(
+                            isExcel ? AppIcons.excel : AppIcons.pdf,
                             color: AppColors.navy700,
                           ),
                           const SizedBox(width: 6),
@@ -408,7 +400,7 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
                 const SizedBox(height: 8),
                 const Row(
                   children: [
-                    Icon(Icons.timer_outlined, size: 14, color: AppColors.textDisabled),
+                    AppIcon.small(AppIcons.clock, color: AppColors.textDisabled),
                     SizedBox(width: 4),
                     Text(
                       'Pemberitahuan ini otomatis tertutup dalam 3 detik...',
@@ -427,7 +419,7 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
                 child: const Text('Tutup'),
               ),
               OutlinedButton.icon(
-                icon: const Icon(Icons.folder_open, size: 18),
+                icon: const AppIcon.medium(AppIcons.folder),
                 label: const Text('Buka Folder'),
                 onPressed: () {
                   autoCloseTimer?.cancel();
@@ -440,7 +432,7 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
                   backgroundColor: isExcel ? AppColors.statusAvailable : AppColors.orange600,
                   foregroundColor: AppColors.surface,
                 ),
-                icon: const Icon(Icons.open_in_new, size: 18),
+                icon: const AppIcon.medium(AppIcons.openInNew),
                 label: Text(isExcel ? 'Buka Excel Sekarang' : 'Buka PDF Sekarang'),
                 onPressed: () {
                   autoCloseTimer?.cancel();
@@ -518,7 +510,7 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
                             builder: (bContext) => Padding(
                               padding: const EdgeInsets.only(right: 6.0),
                               child: IconButton(
-                                icon: const Icon(Icons.menu, color: AppColors.navy900),
+                                icon: const AppIcon.medium(AppIcons.menu, color: AppColors.navy900),
                                 tooltip: 'Buka Menu Navigasi',
                                 onPressed: () => Scaffold.of(bContext).openDrawer(),
                               ),
@@ -551,7 +543,7 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
                         ),
                         IconButton(
                           tooltip: 'Segarkan Data',
-                          icon: const Icon(Icons.refresh_rounded, size: 18, color: AppColors.brandNavy),
+                          icon: const AppIcon.medium(AppIcons.refresh, color: AppColors.brandNavy),
                           onPressed: _loadAllDashboardData,
                         ),
                         const SizedBox(width: AppSpacing.xs),
@@ -560,14 +552,14 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
                         if (isMobile)
                           IconButton(
                             tooltip: 'Mode Resepsionis (Frontdesk)',
-                            icon: const Icon(Icons.storefront_outlined, color: AppColors.navy700),
+                            icon: const AppIcon.medium(AppIcons.reception, color: AppColors.navy700),
                             onPressed: () => context.go('/receptionist/rooms'),
                           )
                         else
                           AppButton(
                             label: 'Mode Resepsionis',
                             variant: AppButtonVariant.outline,
-                            icon: Icons.storefront_outlined,
+                            icon: AppIcons.reception,
                             onPressed: () => context.go('/receptionist/rooms'),
                           ),
 
@@ -578,19 +570,19 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
                           if (isMobile) ...[
                             IconButton(
                               tooltip: 'Ekspor Excel (.xlsx)',
-                              icon: const Icon(Icons.table_view_outlined, color: AppColors.statusAvailable),
+                              icon: const AppIcon.medium(AppIcons.excel, color: AppColors.statusAvailable),
                               onPressed: _handleExportExcel,
                             ),
                             IconButton(
                               tooltip: 'Ekspor PDF Resmi',
-                              icon: const Icon(Icons.picture_as_pdf_outlined, color: AppColors.orange600),
+                              icon: const AppIcon.medium(AppIcons.pdf, color: AppColors.orange600),
                               onPressed: _handleExportPdf,
                             ),
                           ] else ...[
                             AppButton(
                               label: 'Ekspor Excel',
                               variant: AppButtonVariant.secondary,
-                              icon: Icons.table_view_outlined,
+                              icon: AppIcons.excel,
                               isLoading: _isExportingExcel,
                               onPressed: _handleExportExcel,
                             ),
@@ -598,7 +590,7 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
                             AppButton(
                               label: 'Ekspor PDF',
                               variant: AppButtonVariant.outline,
-                              icon: Icons.picture_as_pdf_outlined,
+                              icon: AppIcons.pdf,
                               isLoading: _isExportingPdf,
                               onPressed: _handleExportPdf,
                             ),
@@ -610,7 +602,7 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
                           if (isMobile)
                             IconButton(
                               tooltip: 'Tambah Unit Kamar',
-                              icon: const Icon(Icons.add_circle, color: AppColors.orange600),
+                              icon: const AppIcon.medium(AppIcons.add, color: AppColors.orange600),
                               onPressed: () {
                                 showDialog(
                                   context: context,
@@ -622,7 +614,7 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
                             AppButton(
                               label: 'Tambah Kamar',
                               variant: AppButtonVariant.primary,
-                              icon: Icons.add,
+                              icon: AppIcons.add,
                               onPressed: () {
                                 showDialog(
                                   context: context,
@@ -753,33 +745,21 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
               label: 'Pendapatan Bersih Bulan Ini',
               value: totalNetRevenue,
               subtitle: 'Berdasarkan transaksi selesai',
-              icon: Icons.account_balance_wallet_rounded,
-              iconColor: const Color(0xFF059669),
-              iconBgColor: const Color(0xFFD1FAE5),
             );
             final kpi2 = KpiTile(
               label: 'Okupansi Hari Ini',
               value: '$todayOccPercent%',
               subtitle: '$occupiedRooms dari $operationalRooms kamar operasional aktif',
-              icon: Icons.hotel_rounded,
-              iconColor: const Color(0xFF2563EB),
-              iconBgColor: const Color(0xFFDBEAFE),
             );
             final kpi3 = KpiTile(
               label: 'Okupansi Bulan Ini',
               value: occMonthlyRate,
               subtitle: 'Penyebut: $operationalRooms kamar aktif × hari periode',
-              icon: Icons.pie_chart_outline_rounded,
-              iconColor: const Color(0xFF7C3AED),
-              iconBgColor: const Color(0xFFEDE9FE),
             );
             final kpi4 = KpiTile(
               label: 'Kedatangan Tamu (Check-In)',
               value: '$totalCheckIn Tamu',
               subtitle: 'Total check-in bulan ini',
-              icon: Icons.people_alt_rounded,
-              iconColor: const Color(0xFFEA580C),
-              iconBgColor: const Color(0xFFFFEDD5),
             );
 
             if (constraints.maxWidth >= 980) {
@@ -1206,7 +1186,7 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
                 AppButton(
                   label: 'Tambah Kamar Baru',
                   variant: AppButtonVariant.primary,
-                  icon: Icons.add,
+                  icon: AppIcons.add,
                   onPressed: () {
                     showDialog(
                       context: context,
@@ -1299,7 +1279,7 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
                                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                                   visualDensity: VisualDensity.compact,
                                 ),
-                                icon: const Icon(Icons.edit_outlined, size: 15, color: AppColors.navy700),
+                                icon: const AppIcon.small(AppIcons.edit, color: AppColors.navy700),
                                 label: const Text('Ubah', style: TextStyle(fontSize: 12)),
                                 onPressed: () {
                                   showDialog(
@@ -1314,9 +1294,8 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
                                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                                   visualDensity: VisualDensity.compact,
                                 ),
-                                icon: Icon(
-                                  Icons.build_circle_outlined,
-                                  size: 15,
+                                icon: AppIcon.small(
+                                  AppIcons.maintenance,
                                   color: room.isMaintenance ? AppColors.statusAvailable : AppColors.textSecondary,
                                 ),
                                 label: Text(
@@ -1328,7 +1307,7 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
                               const SizedBox(width: 8),
                               IconButton(
                                 tooltip: 'Hapus Kamar',
-                                icon: const Icon(Icons.delete_outline, size: 18, color: AppColors.statusOccupied),
+                                icon: const AppIcon.medium(AppIcons.delete, color: AppColors.statusOccupied),
                                 onPressed: room.isOccupied ? null : () => _handleDeleteRoom(room),
                               ),
                             ],
@@ -1423,7 +1402,7 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
                                     children: [
                                       IconButton(
                                         tooltip: 'Ubah Data Kamar',
-                                        icon: const Icon(Icons.edit_outlined, color: AppColors.navy700),
+                                        icon: const AppIcon.medium(AppIcons.edit, color: AppColors.navy700),
                                         onPressed: () {
                                           showDialog(
                                             context: context,
@@ -1435,13 +1414,13 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
                                       AppButton(
                                         label: room.isMaintenance ? 'Aktifkan' : 'Perawatan',
                                         variant: AppButtonVariant.outline,
-                                        icon: Icons.build_circle_outlined,
+                                        icon: AppIcons.maintenance,
                                         onPressed: room.isOccupied ? null : () => _handleToggleMaintenance(room),
                                       ),
                                       const SizedBox(width: 8),
                                       IconButton(
                                         tooltip: 'Hapus Kamar',
-                                        icon: const Icon(Icons.delete_outline, color: AppColors.statusOccupied),
+                                        icon: const AppIcon.medium(AppIcons.delete, color: AppColors.statusOccupied),
                                         onPressed: room.isOccupied ? null : () => _handleDeleteRoom(room),
                                       ),
                                     ],
@@ -1506,14 +1485,14 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
                     AppButton(
                       label: 'Unduh Excel (.xlsx)',
                       variant: AppButtonVariant.secondary,
-                      icon: Icons.file_download_outlined,
+                      icon: AppIcons.excel,
                       isLoading: _isExportingExcel,
                       onPressed: _handleExportExcel,
                     ),
                     AppButton(
                       label: 'Unduh PDF Resmi',
                       variant: AppButtonVariant.primary,
-                      icon: Icons.picture_as_pdf_outlined,
+                      icon: AppIcons.pdf,
                       isLoading: _isExportingPdf,
                       onPressed: _handleExportPdf,
                     ),
@@ -1535,7 +1514,7 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
             const Padding(
               padding: EdgeInsets.symmetric(vertical: 40),
               child: EmptyStateWidget(
-                icon: Icons.receipt_long_outlined,
+                icon: AppIcons.receipt,
                 title: 'Belum Ada Transaksi Tercatat',
                 message:
                     'Belum ada transaksi pembayaran atau reservasi yang tersimpan di server untuk periode ini. Riwayat transaksi akan tercatat otomatis saat tamu melakukan pembayaran.',
@@ -1688,19 +1667,11 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Row(
-                        children: [
-                          const Icon(Icons.history_toggle_off_rounded, size: 22, color: AppColors.navy900),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              'Rekam Jejak Operasional & Audit Trail',
-                              style: AppTypography.h3,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        ],
+                      Text(
+                        'Rekam Jejak Operasional & Audit Trail',
+                        style: AppTypography.h3,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                       const SizedBox(height: 4),
                       Text(
@@ -1712,7 +1683,7 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
                 ),
                 IconButton(
                   tooltip: 'Muat Ulang Log',
-                  icon: const Icon(Icons.refresh, color: AppColors.navy700),
+                  icon: const AppIcon.medium(AppIcons.refresh, color: AppColors.navy700),
                   onPressed: _loadAuditLogs,
                 ),
               ],
@@ -1753,14 +1724,7 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
               child: Center(
                 child: Column(
                   children: [
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: AppColors.navy50,
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(Icons.inbox_outlined, size: 36, color: AppColors.textDisabled),
-                    ),
+                    const AppIcon.large(AppIcons.emptyState, color: AppColors.textDisabled),
                     const SizedBox(height: 12),
                     Text(
                       'Tidak ada catatan aktivitas pada kategori ini',
@@ -1805,14 +1769,7 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
                           children: [
                             Row(
                               children: [
-                                Container(
-                                  padding: const EdgeInsets.all(7),
-                                  decoration: BoxDecoration(
-                                    color: parsed.iconBg,
-                                    borderRadius: AppRadius.rounded,
-                                  ),
-                                  child: Icon(parsed.icon, size: 16, color: parsed.iconColor),
-                                ),
+                                AppIcon.small(parsed.icon, color: parsed.iconColor),
                                 const SizedBox(width: 8),
                                 Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
@@ -1868,16 +1825,9 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
                                     borderRadius: BorderRadius.circular(4),
                                     border: Border.all(color: AppColors.border),
                                   ),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      const Icon(Icons.person_outline, size: 12, color: AppColors.navy700),
-                                      const SizedBox(width: 4),
-                                      Text(
-                                        actorRole != null ? '$actorName ($actorRole)' : actorName,
-                                        style: const TextStyle(fontSize: 11, color: AppColors.navy900, fontWeight: FontWeight.w500),
-                                      ),
-                                    ],
+                                  child: Text(
+                                    actorRole != null ? '$actorName ($actorRole)' : actorName,
+                                    style: const TextStyle(fontSize: 11, color: AppColors.navy900, fontWeight: FontWeight.w500),
                                   ),
                                 ),
                                 Container(
@@ -1905,16 +1855,7 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
-                          // Icon Avatar Lingkaran
-                          Container(
-                            width: 38,
-                            height: 38,
-                            decoration: BoxDecoration(
-                              color: parsed.iconBg,
-                              borderRadius: AppRadius.rounded,
-                            ),
-                            child: Icon(parsed.icon, size: 19, color: parsed.iconColor),
-                          ),
+                          AppIcon.medium(parsed.icon, color: parsed.iconColor),
                           const SizedBox(width: 14),
 
                           // Konten Tengah: Action, Judul, Subtitle
@@ -1973,8 +1914,6 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
                                       child: Row(
                                         mainAxisSize: MainAxisSize.min,
                                         children: [
-                                          const Icon(Icons.person_outline, size: 12, color: AppColors.navy700),
-                                          const SizedBox(width: 4),
                                           Text(
                                             actorName,
                                             style: const TextStyle(fontSize: 11, color: AppColors.navy900, fontWeight: FontWeight.w600),
@@ -1997,16 +1936,9 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
                                         borderRadius: BorderRadius.circular(4),
                                         border: Border.all(color: AppColors.border),
                                       ),
-                                      child: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          const Icon(Icons.terminal_rounded, size: 12, color: AppColors.textSecondary),
-                                          const SizedBox(width: 4),
-                                          Text(
-                                            cleanIp,
-                                            style: const TextStyle(fontSize: 10.5, color: AppColors.textSecondary, fontFamily: 'monospace'),
-                                          ),
-                                        ],
+                                      child: Text(
+                                        cleanIp,
+                                        style: const TextStyle(fontSize: 10.5, color: AppColors.textSecondary, fontFamily: 'monospace'),
                                       ),
                                     ),
                                   ],
@@ -2111,7 +2043,7 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
         actionLabel: 'CHECK-IN',
         title: 'Check-in Tamu: $guest',
         subtitle: inv != null ? 'Kamar $room · No. Invoice: $inv' : 'Kamar $room · Reservasi berhasil diproses',
-        icon: Icons.login_rounded,
+        icon: AppIcons.checkIn,
         badgeBg: AppColors.availableBg,
         badgeColor: AppColors.availableText,
         iconBg: AppColors.availableBg,
@@ -2137,7 +2069,7 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
           if (paymentStr.isNotEmpty) '$paymentStr$lateStr',
           if (inv != null) 'Invoice: $inv',
         ].join(' · '),
-        icon: Icons.logout_rounded,
+        icon: AppIcons.checkOut,
         badgeBg: AppColors.orange100,
         badgeColor: AppColors.orange800,
         iconBg: AppColors.orange100,
@@ -2168,7 +2100,7 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
         actionLabel: 'STATUS KAMAR',
         title: title,
         subtitle: subtitle,
-        icon: Icons.cleaning_services_rounded,
+        icon: AppIcons.cleaning,
         badgeBg: AppColors.navy50,
         badgeColor: AppColors.navy700,
         iconBg: AppColors.navy50,
@@ -2181,7 +2113,7 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
         actionLabel: isFailed ? 'LOGIN GAGAL' : 'LOGIN BERHASIL',
         title: isFailed ? 'Percobaan Masuk Gagal (Security Alert)' : 'Autentikasi Pengguna Berhasil',
         subtitle: 'Upaya akses sistem untuk akun "$user"',
-        icon: isFailed ? Icons.gpp_maybe_rounded : Icons.verified_user_rounded,
+        icon: isFailed ? AppIcons.warning : AppIcons.shield,
         badgeBg: isFailed ? AppColors.errorBg : AppColors.availableBg,
         badgeColor: isFailed ? AppColors.errorText : AppColors.availableText,
         iconBg: isFailed ? AppColors.errorBg : AppColors.availableBg,
@@ -2193,7 +2125,7 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
         actionLabel: 'HAPUS DATA',
         title: 'Penghapusan Inventaris Kamar $room',
         subtitle: 'Data unit kamar dihapus dari daftar operasional hotel',
-        icon: Icons.delete_outline_rounded,
+        icon: AppIcons.delete,
         badgeBg: AppColors.errorBg,
         badgeColor: AppColors.errorText,
         iconBg: AppColors.errorBg,
@@ -2206,7 +2138,7 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
         actionLabel: 'UNDUH LAPORAN',
         title: 'Ekspor Rekapitulasi Laporan $format',
         subtitle: 'Mengunduh rekapitulasi data keuangan & operasional ($total data)',
-        icon: Icons.file_download_outlined,
+        icon: AppIcons.download,
         badgeBg: AppColors.navy100,
         badgeColor: AppColors.navy900,
         iconBg: AppColors.navy50,
@@ -2217,7 +2149,7 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
         actionLabel: act.replaceAll('_', ' '),
         title: 'Aktivitas ${act.replaceAll('_', ' ')}',
         subtitle: d.isNotEmpty ? d : 'Tidak ada rincian tambahan',
-        icon: Icons.history_rounded,
+        icon: AppIcons.audit,
         badgeBg: AppColors.navy50,
         badgeColor: AppColors.navy700,
         iconBg: AppColors.navy50,

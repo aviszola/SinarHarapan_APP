@@ -3,6 +3,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../../theme/app_colors.dart';
+import '../../../theme/app_icons.dart';
 import '../../../theme/app_text_styles.dart';
 import '../../shared_widgets/empty_state.dart';
 
@@ -272,7 +273,7 @@ class _ExecutiveTrendChartState extends State<ExecutiveTrendChart> {
             child: hasData
                 ? _buildCleanLineChart(chartData)
                 : EmptyStateWidget(
-                    icon: Icons.show_chart_rounded,
+                    icon: AppIcons.report,
                     title: 'Data Belum Tersedia',
                     message:
                         'Belum ada transaksi pada periode yang dipilih. Data transaksi baru akan langsung otomatis muncul di grafik ini.',
