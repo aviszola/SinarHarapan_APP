@@ -62,18 +62,20 @@ abstract final class AppIcons {
   // --- Autentikasi & Keamanan ---
   static const IconData lock = LucideIcons.lock;
   static const IconData eye = LucideIcons.eye;
-  static const eyeOff = LucideIcons.eyeOff;
+  static const IconData eyeOff = LucideIcons.eyeOff;
   static const IconData shield = LucideIcons.shieldCheck;
 
   // --- Pemeliharaan & Status Kamar ---
   static const IconData maintenance = LucideIcons.wrench;
   static const IconData cleaning = LucideIcons.sparkles;
+  static const IconData clean = LucideIcons.sparkles;
   static const IconData broom = LucideIcons.sparkles;
   static const IconData star = LucideIcons.star;
 
   // --- Indikator & Feedback ---
   static const IconData info = LucideIcons.info;
   static const IconData warning = LucideIcons.alertTriangle;
+  static const IconData alertTriangle = LucideIcons.alertTriangle;
   static const IconData error = LucideIcons.alertCircle;
   static const IconData success = LucideIcons.checkCircle2;
   static const IconData help = LucideIcons.helpCircle;
@@ -89,6 +91,8 @@ abstract final class AppIcons {
   static const IconData qrCode = LucideIcons.qrCode;
   static const IconData menu = LucideIcons.menu;
   static const IconData dropdown = LucideIcons.chevronDown;
+  static const IconData chevronDown = LucideIcons.chevronDown;
+  static const IconData plus = LucideIcons.plus;
   static const IconData layers = LucideIcons.layers;
   static const IconData food = LucideIcons.utensils;
   static const IconData drink = LucideIcons.coffee;

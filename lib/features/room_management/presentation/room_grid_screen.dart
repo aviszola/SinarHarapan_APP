@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../theme/app_colors.dart';
+import '../../../theme/app_icons.dart';
 import '../../../theme/app_text_styles.dart';
 import '../../../theme/app_spacing.dart';
 import '../../../core/config/app_config.dart';
@@ -62,7 +63,7 @@ class _RoomGridScreenState extends ConsumerState<RoomGridScreen> {
   void _showDirtyDialog(RoomModel room) async {
     final confirmed = await AppConfirmationDialog.show(
       context,
-      icon: Icons.cleaning_services_rounded,
+      icon: AppIcons.clean,
       iconColor: AppColors.statusDirty,
       iconBgColor: AppColors.statusDirtyBg,
       title: 'Pembersihan Kamar ${room.roomNumber}',
@@ -87,7 +88,7 @@ class _RoomGridScreenState extends ConsumerState<RoomGridScreen> {
   void _showMaintenanceDialog(RoomModel room) {
     AppConfirmationDialog.show(
       context,
-      icon: Icons.construction_rounded,
+      icon: AppIcons.maintenance,
       iconColor: AppColors.textDisabled,
       iconBgColor: AppColors.surface,
       title: 'Kamar ${room.roomNumber} Dalam Perawatan',
@@ -181,7 +182,7 @@ class _RoomGridScreenState extends ConsumerState<RoomGridScreen> {
               loading: () => const _RoomGridSkeleton(),
               error: (err, _) => Center(
                 child: EmptyStateWidget(
-                  icon: Icons.error_outline_rounded,
+                  icon: AppIcons.alertTriangle,
                   title: 'Gagal Memuat Data Kamar',
                   message: 'Terjadi kendala saat menghubungkan ke database: $err',
                   action: ElevatedButton(
@@ -194,7 +195,7 @@ class _RoomGridScreenState extends ConsumerState<RoomGridScreen> {
                 if (filteredRooms.isEmpty) {
                   return Center(
                     child: EmptyStateWidget(
-                      icon: Icons.meeting_room_outlined,
+                      icon: AppIcons.room,
                       title: 'Tidak Ada Kamar yang Sesuai',
                       message: 'Tidak ada unit kamar yang cocok dengan kriteria pencarian atau filter yang dipilih.',
                       action: OutlinedButton(
@@ -262,19 +263,6 @@ class _RoomGrid extends StatelessWidget {
                   padding: const EdgeInsets.only(bottom: 12),
                   child: Row(
                     children: [
-                      Container(
-                        padding: const EdgeInsets.all(4),
-                        decoration: BoxDecoration(
-                          color: AppColors.brandNavyTint,
-                          borderRadius: AppRadius.roundedSm,
-                        ),
-                        child: const Icon(
-                          Icons.layers_rounded,
-                          size: 14,
-                          color: AppColors.brandNavy,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
                       Text(
                         'Lantai $floor',
                         style: AppTextStyles.titleSmall.copyWith(
