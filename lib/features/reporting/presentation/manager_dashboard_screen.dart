@@ -753,21 +753,33 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
               label: 'Pendapatan Bersih Bulan Ini',
               value: totalNetRevenue,
               subtitle: 'Berdasarkan transaksi selesai',
+              icon: Icons.account_balance_wallet_rounded,
+              iconColor: const Color(0xFF059669),
+              iconBgColor: const Color(0xFFD1FAE5),
             );
             final kpi2 = KpiTile(
               label: 'Okupansi Hari Ini',
               value: '$todayOccPercent%',
               subtitle: '$occupiedRooms dari $operationalRooms kamar operasional aktif',
+              icon: Icons.hotel_rounded,
+              iconColor: const Color(0xFF2563EB),
+              iconBgColor: const Color(0xFFDBEAFE),
             );
             final kpi3 = KpiTile(
               label: 'Okupansi Bulan Ini',
               value: occMonthlyRate,
               subtitle: 'Penyebut: $operationalRooms kamar aktif × hari periode',
+              icon: Icons.pie_chart_outline_rounded,
+              iconColor: const Color(0xFF7C3AED),
+              iconBgColor: const Color(0xFFEDE9FE),
             );
             final kpi4 = KpiTile(
               label: 'Kedatangan Tamu (Check-In)',
               value: '$totalCheckIn Tamu',
               subtitle: 'Total check-in bulan ini',
+              icon: Icons.people_alt_rounded,
+              iconColor: const Color(0xFFEA580C),
+              iconBgColor: const Color(0xFFFFEDD5),
             );
 
             if (constraints.maxWidth >= 980) {
@@ -820,7 +832,7 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
 
         const SizedBox(height: AppSpacing.lg),
 
-        // Grafik Tren Bersih (Line Chart 2px tanpa spline meliuk/glow)
+        // Grafik Tren Bersih
         ExecutiveTrendChart(
           currencyFormatter: currencyFormatter,
           realTimeseriesData: _transactions,
@@ -837,8 +849,15 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
               padding: const EdgeInsets.all(AppSpacing.md),
               decoration: BoxDecoration(
                 color: AppColors.surface,
-                borderRadius: AppRadius.rounded,
-                border: Border.all(color: AppColors.border, width: 1),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: const Color(0xFFE2E8F0), width: 1),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.02),
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -846,94 +865,163 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
                   Text(
                     'Saluran Pemesanan Tamu',
                     style: AppTextStyles.titleSmall.copyWith(
-                      color: AppColors.brandNavyDark,
+                      color: const Color(0xFF0F172A),
+                      fontWeight: FontWeight.w700,
+                      fontSize: 16,
                     ),
                   ),
                   const SizedBox(height: 2),
                   Text(
                     'Perbandingan pemesanan Mitra RedDoorz vs Langsung',
-                    style: AppTextStyles.caption.copyWith(color: AppColors.textSecondary),
+                    style: AppTextStyles.caption.copyWith(
+                      color: const Color(0xFF64748B),
+                      fontSize: 12,
+                    ),
                   ),
                   const SizedBox(height: AppSpacing.md),
 
-                  // Batang Proporsi Bersih
+                  // Dua Tile Statistik Saluran yang Terang & Jelas
+                  Row(
+                    children: [
+                      // RedDoorz
+                      Expanded(
+                        child: Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFFFF7ED),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: const Color(0xFFFFEDD5)),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Container(
+                                    width: 8,
+                                    height: 8,
+                                    decoration: const BoxDecoration(
+                                      color: Color(0xFFEA580C),
+                                      shape: BoxShape.circle,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 6),
+                                  const Text(
+                                    'RedDoorz',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600,
+                                      color: Color(0xFF9A3412),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 6),
+                              Text(
+                                '$reddoorzPct%',
+                                style: const TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.w800,
+                                  color: Color(0xFF7C2D12),
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                '${reddoorzCount ?? 0} Transaksi · ${currencyFormatter.format(reddoorzNominal)}',
+                                style: const TextStyle(
+                                  fontSize: 11,
+                                  color: Color(0xFF9A3412),
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      // Langsung
+                      Expanded(
+                        child: Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFEFF6FF),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: const Color(0xFFDBEAFE)),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Container(
+                                    width: 8,
+                                    height: 8,
+                                    decoration: const BoxDecoration(
+                                      color: Color(0xFF1E3A8A),
+                                      shape: BoxShape.circle,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 6),
+                                  const Text(
+                                    'Langsung (Walk-In)',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600,
+                                      color: Color(0xFF1E40AF),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 6),
+                              Text(
+                                '$walkInPct%',
+                                style: const TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.w800,
+                                  color: Color(0xFF1E3A8A),
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                '${walkInCount ?? 0} Transaksi · ${currencyFormatter.format(walkInNominal)}',
+                                style: const TextStyle(
+                                  fontSize: 11,
+                                  color: Color(0xFF1E40AF),
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 14),
+
+                  // Batang Proporsi Rapi Bersih Tanpa Teks Terjepit
                   ClipRRect(
-                    borderRadius: AppRadius.roundedSm,
-                    child: SizedBox(
-                      height: 22,
+                    borderRadius: BorderRadius.circular(6),
+                    child: Container(
+                      height: 10,
+                      color: const Color(0xFFF1F5F9),
                       child: Row(
                         children: [
-                          Expanded(
-                            flex: totalChannels > 0 ? reddoorzPct : 50,
-                            child: Container(
-                              color: AppColors.brandOrange,
-                              alignment: Alignment.center,
-                              child: Text(
-                                totalChannels > 0 ? 'RedDoorz $reddoorzPct%' : 'RedDoorz',
-                                style: const TextStyle(
-                                  color: AppColors.white,
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
+                          if (reddoorzPct > 0)
+                            Expanded(
+                              flex: reddoorzPct,
+                              child: Container(color: const Color(0xFFEA580C)),
                             ),
-                          ),
-                          Expanded(
-                            flex: totalChannels > 0 ? walkInPct : 50,
-                            child: Container(
-                              color: AppColors.brandNavy,
-                              alignment: Alignment.center,
-                              child: Text(
-                                totalChannels > 0 ? 'Langsung $walkInPct%' : 'Langsung',
-                                style: const TextStyle(
-                                  color: AppColors.white,
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
+                          if (walkInPct > 0)
+                            Expanded(
+                              flex: walkInPct,
+                              child: Container(color: const Color(0xFF1E3A8A)),
                             ),
-                          ),
                         ],
                       ),
                     ),
-                  ),
-
-                  const SizedBox(height: AppSpacing.md),
-
-                  Wrap(
-                    spacing: AppSpacing.md,
-                    runSpacing: AppSpacing.sm,
-                    alignment: WrapAlignment.spaceBetween,
-                    children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text('Mitra RedDoorz', style: AppTextStyles.caption),
-                          Text(
-                            reddoorzCount != null
-                                ? '$reddoorzCount Transaksi · ${currencyFormatter.format(reddoorzNominal)}'
-                                : '0 Transaksi',
-                            style: AppTextStyles.bodyMediumMedium.copyWith(
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                        ],
-                      ),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text('Pemesanan Langsung', style: AppTextStyles.caption),
-                          Text(
-                            walkInCount != null
-                                ? '$walkInCount Transaksi · ${currencyFormatter.format(walkInNominal)}'
-                                : '0 Transaksi',
-                            style: AppTextStyles.bodyMediumMedium.copyWith(
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
                   ),
                 ],
               ),
@@ -943,8 +1031,15 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
               padding: const EdgeInsets.all(AppSpacing.md),
               decoration: BoxDecoration(
                 color: AppColors.surface,
-                borderRadius: AppRadius.rounded,
-                border: Border.all(color: AppColors.border, width: 1),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: const Color(0xFFE2E8F0), width: 1),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.02),
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -952,13 +1047,18 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
                   Text(
                     'Hunian Berdasarkan Lantai',
                     style: AppTextStyles.titleSmall.copyWith(
-                      color: AppColors.brandNavyDark,
+                      color: const Color(0xFF0F172A),
+                      fontWeight: FontWeight.w700,
+                      fontSize: 16,
                     ),
                   ),
                   const SizedBox(height: 2),
                   Text(
                     'Distribusi keterisian kamar aktif saat ini',
-                    style: AppTextStyles.caption.copyWith(color: AppColors.textSecondary),
+                    style: AppTextStyles.caption.copyWith(
+                      color: const Color(0xFF64748B),
+                      fontSize: 12,
+                    ),
                   ),
                   const SizedBox(height: AppSpacing.md),
 
@@ -1008,42 +1108,65 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
   }
 
   Widget _buildFloorOccupancyRow(String title, double ratio, String label) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Expanded(
-              child: Text(
+    final isOccupied = ratio > 0;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: const Color(0xFFE2E8F0), width: 0.8),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
                 title,
-                style: AppTypography.caption.copyWith(fontWeight: FontWeight.w600),
-                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF1E293B),
+                ),
               ),
-            ),
-            const SizedBox(width: 8),
-            Text(
-              label,
-              style: AppTypography.caption.copyWith(
-                color: ratio > 0 ? AppColors.orange800 : AppColors.textSecondary,
-                fontWeight: FontWeight.bold,
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                decoration: BoxDecoration(
+                  color: isOccupied ? const Color(0xFFFEF3C7) : Colors.transparent,
+                  borderRadius: BorderRadius.circular(4),
+                  border: isOccupied
+                      ? Border.all(color: const Color(0xFFFCD34D), width: 0.8)
+                      : null,
+                ),
+                child: Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w700,
+                    color: isOccupied
+                        ? const Color(0xFF92400E)
+                        : const Color(0xFF64748B),
+                  ),
+                ),
               ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 5),
-        ClipRRect(
-          borderRadius: BorderRadius.circular(4),
-          child: LinearProgressIndicator(
-            value: ratio,
-            backgroundColor: AppColors.navy50,
-            valueColor: AlwaysStoppedAnimation<Color>(
-              ratio > 0 ? AppColors.orange600 : AppColors.border,
-            ),
-            minHeight: 6,
+            ],
           ),
-        ),
-      ],
+          const SizedBox(height: 8),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(4),
+            child: LinearProgressIndicator(
+              value: ratio,
+              backgroundColor: const Color(0xFFE2E8F0),
+              valueColor: AlwaysStoppedAnimation<Color>(
+                isOccupied ? const Color(0xFF2563EB) : const Color(0xFF94A3B8),
+              ),
+              minHeight: 6,
+            ),
+          ),
+        ],
+      ),
     );
   }
 
