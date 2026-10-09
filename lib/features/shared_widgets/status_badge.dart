@@ -48,10 +48,14 @@ class StatusBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     final s = _style;
     final label = customLabel ?? s.label;
+    final disableAnimations = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
+    final animDuration = disableAnimations ? Duration.zero : const Duration(milliseconds: 180);
 
     return Align(
       alignment: Alignment.centerLeft,
-      child: Container(
+      child: AnimatedContainer(
+        duration: animDuration,
+        curve: Curves.easeInOut,
         padding: compact
             ? const EdgeInsets.all(5)
             : const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -63,7 +67,9 @@ class StatusBadge extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Container(
+            AnimatedContainer(
+              duration: animDuration,
+              curve: Curves.easeInOut,
               width: 6,
               height: 6,
               decoration: BoxDecoration(
@@ -73,12 +79,14 @@ class StatusBadge extends StatelessWidget {
             ),
             if (!compact) ...[
               const SizedBox(width: 6),
-              Text(
-                label,
+              AnimatedDefaultTextStyle(
+                duration: animDuration,
+                curve: Curves.easeInOut,
                 style: AppTextStyles.badge.copyWith(
                   color: s.fg,
                   fontSize: 12,
                 ),
+                child: Text(label),
               ),
             ],
           ],

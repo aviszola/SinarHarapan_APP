@@ -26,6 +26,7 @@ class RoomCard extends StatefulWidget {
 
 class _RoomCardState extends State<RoomCard> {
   bool _isHovered = false;
+  bool _isPressed = false;
 
   static final _currFmt = NumberFormat.currency(
     locale: 'id_ID',
@@ -45,34 +46,47 @@ class _RoomCardState extends State<RoomCard> {
   @override
   Widget build(BuildContext context) {
     final room = widget.room;
+    final disableAnimations = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
 
     return MouseRegion(
       onEnter: (_) => setState(() => _isHovered = true),
       onExit: (_) => setState(() => _isHovered = false),
       cursor: room.isMaintenance ? SystemMouseCursors.basic : SystemMouseCursors.click,
       child: GestureDetector(
+        onTapDown: (_) => setState(() => _isPressed = true),
+        onTapUp: (_) => setState(() => _isPressed = false),
+        onTapCancel: () => setState(() => _isPressed = false),
         onTap: widget.onTap,
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            final isCompact = constraints.maxWidth < 180 || constraints.maxHeight < 150;
+        child: AnimatedScale(
+          scale: disableAnimations ? 1.0 : (_isPressed ? 0.99 : 1.0),
+          duration: const Duration(milliseconds: 120),
+          curve: Curves.easeOutCubic,
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final isCompact = constraints.maxWidth < 180 || constraints.maxHeight < 150;
 
-            if (isCompact) {
-              return AnimatedContainer(
-                duration: const Duration(milliseconds: 140),
-                decoration: BoxDecoration(
-                  color: AppColors.surface,
-                  borderRadius: AppRadius.rounded,
-                  border: Border.all(
-                    color: _isHovered ? AppColors.brandNavy : AppColors.border,
-                    width: _isHovered ? 1.5 : 1,
+              if (isCompact) {
+                return AnimatedContainer(
+                  duration: const Duration(milliseconds: 140),
+                  decoration: BoxDecoration(
+                    color: AppColors.surface,
+                    borderRadius: AppRadius.rounded,
+                    border: Border.all(
+                      color: _isHovered ? AppColors.brandNavy : AppColors.border,
+                      width: _isHovered ? 1.5 : 1,
+                    ),
+                    boxShadow: _isHovered ? AppElevation.subtle : AppElevation.none,
                   ),
-                  boxShadow: _isHovered ? AppElevation.subtle : AppElevation.none,
-                ),
-                clipBehavior: Clip.antiAlias,
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Container(width: 4, color: _statusStripeColor),
+                  clipBehavior: Clip.antiAlias,
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      AnimatedContainer(
+                        duration: const Duration(milliseconds: 180),
+                        curve: Curves.easeInOut,
+                        width: 4,
+                        color: _statusStripeColor,
+                      ),
                     Expanded(
                       child: Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
@@ -148,7 +162,9 @@ class _RoomCardState extends State<RoomCard> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   // Garis Status 4px di Sisi Kiri
-                  Container(
+                  AnimatedContainer(
+                    duration: const Duration(milliseconds: 180),
+                    curve: Curves.easeInOut,
                     width: 4,
                     color: _statusStripeColor,
                   ),
@@ -222,6 +238,7 @@ class _RoomCardState extends State<RoomCard> {
             );
           },
         ),
+      ),
       ),
     );
   }
