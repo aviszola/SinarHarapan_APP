@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../app/theme.dart';
+import '../../theme/app_icons.dart';
 
 /// Consistent text input field matching design.md §6.4.
 /// Height: 48px, border 1px → 2px navy on focus, no glow/shadow.
@@ -131,20 +132,12 @@ class _AppTextFieldState extends State<AppTextField> {
                   color: AppColors.navy100,
                   borderRadius: AppRadius.roundedSm,
                 ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(Icons.auto_fix_high_rounded,
-                        size: 11, color: AppColors.navy700),
-                    const SizedBox(width: 3),
-                    Text(
-                      'Diisi otomatis',
-                      style: AppTypography.overline.copyWith(
-                        color: AppColors.navy700,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
+                child: Text(
+                  'Diisi otomatis',
+                  style: AppTypography.overline.copyWith(
+                    color: AppColors.navy700,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
             ],
@@ -181,20 +174,19 @@ class _AppTextFieldState extends State<AppTextField> {
             filled: true,
             fillColor: widget.readOnly ? AppColors.bg : AppColors.surface,
             prefixIcon: widget.prefixIcon != null
-                ? Icon(
-                    widget.prefixIcon,
-                    size: 20,
+                ? AppIcon(
+                    widget.prefixIcon!,
+                    size: AppIconSize.medium,
                     color: _focused ? AppColors.navy700 : AppColors.textSecondary,
                   )
                 : null,
             suffixIcon: widget.isPassword
                 ? IconButton(
-                    icon: Icon(
-                      _obscure
-                          ? Icons.visibility_outlined
-                          : Icons.visibility_off_outlined,
-                      size: 20,
+                    icon: AppIcon(
+                      _obscure ? AppIcons.eye : AppIcons.eyeOff,
+                      size: AppIconSize.medium,
                       color: AppColors.textSecondary,
+                      tooltip: _obscure ? 'Tampilkan sandi' : 'Sembunyikan sandi',
                     ),
                     onPressed: () => setState(() => _obscure = !_obscure),
                   )

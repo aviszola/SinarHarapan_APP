@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../app/theme.dart';
+import '../../theme/app_icons.dart';
 
 enum AppButtonVariant { primary, secondary, outline, ghost, destructive }
 
@@ -97,7 +98,7 @@ class AppButton extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         if (icon != null) ...[
-                          Icon(icon, size: 19,
+                          AppIcon.small(icon!,
                               color: isEnabled ? fg : AppColors.textDisabled),
                           const SizedBox(width: 8),
                         ],

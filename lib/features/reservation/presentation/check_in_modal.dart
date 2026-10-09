@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import '../../../app/theme.dart';
+import '../../../theme/app_icons.dart';
 import '../../../core/config/app_config.dart';
 import '../../../core/network/api_client.dart';
 import '../../auth/presentation/auth_controller.dart';
@@ -133,7 +134,7 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
               children: [
                 Expanded(
                   child: ElevatedButton.icon(
-                    icon: const Icon(Icons.camera_alt),
+                    icon: const AppIcon.medium(AppIcons.camera),
                     label: const Text('Buka Kamera'),
                     onPressed: () {
                       Navigator.pop(ctx);
@@ -144,7 +145,7 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
                 const SizedBox(width: 12),
                 Expanded(
                   child: ElevatedButton.icon(
-                    icon: const Icon(Icons.photo_library),
+                    icon: const AppIcon.medium(AppIcons.image),
                     label: const Text('Pilih Galeri'),
                     onPressed: () {
                       Navigator.pop(ctx);
@@ -616,8 +617,9 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
                       ),
                     ),
                     IconButton(
-                      icon: const Icon(
-                        Icons.close,
+                      tooltip: 'Tutup',
+                      icon: const AppIcon.medium(
+                        AppIcons.close,
                         color: AppColors.textSecondary,
                       ),
                       onPressed: () => Navigator.of(context).pop(),
@@ -689,8 +691,8 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
                                 ),
                                 child: Row(
                                   children: [
-                                    Icon(
-                                      Icons.person_pin_circle_outlined,
+                                    AppIcon.medium(
+                                      AppIcons.guest,
                                       color: _bookingSource == 'WALK_IN'
                                           ? AppColors.navy700
                                           : AppColors.textSecondary,
@@ -749,8 +751,8 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
                                 ),
                                 child: Row(
                                   children: [
-                                    Icon(
-                                      Icons.hotel_class_rounded,
+                                    AppIcon.medium(
+                                      AppIcons.room,
                                       color: _bookingSource == 'REDDOORZ'
                                           ? AppColors.brandOrange
                                           : AppColors.textSecondary,
@@ -811,7 +813,6 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
                             label: 'Kode Booking RedDoorz',
                             hint: 'Contoh: RD-89421',
                             controller: _bookingCodeController,
-                            prefixIcon: Icons.confirmation_number_outlined,
                             validator: (v) =>
                                 (_bookingSource == 'REDDOORZ' &&
                                     (v == null || v.trim().isEmpty))
@@ -837,22 +838,12 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
                                 mainAxisAlignment:
                                     MainAxisAlignment.spaceBetween,
                                 children: [
-                                  Row(
-                                    children: [
-                                      const Icon(
-                                        Icons.document_scanner_rounded,
-                                        color: AppColors.navy700,
-                                        size: 20,
-                                      ),
-                                      const SizedBox(width: 8),
-                                      Text(
-                                        'Ekstraksi Kamera / OCR KTP Tamu',
-                                        style: AppTypography.bodySm.copyWith(
-                                          fontWeight: FontWeight.w700,
-                                          color: AppColors.navy900,
-                                        ),
-                                      ),
-                                    ],
+                                  Text(
+                                    'Ekstraksi Kamera / OCR KTP Tamu',
+                                    style: AppTypography.bodySm.copyWith(
+                                      fontWeight: FontWeight.w700,
+                                      color: AppColors.navy900,
+                                    ),
                                   ),
                                   if (_isOcrExtracted)
                                     Container(
@@ -890,7 +881,7 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
                                         ? 'Scan Ulang $_idType'
                                         : 'Scan Dokumen Sekarang',
                                     variant: AppButtonVariant.secondary,
-                                    icon: Icons.camera_alt_outlined,
+                                    icon: AppIcons.camera,
                                     isLoading: _isOcrLoading,
                                     onPressed: _requestCameraPermissionAndScan,
                                   ),
@@ -952,7 +943,6 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
                                       : 'Nomor SIM'),
                             controller: _nikController,
                             isAutoFilled: _isOcrExtracted,
-                            prefixIcon: Icons.badge_outlined,
                             keyboardType: _idType == 'KTP' || _idType == 'SIM'
                                 ? TextInputType.number
                                 : TextInputType.text,
@@ -965,7 +955,6 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
                             hint: 'Sesuai kartu identitas',
                             controller: _nameController,
                             isAutoFilled: _isOcrExtracted,
-                            prefixIcon: Icons.person_outline,
                             validator: (v) => (v == null || v.trim().isEmpty)
                                 ? 'Nama wajib diisi'
                                 : null,
@@ -976,7 +965,6 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
                             hint:
                                 '08... atau +62... (untuk pengingat check-out)',
                             controller: _phoneController,
-                            prefixIcon: Icons.chat_bubble_outline,
                             keyboardType: TextInputType.phone,
                             validator: (v) => FlutterValidation.validateWa(v),
                           ),
@@ -986,7 +974,6 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
                             hint: 'Kota / Alamat lengkap (opsional)',
                             controller: _addressController,
                             isAutoFilled: _isOcrExtracted,
-                            prefixIcon: Icons.location_on_outlined,
                           ),
                         ] else ...[
                           Row(
@@ -1001,7 +988,6 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
                                             : 'Nomor SIM'),
                                   controller: _nikController,
                                   isAutoFilled: _isOcrExtracted,
-                                  prefixIcon: Icons.badge_outlined,
                                   keyboardType:
                                       _idType == 'KTP' || _idType == 'SIM'
                                       ? TextInputType.number
@@ -1020,7 +1006,6 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
                                   hint: 'Sesuai kartu identitas',
                                   controller: _nameController,
                                   isAutoFilled: _isOcrExtracted,
-                                  prefixIcon: Icons.person_outline,
                                   validator: (v) =>
                                       (v == null || v.trim().isEmpty)
                                       ? 'Nama wajib diisi'
@@ -1038,7 +1023,6 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
                                   hint:
                                       '08... atau +62... (pengingat check-out)',
                                   controller: _phoneController,
-                                  prefixIcon: Icons.chat_bubble_outline,
                                   keyboardType: TextInputType.phone,
                                   validator: (v) =>
                                       FlutterValidation.validateWa(v),
@@ -1051,7 +1035,6 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
                                   hint: 'Kota / Alamat lengkap (opsional)',
                                   controller: _addressController,
                                   isAutoFilled: _isOcrExtracted,
-                                  prefixIcon: Icons.location_on_outlined,
                                 ),
                               ),
                             ],
@@ -1233,9 +1216,8 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
                                         ),
                                         visualDensity: VisualDensity.compact,
                                       ),
-                                      icon: const Icon(
-                                        Icons.restart_alt_rounded,
-                                        size: 14,
+                                      icon: const AppIcon.small(
+                                        AppIcons.reset,
                                       ),
                                       label: const Text(
                                         'Reset ke Standar',
@@ -1468,7 +1450,7 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
                     AppButton(
                       label: 'Pratinjau Invoice & Selesaikan',
                       variant: AppButtonVariant.primary,
-                      icon: Icons.receipt_long_rounded,
+                      icon: AppIcons.checkIn,
                       onPressed: _handleSubmit,
                     ),
                   ],
@@ -1496,12 +1478,11 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(
-            Icons.event_available_rounded,
-            size: 12,
+          const AppIcon.small(
+            AppIcons.calendar,
             color: AppColors.navy700,
           ),
-          const SizedBox(width: 3),
+          const SizedBox(width: 4),
           Flexible(
             child: Text(
               '$dayName, $formattedDate',
@@ -1535,9 +1516,8 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
             padding: const EdgeInsets.symmetric(horizontal: 10),
             child: Row(
               children: [
-                const Icon(
-                  Icons.edit_calendar_outlined,
-                  size: 16,
+                const AppIcon.small(
+                  AppIcons.calendar,
                   color: AppColors.navy700,
                 ),
                 const SizedBox(width: 8),
@@ -1576,9 +1556,9 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
                 ),
                 const SizedBox(width: 6),
                 IconButton(
-                  icon: const Icon(
-                    Icons.remove_circle_outline,
-                    size: 16,
+                  tooltip: 'Kurang 1 malam',
+                  icon: const AppIcon.small(
+                    AppIcons.minus,
                     color: AppColors.navy700,
                   ),
                   padding: EdgeInsets.zero,
@@ -1595,9 +1575,9 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
                       : null,
                 ),
                 IconButton(
-                  icon: const Icon(
-                    Icons.add_circle_outline,
-                    size: 16,
+                  tooltip: 'Tambah 1 malam',
+                  icon: const AppIcon.small(
+                    AppIcons.plus,
                     color: AppColors.navy700,
                   ),
                   padding: EdgeInsets.zero,
@@ -1641,10 +1621,9 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
         child: DropdownButton<int>(
           value: selectedValue,
           isExpanded: true,
-          icon: const Icon(
-            Icons.keyboard_arrow_down_rounded,
+          icon: const AppIcon.medium(
+            AppIcons.chevronDown,
             color: AppColors.navy700,
-            size: 20,
           ),
           dropdownColor: AppColors.surface,
           borderRadius: AppRadius.rounded,
@@ -1653,9 +1632,8 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
               value: 1,
               child: Row(
                 children: [
-                  const Icon(
-                    Icons.bed_outlined,
-                    size: 18,
+                  const AppIcon.small(
+                    AppIcons.room,
                     color: AppColors.navy700,
                   ),
                   const SizedBox(width: 8),
@@ -1675,9 +1653,8 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
               value: 3,
               child: Row(
                 children: [
-                  const Icon(
-                    Icons.bed_outlined,
-                    size: 18,
+                  const AppIcon.small(
+                    AppIcons.room,
                     color: AppColors.navy700,
                   ),
                   const SizedBox(width: 8),
@@ -1697,9 +1674,8 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
               value: 5,
               child: Row(
                 children: [
-                  const Icon(
-                    Icons.bed_outlined,
-                    size: 18,
+                  const AppIcon.small(
+                    AppIcons.room,
                     color: AppColors.navy700,
                   ),
                   const SizedBox(width: 8),
@@ -1719,9 +1695,8 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
               value: -1,
               child: Row(
                 children: [
-                  const Icon(
-                    Icons.edit_calendar_outlined,
-                    size: 18,
+                  const AppIcon.small(
+                    AppIcons.calendar,
                     color: AppColors.orange600,
                   ),
                   const SizedBox(width: 8),
@@ -1767,25 +1742,25 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
         {
           'id': 'REDDOORZ_PREPAID',
           'label': 'Lunas via RedDoorz App',
-          'icon': Icons.hotel_class_rounded,
+          'icon': AppIcons.room,
           'color': AppColors.brandOrange,
         },
       {
         'id': 'CASH',
         'label': 'Tunai (Cash)',
-        'icon': Icons.payments_outlined,
+        'icon': AppIcons.wallet,
         'color': AppColors.navy900,
       },
       {
         'id': 'QRIS',
         'label': 'QRIS Dinamis',
-        'icon': Icons.qr_code_rounded,
+        'icon': AppIcons.qrCode,
         'color': AppColors.statusAvailable,
       },
       {
         'id': 'TRANSFER',
         'label': 'Transfer Bank (BCA/Mandiri)',
-        'icon': Icons.account_balance_outlined,
+        'icon': AppIcons.payment,
         'color': AppColors.brandNavy,
       },
     ];
@@ -1807,10 +1782,9 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
         child: DropdownButton<String>(
           value: effectiveValue,
           isExpanded: true,
-          icon: const Icon(
-            Icons.keyboard_arrow_down_rounded,
+          icon: const AppIcon.medium(
+            AppIcons.chevronDown,
             color: AppColors.navy700,
-            size: 20,
           ),
           dropdownColor: AppColors.surface,
           borderRadius: AppRadius.rounded,
@@ -1821,7 +1795,7 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
               value: opt['id'] as String,
               child: Row(
                 children: [
-                  Icon(opt['icon'] as IconData, size: 18, color: color),
+                  AppIcon.small(opt['icon'] as IconData, color: color),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(

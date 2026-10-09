@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../theme/app_colors.dart';
 import '../../../theme/app_text_styles.dart';
 import '../../../theme/app_spacing.dart';
+import '../../../theme/app_icons.dart';
 import '../../shared_widgets/app_button.dart';
 import '../../shared_widgets/app_text_field.dart';
 import '../domain/user_model.dart';
@@ -176,25 +177,23 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               const SizedBox(height: AppSpacing.md),
             ],
 
-            // Input Nama Pengguna
+            // Input Nama Pengguna (tanpa ikon dekoratif)
             AppTextField(
               label: 'Nama Pengguna',
               hint: 'Contoh: resepsionis01',
               controller: _usernameController,
-              prefixIcon: Icons.person_outline_rounded,
               validator: (v) => (v == null || v.trim().isEmpty)
                   ? 'Nama pengguna wajib diisi'
                   : null,
             ),
             const SizedBox(height: AppSpacing.md),
 
-            // Input Kata Sandi
+            // Input Kata Sandi (tanpa ikon dekoratif, aksi visibilitas tetap ada)
             AppTextField(
               label: 'Kata Sandi',
               hint: 'Masukkan kata sandi staf',
               controller: _passwordController,
               isPassword: true,
-              prefixIcon: Icons.lock_outline_rounded,
               validator: (v) =>
                   (v == null || v.isEmpty) ? 'Kata sandi wajib diisi' : null,
               onSubmitted: (_) => _handleLogin(),
@@ -205,7 +204,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             AppButton(
               label: 'Masuk ke Sistem',
               variant: AppButtonVariant.primary,
-              icon: Icons.login_rounded,
+              icon: AppIcons.login,
               isLoading: authState.isLoading,
               onPressed: _handleLogin,
             ),
@@ -221,7 +220,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     child: AppButton(
                       label: 'Resepsionis',
                       variant: AppButtonVariant.outline,
-                      icon: Icons.badge_outlined,
                       onPressed: authState.isLoading
                           ? null
                           : () => _handleQuickLogin(UserRole.receptionist),
@@ -232,7 +230,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     child: AppButton(
                       label: 'Manajer Hotel',
                       variant: AppButtonVariant.outline,
-                      icon: Icons.admin_panel_settings_outlined,
                       onPressed: authState.isLoading
                           ? null
                           : () => _handleQuickLogin(UserRole.manager),
@@ -296,19 +293,19 @@ class _LeftBrandPanel extends StatelessWidget {
           const Spacer(),
           // Modul Operasional Hotel
           _ModuleItem(
-            icon: Icons.hotel_rounded,
+            icon: AppIcons.room,
             title: 'Operasional Kamar',
             subtitle: 'Pemantauan status 3 kamar, check-in, dan check-out cepat.',
           ),
           const SizedBox(height: 18),
           _ModuleItem(
-            icon: Icons.document_scanner_outlined,
+            icon: AppIcons.reception,
             title: 'Verifikasi Tamu & KTP',
             subtitle: 'Pencatatan data identitas tamu walk-in maupun channel.',
           ),
           const SizedBox(height: 18),
           _ModuleItem(
-            icon: Icons.query_stats_rounded,
+            icon: AppIcons.report,
             title: 'Laporan Keuangan',
             subtitle: 'Rekapitulasi pendapatan harian dan riwayat transaksi.',
           ),
@@ -323,9 +320,8 @@ class _LeftBrandPanel extends StatelessWidget {
             ),
             child: Row(
               children: [
-                const Icon(
-                  Icons.lock_outline_rounded,
-                  size: 16,
+                const AppIcon.small(
+                  AppIcons.shield,
                   color: AppColors.white,
                 ),
                 const SizedBox(width: 10),
@@ -363,14 +359,13 @@ class _ModuleItem extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Container(
-          width: 36,
-          height: 36,
-          decoration: BoxDecoration(
-            color: AppColors.brandNavy,
-            borderRadius: AppRadius.rounded,
+        Padding(
+          padding: const EdgeInsets.only(top: 2),
+          child: AppIcon(
+            icon,
+            size: AppIconSize.medium,
+            color: AppColors.brandOrange,
           ),
-          child: Icon(icon, size: 18, color: AppColors.white),
         ),
         const SizedBox(width: 14),
         Expanded(
@@ -472,9 +467,8 @@ class _ErrorBanner extends StatelessWidget {
       ),
       child: Row(
         children: [
-          const Icon(
-            Icons.error_outline_rounded,
-            size: 18,
+          const AppIcon.small(
+            AppIcons.error,
             color: AppColors.errorText,
           ),
           const SizedBox(width: 10),

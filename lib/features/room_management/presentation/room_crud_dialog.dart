@@ -2,6 +2,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../app/theme.dart';
+import '../../../theme/app_icons.dart';
 import '../../shared_widgets/app_button.dart';
 import '../../shared_widgets/app_feedback.dart';
 import '../../shared_widgets/app_text_field.dart';
@@ -79,26 +80,13 @@ class _RoomCrudDialogState extends ConsumerState<RoomCrudDialog> {
 
             return AlertDialog(
               shape: const RoundedRectangleBorder(borderRadius: AppRadius.rounded),
-              title: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: AppColors.orange50,
-                      borderRadius: AppRadius.rounded,
-                    ),
-                    child: const Icon(Icons.hotel_class_outlined, color: AppColors.orange600, size: 20),
-                  ),
-                  const SizedBox(width: 10),
-                  const Text(
-                    'Tambah Fasilitas Kamar',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.navy900,
-                    ),
-                  ),
-                ],
+              title: const Text(
+                'Tambah Fasilitas Kamar',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.navy900,
+                ),
               ),
               content: SizedBox(
                 width: math.min(440.0, MediaQuery.of(dialogCtx).size.width - 48),
@@ -123,7 +111,6 @@ class _RoomCrudDialogState extends ConsumerState<RoomCrudDialog> {
                           runSpacing: 8,
                           children: remainingPresets.map((facility) {
                             return ActionChip(
-                              avatar: const Icon(Icons.add_circle_outline, size: 15, color: AppColors.navy700),
                               label: Text(facility),
                               labelStyle: AppTypography.caption.copyWith(
                                 color: AppColors.navy900,
@@ -204,7 +191,7 @@ class _RoomCrudDialogState extends ConsumerState<RoomCrudDialog> {
                               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                               shape: RoundedRectangleBorder(borderRadius: AppRadius.rounded),
                             ),
-                            icon: const Icon(Icons.add, size: 16),
+                            icon: const AppIcon.small(AppIcons.plus),
                             label: const Text('Tambah', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
                             onPressed: () {
                               final text = customController.text.trim();
@@ -350,7 +337,8 @@ class _RoomCrudDialogState extends ConsumerState<RoomCrudDialog> {
                       ),
                     ),
                     IconButton(
-                      icon: const Icon(Icons.close, color: AppColors.textSecondary),
+                      tooltip: 'Tutup',
+                      icon: const AppIcon.medium(AppIcons.close, color: AppColors.textSecondary),
                       onPressed: () => Navigator.of(context).pop(),
                     ),
                   ],
@@ -369,7 +357,6 @@ class _RoomCrudDialogState extends ConsumerState<RoomCrudDialog> {
                             label: 'Nomor Kamar',
                             hint: 'Contoh: 305',
                             controller: _roomNumberController,
-                            prefixIcon: Icons.meeting_room_outlined,
                             validator: (v) =>
                                 (v == null || v.trim().isEmpty) ? 'Nomor kamar wajib diisi' : null,
                           ),
@@ -425,7 +412,6 @@ class _RoomCrudDialogState extends ConsumerState<RoomCrudDialog> {
                             label: 'Tarif Dasar / Malam (Rp)',
                             controller: _basePriceController,
                             keyboardType: TextInputType.number,
-                            prefixIcon: Icons.payments_outlined,
                             validator: (v) =>
                                 (v == null || v.trim().isEmpty) ? 'Tarif wajib diisi' : null,
                           ),
@@ -437,7 +423,6 @@ class _RoomCrudDialogState extends ConsumerState<RoomCrudDialog> {
                                   label: 'Nomor Kamar',
                                   hint: 'Contoh: 305',
                                   controller: _roomNumberController,
-                                  prefixIcon: Icons.meeting_room_outlined,
                                   validator: (v) =>
                                       (v == null || v.trim().isEmpty) ? 'Nomor kamar wajib diisi' : null,
                                 ),
@@ -505,7 +490,6 @@ class _RoomCrudDialogState extends ConsumerState<RoomCrudDialog> {
                                   label: 'Tarif Dasar / Malam (Rp)',
                                   controller: _basePriceController,
                                   keyboardType: TextInputType.number,
-                                  prefixIcon: Icons.payments_outlined,
                                   validator: (v) =>
                                       (v == null || v.trim().isEmpty) ? 'Tarif wajib diisi' : null,
                                 ),
@@ -537,7 +521,7 @@ class _RoomCrudDialogState extends ConsumerState<RoomCrudDialog> {
                                 backgroundColor: AppColors.navy50,
                                 side: const BorderSide(color: AppColors.border),
                                 shape: RoundedRectangleBorder(borderRadius: AppRadius.rounded),
-                                deleteIcon: const Icon(Icons.close, size: 15, color: AppColors.navy700),
+                                deleteIcon: const AppIcon.small(AppIcons.close, color: AppColors.navy700),
                                 deleteButtonTooltipMessage: 'Hapus $facility',
                                 onDeleted: () {
                                   setState(() {
@@ -549,7 +533,7 @@ class _RoomCrudDialogState extends ConsumerState<RoomCrudDialog> {
 
                             // Tombol Tambah Fasilitas
                             ActionChip(
-                              avatar: const Icon(Icons.add_circle, size: 16, color: AppColors.orange600),
+                              avatar: const AppIcon.small(AppIcons.plus, color: AppColors.orange600),
                               label: const Text('Tambah Fasilitas'),
                               labelStyle: AppTypography.caption.copyWith(
                                 color: AppColors.orange600,
@@ -583,7 +567,7 @@ class _RoomCrudDialogState extends ConsumerState<RoomCrudDialog> {
                     AppButton(
                       label: widget.roomToEdit != null ? 'Simpan Perubahan' : 'Simpan Unit Kamar',
                       variant: AppButtonVariant.primary,
-                      icon: Icons.check,
+                      icon: AppIcons.check,
                       onPressed: _handleSave,
                     ),
                   ],

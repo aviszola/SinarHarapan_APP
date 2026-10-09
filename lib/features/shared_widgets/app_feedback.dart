@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../app/theme.dart';
+import '../../theme/app_icons.dart';
 import '../auth/domain/user_model.dart';
 import 'app_logout_dialog.dart';
 
@@ -113,25 +114,25 @@ class AppFeedback {
 
     final (icon, iconColor, iconBg, borderColor) = switch (type) {
       FeedbackType.success => (
-        Icons.check_circle_rounded,
+        AppIcons.success,
         AppColors.statusAvailable,
         AppColors.availableBg,
         AppColors.availableBg,
       ),
       FeedbackType.error => (
-        Icons.error_outline_rounded,
+        AppIcons.error,
         AppColors.error,
         AppColors.errorBg,
         AppColors.errorBg,
       ),
       FeedbackType.warning => (
-        Icons.warning_amber_rounded,
+        AppIcons.warning,
         AppColors.orange800,
         AppColors.orange100,
         AppColors.orange100,
       ),
       FeedbackType.info => (
-        Icons.info_outline_rounded,
+        AppIcons.info,
         AppColors.navy700,
         AppColors.navy50,
         AppColors.navy100,
@@ -160,13 +161,9 @@ class AppFeedback {
         content: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Container(
-              padding: const EdgeInsets.all(7),
-              decoration: BoxDecoration(
-                color: iconBg,
-                borderRadius: AppRadius.rounded,
-              ),
-              child: Icon(icon, size: 18, color: iconColor),
+            Padding(
+              padding: const EdgeInsets.only(top: 2),
+              child: AppIcon.small(icon, color: iconColor),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -275,10 +272,8 @@ class AppConfirmationDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final effectiveIcon = icon ??
-        (isDestructive ? Icons.warning_amber_rounded : Icons.help_outline_rounded);
+        (isDestructive ? AppIcons.warning : AppIcons.help);
 
-    final effectiveIconBg = iconBgColor ??
-        (isDestructive ? AppColors.errorBg : AppColors.navy50);
     final effectiveIconColor = iconColor ??
         (isDestructive ? AppColors.error : AppColors.navy700);
 
@@ -298,14 +293,14 @@ class AppConfirmationDialog extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: effectiveIconBg,
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(effectiveIcon, size: 22, color: effectiveIconColor),
+                Padding(
+                  padding: const EdgeInsets.only(top: 2),
+                  child: AppIcon(
+                    effectiveIcon,
+                    size: AppIconSize.medium,
+                    color: effectiveIconColor,
                   ),
+                ),
                   const SizedBox(width: 14),
                   Expanded(
                     child: Text(
@@ -395,14 +390,7 @@ class AppEmptyState extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Container(
-              padding: const EdgeInsets.all(18),
-              decoration: const BoxDecoration(
-                color: AppColors.navy50,
-                shape: BoxShape.circle,
-              ),
-              child: Icon(icon, size: 36, color: AppColors.navy500),
-            ),
+            AppIcon.large(icon, color: AppColors.navy500),
             const SizedBox(height: 16),
             Text(
               title,
@@ -435,7 +423,7 @@ class AppEmptyState extends StatelessWidget {
                     borderRadius: AppRadius.rounded,
                   ),
                 ),
-                icon: const Icon(Icons.refresh_rounded, size: 16),
+                icon: const AppIcon.small(AppIcons.refresh, color: AppColors.navy700),
                 label: Text(actionLabel!),
                 onPressed: onAction,
               ),
@@ -466,25 +454,25 @@ class AppInlineBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     final (icon, iconColor, bg, border) = switch (type) {
       FeedbackType.success => (
-        Icons.check_circle_outline_rounded,
+        AppIcons.success,
         AppColors.statusAvailable,
         AppColors.availableBg,
         AppColors.availableBg,
       ),
       FeedbackType.error => (
-        Icons.error_outline_rounded,
+        AppIcons.error,
         AppColors.error,
         AppColors.errorBg,
         AppColors.errorBg,
       ),
       FeedbackType.warning => (
-        Icons.warning_amber_rounded,
+        AppIcons.warning,
         AppColors.orange800,
         AppColors.orange100,
         AppColors.orange100,
       ),
       FeedbackType.info => (
-        Icons.info_outline_rounded,
+        AppIcons.info,
         AppColors.navy700,
         AppColors.navy50,
         AppColors.navy100,
@@ -500,7 +488,7 @@ class AppInlineBanner extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Icon(icon, size: 18, color: iconColor),
+          AppIcon.small(icon, color: iconColor),
           const SizedBox(width: 10),
           Expanded(
             child: Text(

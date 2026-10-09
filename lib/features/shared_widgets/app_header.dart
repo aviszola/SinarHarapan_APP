@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import '../../app/theme.dart';
+import '../../theme/app_icons.dart';
 
 /// Top navigation bar for the Receptionist view.
 /// Height: 64px, background: navy900. Per design.md §6.9.
@@ -139,10 +140,11 @@ class _ReceptionistTopBarState extends State<ReceptionistTopBar> {
               if (isMobile)
                 IconButton(
                   tooltip: 'Portal Manajer & Inventaris Kamar',
-                  icon: const Icon(
-                    Icons.admin_panel_settings_outlined,
+                  icon: const AppIcon(
+                    AppIcons.reception,
                     color: AppColors.white,
-                    size: 20,
+                    size: AppIconSize.medium,
+                    tooltip: 'Portal Manajer & Inventaris Kamar',
                   ),
                   onPressed: widget.onOpenManagerPortal,
                 )
@@ -159,9 +161,8 @@ class _ReceptionistTopBarState extends State<ReceptionistTopBar> {
                       borderRadius: AppRadius.roundedMd,
                     ),
                   ),
-                  icon: const Icon(
-                    Icons.admin_panel_settings_outlined,
-                    size: 16,
+                  icon: const AppIcon.small(
+                    AppIcons.reception,
                     color: AppColors.orange500,
                   ),
                   label: Text(
@@ -360,7 +361,7 @@ class _ActiveGuestsChipState extends State<_ActiveGuestsChip> {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.people_alt_rounded, size: 16, color: iconColor),
+              AppIcon.small(AppIcons.guest, color: iconColor),
               if (!widget.compact) ...[
                 const SizedBox(width: 7),
                 Text(
@@ -516,10 +517,11 @@ class _UserChipState extends State<_UserChip> {
                       : Colors.transparent,
                   borderRadius: AppRadius.roundedMd,
                 ),
-                child: Icon(
-                  Icons.logout_rounded,
-                  size: 19,
+                child: AppIcon(
+                  AppIcons.logout,
+                  size: AppIconSize.medium,
                   color: _hovered ? AppColors.error : AppColors.white.withAlpha(140),
+                  tooltip: 'Keluar dari sistem',
                 ),
               ),
             ),
@@ -550,14 +552,10 @@ class ManagerSidebar extends StatelessWidget {
   });
 
   static const _navItems = [
-    (Icons.dashboard_outlined, Icons.dashboard_rounded, 'Ikhtisar'),
-    (
-      Icons.meeting_room_outlined,
-      Icons.meeting_room_rounded,
-      'Inventaris Kamar',
-    ),
-    (Icons.bar_chart_outlined, Icons.bar_chart_rounded, 'Laporan'),
-    (Icons.history_rounded, Icons.history_rounded, 'Audit Trail'),
+    (AppIcons.dashboard, 'Ikhtisar'),
+    (AppIcons.room, 'Inventaris Kamar'),
+    (AppIcons.report, 'Laporan'),
+    (AppIcons.audit, 'Audit Trail'),
   ];
 
   @override
@@ -663,9 +661,8 @@ class ManagerSidebar extends StatelessWidget {
                             ),
                             ...List.generate(_navItems.length, (i) {
                               return _SidebarNavItem(
-                                inactiveIcon: _navItems[i].$1,
-                                activeIcon: _navItems[i].$2,
-                                label: _navItems[i].$3,
+                                icon: _navItems[i].$1,
+                                label: _navItems[i].$2,
                                 isActive: activeIndex == i,
                                 onTap: () => onNavChanged(i),
                               );
@@ -728,10 +725,11 @@ class ManagerSidebar extends StatelessWidget {
                               ),
                             ),
                             IconButton(
-                              icon: Icon(
-                                Icons.logout_rounded,
-                                size: 19,
+                              icon: AppIcon(
+                                AppIcons.logout,
+                                size: AppIconSize.medium,
                                 color: AppColors.white.withAlpha(100),
+                                tooltip: 'Keluar',
                               ),
                               tooltip: 'Keluar',
                               onPressed: onLogout,
@@ -763,15 +761,13 @@ String _initials(String name) {
 }
 
 class _SidebarNavItem extends StatefulWidget {
-  final IconData inactiveIcon;
-  final IconData activeIcon;
+  final IconData icon;
   final String label;
   final bool isActive;
   final VoidCallback onTap;
 
   const _SidebarNavItem({
-    required this.inactiveIcon,
-    required this.activeIcon,
+    required this.icon,
     required this.label,
     required this.isActive,
     required this.onTap,
@@ -812,9 +808,9 @@ class _SidebarNavItemState extends State<_SidebarNavItem> {
             ),
             child: Row(
               children: [
-                Icon(
-                  isActive ? widget.activeIcon : widget.inactiveIcon,
-                  size: 19,
+                AppIcon(
+                  widget.icon,
+                  size: AppIconSize.medium,
                   color: isActive
                       ? AppColors.white
                       : (_hovered ? AppColors.white.withAlpha(200) : AppColors.brandNavyTint.withAlpha(160)),

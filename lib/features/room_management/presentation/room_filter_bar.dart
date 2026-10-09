@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../theme/app_colors.dart';
+import '../../../theme/app_icons.dart';
 import '../../../theme/app_text_styles.dart';
 import '../../../theme/app_spacing.dart';
 import '../../shared_widgets/status_badge.dart';
@@ -81,7 +82,6 @@ class RoomFilterBar extends ConsumerWidget {
     // Dropdown Tipe Kamar
     final roomTypeDropdown = _buildFilterDropdown<String>(
       value: filter.roomType,
-      icon: const Icon(Icons.meeting_room_outlined, size: 14, color: AppColors.textSecondary),
       label: filter.roomType == 'ALL' ? 'Semua Tipe' : filter.roomType,
       isActive: filter.roomType != 'ALL',
       items: const [
@@ -99,7 +99,6 @@ class RoomFilterBar extends ConsumerWidget {
     // Dropdown Lantai
     final floorDropdown = _buildFilterDropdown<int>(
       value: filter.floor,
-      icon: const Icon(Icons.layers_outlined, size: 14, color: AppColors.textSecondary),
       label: filter.floor == 0 ? 'Semua Lantai' : 'Lantai ${filter.floor}',
       isActive: filter.floor != 0,
       items: const [
@@ -116,7 +115,6 @@ class RoomFilterBar extends ConsumerWidget {
     // Dropdown Status (Bahasa Indonesia)
     final statusDropdown = _buildFilterDropdown<RoomStatusType?>(
       value: filter.status,
-      icon: const Icon(Icons.filter_list_rounded, size: 14, color: AppColors.textSecondary),
       label: _getStatusLabel(filter.status),
       isActive: filter.status != null,
       items: const [
@@ -145,11 +143,12 @@ class RoomFilterBar extends ConsumerWidget {
           decoration: InputDecoration(
             hintText: 'Cari kamar / tamu...',
             hintStyle: AppTextStyles.bodyMedium.copyWith(color: AppColors.textMuted),
-            prefixIcon: const Icon(Icons.search_rounded, size: 16, color: AppColors.textSecondary),
+            prefixIcon: const AppIcon.small(AppIcons.search, color: AppColors.textSecondary),
             suffixIcon: filter.searchQuery.isNotEmpty
                 ? IconButton(
                     padding: EdgeInsets.zero,
-                    icon: const Icon(Icons.clear, size: 14, color: AppColors.textSecondary),
+                    tooltip: 'Hapus pencarian',
+                    icon: const AppIcon.small(AppIcons.close, color: AppColors.textSecondary),
                     onPressed: () => notifier.state = filter.copyWith(searchQuery: ''),
                   )
                 : null,
@@ -196,7 +195,7 @@ class RoomFilterBar extends ConsumerWidget {
                       side: const BorderSide(color: AppColors.error),
                       foregroundColor: AppColors.errorText,
                     ),
-                    icon: const Icon(Icons.close_rounded, size: 14),
+                    icon: const AppIcon.small(AppIcons.close),
                     label: const Text('Reset', style: TextStyle(fontSize: 12)),
                     onPressed: () => notifier.state = const RoomFilterState(),
                   ),
@@ -215,7 +214,7 @@ class RoomFilterBar extends ConsumerWidget {
                             height: 12,
                             child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.brandNavy),
                           )
-                        : const Icon(Icons.refresh_rounded, size: 14),
+                        : const AppIcon.small(AppIcons.refresh),
                     label: const Text('Segarkan', style: TextStyle(fontSize: 12)),
                     onPressed: isRefreshing ? null : onRefresh,
                   ),
@@ -250,7 +249,7 @@ class RoomFilterBar extends ConsumerWidget {
                           side: const BorderSide(color: AppColors.error),
                           foregroundColor: AppColors.errorText,
                         ),
-                        icon: const Icon(Icons.close_rounded, size: 14),
+                        icon: const AppIcon.small(AppIcons.close),
                         label: const Text('Reset', style: TextStyle(fontSize: 12)),
                         onPressed: () => notifier.state = const RoomFilterState(),
                       ),
@@ -297,7 +296,6 @@ class RoomFilterBar extends ConsumerWidget {
 
   Widget _buildFilterDropdown<T>({
     required T value,
-    required Widget icon,
     required String label,
     required bool isActive,
     required List<DropdownMenuItem<T>> items,
@@ -317,7 +315,7 @@ class RoomFilterBar extends ConsumerWidget {
       child: DropdownButtonHideUnderline(
         child: DropdownButton<T>(
           value: value,
-          icon: const Icon(Icons.arrow_drop_down, size: 18, color: AppColors.textSecondary),
+          icon: const AppIcon.small(AppIcons.chevronDown, color: AppColors.textSecondary),
           isDense: true,
           style: AppTextStyles.caption.copyWith(
             color: isActive ? AppColors.brandNavy : AppColors.textPrimary,

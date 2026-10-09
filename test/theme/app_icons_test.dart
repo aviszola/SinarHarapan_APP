@@ -1,0 +1,70 @@
+import 'package:flutter/widgets.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
+void main() {
+  test('LucideIcons comprehensive test', () {
+    const list = [
+      LucideIcons.layoutDashboard,
+      LucideIcons.bed,
+      LucideIcons.user,
+      LucideIcons.barChart3,
+      LucideIcons.history,
+      LucideIcons.userCheck,
+      LucideIcons.logIn,
+      LucideIcons.logOut,
+      LucideIcons.receipt,
+      LucideIcons.key,
+      LucideIcons.creditCard,
+      LucideIcons.wallet,
+      LucideIcons.search,
+      LucideIcons.filter,
+      LucideIcons.refreshCw,
+      LucideIcons.rotateCcw,
+      LucideIcons.plus,
+      LucideIcons.pencil,
+      LucideIcons.trash2,
+      LucideIcons.x,
+      LucideIcons.check,
+      LucideIcons.externalLink,
+      LucideIcons.send,
+      LucideIcons.download,
+      LucideIcons.printer,
+      LucideIcons.fileText,
+      LucideIcons.fileSpreadsheet,
+      LucideIcons.folder,
+      LucideIcons.image,
+      LucideIcons.camera,
+      LucideIcons.lock,
+      LucideIcons.eye,
+      LucideIcons.eyeOff,
+      LucideIcons.shieldCheck,
+      LucideIcons.wrench,
+      LucideIcons.sparkles,
+      LucideIcons.star,
+      LucideIcons.info,
+      LucideIcons.alertTriangle,
+      LucideIcons.alertCircle,
+      LucideIcons.checkCircle2,
+      LucideIcons.helpCircle,
+      LucideIcons.inbox,
+      LucideIcons.clock,
+      LucideIcons.calendar,
+      LucideIcons.messageSquare,
+      LucideIcons.phone,
+      LucideIcons.mapPin,
+      LucideIcons.stickyNote,
+      LucideIcons.qrCode,
+      LucideIcons.menu,
+      LucideIcons.chevronDown,
+      LucideIcons.layers,
+      LucideIcons.utensils,
+      LucideIcons.coffee,
+      LucideIcons.terminal,
+      LucideIcons.tag,
+    ];
+    for (final icon in list) {
+      expect(icon, isA<IconData>());
+    }
+  });
+}

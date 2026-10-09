@@ -2,6 +2,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../../app/theme.dart';
+import '../../../theme/app_icons.dart';
 import '../../room_management/domain/room_model.dart';
 import '../../shared_widgets/app_button.dart';
 import '../../shared_widgets/app_feedback.dart';
@@ -128,18 +129,11 @@ class _InvoicePreviewDialogState extends State<InvoicePreviewDialog> {
       context: context,
       builder: (ctx) => AlertDialog(
         shape: const RoundedRectangleBorder(borderRadius: AppRadius.rounded),
-        title: Row(
+        title: const Row(
           children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: AppColors.availableBg,
-                borderRadius: AppRadius.rounded,
-              ),
-              child: const Icon(Icons.check_circle_rounded, color: AppColors.statusAvailable, size: 24),
-            ),
-            const SizedBox(width: 12),
-            const Expanded(
+            AppIcon.large(AppIcons.check, color: AppColors.statusAvailable),
+            SizedBox(width: 12),
+            Expanded(
               child: Text(
                 'Faktur PDF Tersimpan!',
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.navy900),
@@ -168,7 +162,7 @@ class _InvoicePreviewDialogState extends State<InvoicePreviewDialog> {
                 children: [
                   Row(
                     children: [
-                      const Icon(Icons.picture_as_pdf_rounded, color: AppColors.error, size: 22),
+                      const AppIcon.medium(AppIcons.pdf, color: AppColors.error),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
@@ -197,7 +191,7 @@ class _InvoicePreviewDialogState extends State<InvoicePreviewDialog> {
             child: const Text('Tutup'),
           ),
           OutlinedButton.icon(
-            icon: const Icon(Icons.folder_open_rounded, size: 16),
+            icon: const AppIcon.small(AppIcons.folder),
             label: const Text('Buka Folder'),
             onPressed: () {
               InvoicePdfService.openFolder(filePath);
@@ -208,7 +202,7 @@ class _InvoicePreviewDialogState extends State<InvoicePreviewDialog> {
               backgroundColor: AppColors.navy700,
               foregroundColor: AppColors.white,
             ),
-            icon: const Icon(Icons.open_in_new_rounded, size: 16),
+            icon: const AppIcon.small(AppIcons.openInNew),
             label: const Text('Buka Berkas PDF'),
             onPressed: () {
               InvoicePdfService.openFile(filePath);
@@ -265,7 +259,7 @@ class _InvoicePreviewDialogState extends State<InvoicePreviewDialog> {
                     ),
                   ),
                   IconButton(
-                    icon: const Icon(Icons.close, color: AppColors.textSecondary),
+                    icon: const AppIcon.medium(AppIcons.close, color: AppColors.textSecondary),
                     onPressed: () => Navigator.of(context).pop(),
                   ),
                 ],
@@ -292,7 +286,7 @@ class _InvoicePreviewDialogState extends State<InvoicePreviewDialog> {
                       Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(Icons.mark_chat_read_rounded, color: AppColors.statusAvailable, size: 18),
+                          const AppIcon.small(AppIcons.chat, color: AppColors.statusAvailable),
                           const SizedBox(width: 8),
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -317,7 +311,7 @@ class _InvoicePreviewDialogState extends State<InvoicePreviewDialog> {
                           shape: const RoundedRectangleBorder(borderRadius: AppRadius.rounded),
                           elevation: 0,
                         ),
-                        icon: const Icon(Icons.send_rounded, size: 13),
+                        icon: const AppIcon.small(AppIcons.send),
                         label: const Text('Kirim Sekarang', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
                         onPressed: () {
                           showDialog(
@@ -596,7 +590,7 @@ class _InvoicePreviewDialogState extends State<InvoicePreviewDialog> {
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              const Icon(Icons.check_circle, size: 16, color: AppColors.statusAvailable),
+                              const AppIcon.small(AppIcons.check, color: AppColors.statusAvailable),
                               const SizedBox(width: 8),
                               Flexible(
                                 child: Text(
@@ -651,10 +645,10 @@ class _InvoicePreviewDialogState extends State<InvoicePreviewDialog> {
                           backgroundColor: AppColors.whatsapp,
                           foregroundColor: AppColors.white,
                           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                          shape: RoundedRectangleBorder(borderRadius: AppRadius.rounded),
+                          shape: const RoundedRectangleBorder(borderRadius: AppRadius.rounded),
                           elevation: 0,
                         ),
-                        icon: const Icon(Icons.chat_bubble_outline_rounded, size: 16),
+                        icon: const AppIcon.small(AppIcons.chat),
                         label: const Text(
                           'Kirim ke WA',
                           style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
@@ -678,7 +672,7 @@ class _InvoicePreviewDialogState extends State<InvoicePreviewDialog> {
                       AppButton(
                         label: 'Thermal Printer',
                         variant: AppButtonVariant.secondary,
-                        icon: Icons.print_outlined,
+                        icon: AppIcons.print,
                         isLoading: _isPrinting,
                         onPressed: _isPrinting ? null : () => _handlePrint(invoiceNumber),
                       ),
@@ -687,7 +681,7 @@ class _InvoicePreviewDialogState extends State<InvoicePreviewDialog> {
                       AppButton(
                         label: 'Unduh PDF',
                         variant: widget.onConfirmCheckIn != null ? AppButtonVariant.secondary : AppButtonVariant.primary,
-                        icon: Icons.picture_as_pdf_outlined,
+                        icon: AppIcons.pdf,
                         isLoading: _isDownloadingPdf,
                         onPressed: _isDownloadingPdf ? null : () => _handleDownloadPdf(invoiceNumber),
                       ),
@@ -697,7 +691,7 @@ class _InvoicePreviewDialogState extends State<InvoicePreviewDialog> {
                         AppButton(
                           label: 'Konfirmasi Lunas & Masuk Kamar',
                           variant: AppButtonVariant.primary,
-                          icon: Icons.check_circle_outline_rounded,
+                          icon: AppIcons.check,
                           onPressed: () {
                             Navigator.of(context).pop();
                             widget.onConfirmCheckIn!();

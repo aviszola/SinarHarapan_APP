@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../../theme/app_colors.dart';
+import '../../../theme/app_icons.dart';
 import '../../../theme/app_text_styles.dart';
 import '../../../theme/app_spacing.dart';
 import '../../shared_widgets/status_badge.dart';
@@ -255,12 +256,11 @@ class _RoomCardState extends State<RoomCard> {
           // Nama Tamu dengan Ellipsis & Tooltip
           Row(
             children: [
-              const Icon(
-                Icons.person_outline_rounded,
-                size: 15,
+              const AppIcon.small(
+                AppIcons.guest,
                 color: AppColors.textSecondary,
               ),
-              const SizedBox(width: 6),
+              const SizedBox(width: 8),
               Expanded(
                 child: Tooltip(
                   message: guestName,
@@ -297,12 +297,11 @@ class _RoomCardState extends State<RoomCard> {
           // Tanggal Check-out
           Row(
             children: [
-              const Icon(
-                Icons.event_outlined,
-                size: 14,
+              const AppIcon.small(
+                AppIcons.calendar,
                 color: AppColors.textMuted,
               ),
-              const SizedBox(width: 6),
+              const SizedBox(width: 8),
               Expanded(
                 child: Text(
                   'Keluar: $checkOutStr',
@@ -349,12 +348,11 @@ class _RoomCardState extends State<RoomCard> {
         children: [
           Row(
             children: [
-              const Icon(
-                Icons.cleaning_services_outlined,
-                size: 15,
+              const AppIcon.small(
+                AppIcons.clean,
                 color: AppColors.statusDirtyText,
               ),
-              const SizedBox(width: 6),
+              const SizedBox(width: 8),
               Expanded(
                 child: Text(
                   'Perlu pembersihan staf',
@@ -382,12 +380,11 @@ class _RoomCardState extends State<RoomCard> {
       children: [
         Row(
           children: [
-            const Icon(
-              Icons.construction_outlined,
-              size: 15,
+            const AppIcon.small(
+              AppIcons.maintenance,
               color: AppColors.statusMaintenanceText,
             ),
-            const SizedBox(width: 6),
+            const SizedBox(width: 8),
             Expanded(
               child: Text(
                 'Perawatan fasilitas',
@@ -423,7 +420,7 @@ class _RoomCardState extends State<RoomCard> {
             ),
           ),
           onPressed: widget.onTap,
-          icon: const Icon(Icons.login_rounded, size: 14),
+          icon: const AppIcon.small(AppIcons.checkIn),
           label: const Text('Check-in', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
         ),
       );
@@ -444,7 +441,7 @@ class _RoomCardState extends State<RoomCard> {
             ),
           ),
           onPressed: widget.onTap,
-          icon: const Icon(Icons.logout_rounded, size: 14),
+          icon: const AppIcon.small(AppIcons.checkOut),
           label: const Text('Check-out', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
         ),
       );
@@ -464,7 +461,7 @@ class _RoomCardState extends State<RoomCard> {
             ),
           ),
           onPressed: widget.onTap,
-          icon: const Icon(Icons.check_rounded, size: 14),
+          icon: const AppIcon.small(AppIcons.check),
           label: const Text('Tandai Siap', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
         ),
       );

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../app/theme.dart';
+import '../../theme/app_icons.dart';
 import '../auth/domain/user_model.dart';
 
 /// Modal Konfirmasi Logout Eksplisit (Anti AI-Slop)
@@ -69,23 +70,12 @@ class AppLogoutDialog extends StatelessWidget {
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Container(
-                    width: 44,
-                    height: 44,
-                    decoration: BoxDecoration(
-                      color: AppColors.errorBg,
-                      borderRadius: AppRadius.rounded,
-                      border: Border.all(
-                        color: AppColors.error.withAlpha(50),
-                        width: 1,
-                      ),
-                    ),
-                    child: const Center(
-                      child: Icon(
-                        Icons.logout_rounded,
-                        size: 22,
-                        color: AppColors.error,
-                      ),
+                  const Padding(
+                    padding: EdgeInsets.only(top: 2),
+                    child: AppIcon(
+                      AppIcons.logout,
+                      size: AppIconSize.medium,
+                      color: AppColors.error,
                     ),
                   ),
                   const SizedBox(width: 14),
@@ -114,10 +104,11 @@ class AppLogoutDialog extends StatelessWidget {
                     ),
                   ),
                   IconButton(
-                    icon: const Icon(
-                      Icons.close_rounded,
-                      size: 20,
+                    icon: const AppIcon(
+                      AppIcons.close,
+                      size: AppIconSize.medium,
                       color: AppColors.textSecondary,
+                      tooltip: 'Tutup',
                     ),
                     tooltip: 'Tutup',
                     splashRadius: 20,
@@ -232,9 +223,8 @@ class AppLogoutDialog extends StatelessWidget {
                   children: [
                     const Padding(
                       padding: EdgeInsets.only(top: 2),
-                      child: Icon(
-                        Icons.info_outline_rounded,
-                        size: 16,
+                      child: AppIcon.small(
+                        AppIcons.info,
                         color: AppColors.navy700,
                       ),
                     ),
@@ -298,7 +288,7 @@ class AppLogoutDialog extends StatelessWidget {
                           ),
                           padding: const EdgeInsets.symmetric(horizontal: 16),
                         ),
-                        icon: const Icon(Icons.logout_rounded, size: 18),
+                        icon: const AppIcon.small(AppIcons.logout, color: AppColors.white),
                         label: const Text(
                           'Keluar Akun',
                           style: TextStyle(

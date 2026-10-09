@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../../app/theme.dart';
+import '../../../theme/app_icons.dart';
 import '../../auth/presentation/auth_controller.dart';
 import '../../room_management/domain/room_model.dart';
 import '../../room_management/presentation/room_controller.dart';
@@ -158,7 +159,7 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
       confirmLabel: 'Hapus Unit Kamar',
       cancelLabel: 'Batal',
       isDestructive: true,
-      icon: Icons.delete_forever_rounded,
+      icon: AppIcons.delete,
     );
 
     if (!confirmed || !mounted) return;
@@ -340,17 +341,9 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
             shape: const RoundedRectangleBorder(borderRadius: AppRadius.rounded),
             title: Row(
               children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: isExcel ? AppColors.availableBg : AppColors.errorBg,
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    isExcel ? Icons.table_chart : Icons.picture_as_pdf,
-                    color: isExcel ? AppColors.statusAvailable : AppColors.orange600,
-                    size: 24,
-                  ),
+                AppIcon.large(
+                  isExcel ? AppIcons.excel : AppIcons.pdf,
+                  color: isExcel ? AppColors.statusAvailable : AppColors.orange600,
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -383,9 +376,8 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
                     children: [
                       Row(
                         children: [
-                          Icon(
-                            isExcel ? Icons.file_present_outlined : Icons.description_outlined,
-                            size: 16,
+                          AppIcon.small(
+                            isExcel ? AppIcons.excel : AppIcons.pdf,
                             color: AppColors.navy700,
                           ),
                           const SizedBox(width: 6),
@@ -408,7 +400,7 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
                 const SizedBox(height: 8),
                 const Row(
                   children: [
-                    Icon(Icons.timer_outlined, size: 14, color: AppColors.textDisabled),
+                    AppIcon.small(AppIcons.clock, color: AppColors.textDisabled),
                     SizedBox(width: 4),
                     Text(
                       'Pemberitahuan ini otomatis tertutup dalam 3 detik...',
@@ -427,7 +419,7 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
                 child: const Text('Tutup'),
               ),
               OutlinedButton.icon(
-                icon: const Icon(Icons.folder_open, size: 18),
+                icon: const AppIcon.medium(AppIcons.folder),
                 label: const Text('Buka Folder'),
                 onPressed: () {
                   autoCloseTimer?.cancel();
@@ -440,7 +432,7 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
                   backgroundColor: isExcel ? AppColors.statusAvailable : AppColors.orange600,
                   foregroundColor: AppColors.surface,
                 ),
-                icon: const Icon(Icons.open_in_new, size: 18),
+                icon: const AppIcon.medium(AppIcons.openInNew),
                 label: Text(isExcel ? 'Buka Excel Sekarang' : 'Buka PDF Sekarang'),
                 onPressed: () {
                   autoCloseTimer?.cancel();
@@ -518,7 +510,7 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
                             builder: (bContext) => Padding(
                               padding: const EdgeInsets.only(right: 6.0),
                               child: IconButton(
-                                icon: const Icon(Icons.menu, color: AppColors.navy900),
+                                icon: const AppIcon.medium(AppIcons.menu, color: AppColors.navy900),
                                 tooltip: 'Buka Menu Navigasi',
                                 onPressed: () => Scaffold.of(bContext).openDrawer(),
                               ),
@@ -551,7 +543,7 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
                         ),
                         IconButton(
                           tooltip: 'Segarkan Data',
-                          icon: const Icon(Icons.refresh_rounded, size: 18, color: AppColors.brandNavy),
+                          icon: const AppIcon.medium(AppIcons.refresh, color: AppColors.brandNavy),
                           onPressed: _loadAllDashboardData,
                         ),
                         const SizedBox(width: AppSpacing.xs),
@@ -560,14 +552,14 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
                         if (isMobile)
                           IconButton(
                             tooltip: 'Mode Resepsionis (Frontdesk)',
-                            icon: const Icon(Icons.storefront_outlined, color: AppColors.navy700),
+                            icon: const AppIcon.medium(AppIcons.reception, color: AppColors.navy700),
                             onPressed: () => context.go('/receptionist/rooms'),
                           )
                         else
                           AppButton(
                             label: 'Mode Resepsionis',
                             variant: AppButtonVariant.outline,
-                            icon: Icons.storefront_outlined,
+                            icon: AppIcons.reception,
                             onPressed: () => context.go('/receptionist/rooms'),
                           ),
 
@@ -578,19 +570,19 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
                           if (isMobile) ...[
                             IconButton(
                               tooltip: 'Ekspor Excel (.xlsx)',
-                              icon: const Icon(Icons.table_view_outlined, color: AppColors.statusAvailable),
+                              icon: const AppIcon.medium(AppIcons.excel, color: AppColors.statusAvailable),
                               onPressed: _handleExportExcel,
                             ),
                             IconButton(
                               tooltip: 'Ekspor PDF Resmi',
-                              icon: const Icon(Icons.picture_as_pdf_outlined, color: AppColors.orange600),
+                              icon: const AppIcon.medium(AppIcons.pdf, color: AppColors.orange600),
                               onPressed: _handleExportPdf,
                             ),
                           ] else ...[
                             AppButton(
                               label: 'Ekspor Excel',
                               variant: AppButtonVariant.secondary,
-                              icon: Icons.table_view_outlined,
+                              icon: AppIcons.excel,
                               isLoading: _isExportingExcel,
                               onPressed: _handleExportExcel,
                             ),
@@ -598,7 +590,7 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
                             AppButton(
                               label: 'Ekspor PDF',
                               variant: AppButtonVariant.outline,
-                              icon: Icons.picture_as_pdf_outlined,
+                              icon: AppIcons.pdf,
                               isLoading: _isExportingPdf,
                               onPressed: _handleExportPdf,
                             ),
@@ -610,7 +602,7 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
                           if (isMobile)
                             IconButton(
                               tooltip: 'Tambah Unit Kamar',
-                              icon: const Icon(Icons.add_circle, color: AppColors.orange600),
+                              icon: const AppIcon.medium(AppIcons.add, color: AppColors.orange600),
                               onPressed: () {
                                 showDialog(
                                   context: context,
@@ -622,7 +614,7 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
                             AppButton(
                               label: 'Tambah Kamar',
                               variant: AppButtonVariant.primary,
-                              icon: Icons.add,
+                              icon: AppIcons.add,
                               onPressed: () {
                                 showDialog(
                                   context: context,
@@ -820,7 +812,7 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
 
         const SizedBox(height: AppSpacing.lg),
 
-        // Grafik Tren Bersih (Line Chart 2px tanpa spline meliuk/glow)
+        // Grafik Tren Bersih
         ExecutiveTrendChart(
           currencyFormatter: currencyFormatter,
           realTimeseriesData: _transactions,
@@ -837,8 +829,15 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
               padding: const EdgeInsets.all(AppSpacing.md),
               decoration: BoxDecoration(
                 color: AppColors.surface,
-                borderRadius: AppRadius.rounded,
-                border: Border.all(color: AppColors.border, width: 1),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: const Color(0xFFE2E8F0), width: 1),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.02),
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -846,94 +845,171 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
                   Text(
                     'Saluran Pemesanan Tamu',
                     style: AppTextStyles.titleSmall.copyWith(
-                      color: AppColors.brandNavyDark,
+                      color: const Color(0xFF0F172A),
+                      fontWeight: FontWeight.w700,
+                      fontSize: 16,
                     ),
                   ),
                   const SizedBox(height: 2),
                   Text(
                     'Perbandingan pemesanan Mitra RedDoorz vs Langsung',
-                    style: AppTextStyles.caption.copyWith(color: AppColors.textSecondary),
+                    style: AppTextStyles.caption.copyWith(
+                      color: const Color(0xFF64748B),
+                      fontSize: 12,
+                    ),
                   ),
                   const SizedBox(height: AppSpacing.md),
 
-                  // Batang Proporsi Bersih
+                  // Dua Tile Statistik Saluran yang Terang & Jelas
+                  Row(
+                    children: [
+                      // RedDoorz
+                      Expanded(
+                        child: Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFFFF7ED),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: const Color(0xFFFFEDD5)),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Container(
+                                    width: 8,
+                                    height: 8,
+                                    decoration: const BoxDecoration(
+                                      color: Color(0xFFEA580C),
+                                      shape: BoxShape.circle,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 6),
+                                  const Expanded(
+                                    child: Text(
+                                      'RedDoorz',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600,
+                                        color: Color(0xFF9A3412),
+                                      ),
+                                      overflow: TextOverflow.ellipsis,
+                                      maxLines: 1,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 6),
+                              Text(
+                                '$reddoorzPct%',
+                                style: const TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.w800,
+                                  color: Color(0xFF7C2D12),
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                '${reddoorzCount ?? 0} Transaksi · ${currencyFormatter.format(reddoorzNominal)}',
+                                style: const TextStyle(
+                                  fontSize: 11,
+                                  color: Color(0xFF9A3412),
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      // Langsung
+                      Expanded(
+                        child: Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFEFF6FF),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: const Color(0xFFDBEAFE)),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Container(
+                                    width: 8,
+                                    height: 8,
+                                    decoration: const BoxDecoration(
+                                      color: Color(0xFF1E3A8A),
+                                      shape: BoxShape.circle,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 6),
+                                  const Expanded(
+                                    child: Text(
+                                      'Langsung (Walk-In)',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600,
+                                        color: Color(0xFF1E40AF),
+                                      ),
+                                      overflow: TextOverflow.ellipsis,
+                                      maxLines: 1,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 6),
+                              Text(
+                                '$walkInPct%',
+                                style: const TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.w800,
+                                  color: Color(0xFF1E3A8A),
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                '${walkInCount ?? 0} Transaksi · ${currencyFormatter.format(walkInNominal)}',
+                                style: const TextStyle(
+                                  fontSize: 11,
+                                  color: Color(0xFF1E40AF),
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 14),
+
+                  // Batang Proporsi Rapi Bersih Tanpa Teks Terjepit
                   ClipRRect(
-                    borderRadius: AppRadius.roundedSm,
-                    child: SizedBox(
-                      height: 22,
+                    borderRadius: BorderRadius.circular(6),
+                    child: Container(
+                      height: 10,
+                      color: const Color(0xFFF1F5F9),
                       child: Row(
                         children: [
-                          Expanded(
-                            flex: totalChannels > 0 ? reddoorzPct : 50,
-                            child: Container(
-                              color: AppColors.brandOrange,
-                              alignment: Alignment.center,
-                              child: Text(
-                                totalChannels > 0 ? 'RedDoorz $reddoorzPct%' : 'RedDoorz',
-                                style: const TextStyle(
-                                  color: AppColors.white,
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
+                          if (reddoorzPct > 0)
+                            Expanded(
+                              flex: reddoorzPct,
+                              child: Container(color: const Color(0xFFEA580C)),
                             ),
-                          ),
-                          Expanded(
-                            flex: totalChannels > 0 ? walkInPct : 50,
-                            child: Container(
-                              color: AppColors.brandNavy,
-                              alignment: Alignment.center,
-                              child: Text(
-                                totalChannels > 0 ? 'Langsung $walkInPct%' : 'Langsung',
-                                style: const TextStyle(
-                                  color: AppColors.white,
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
+                          if (walkInPct > 0)
+                            Expanded(
+                              flex: walkInPct,
+                              child: Container(color: const Color(0xFF1E3A8A)),
                             ),
-                          ),
                         ],
                       ),
                     ),
-                  ),
-
-                  const SizedBox(height: AppSpacing.md),
-
-                  Wrap(
-                    spacing: AppSpacing.md,
-                    runSpacing: AppSpacing.sm,
-                    alignment: WrapAlignment.spaceBetween,
-                    children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text('Mitra RedDoorz', style: AppTextStyles.caption),
-                          Text(
-                            reddoorzCount != null
-                                ? '$reddoorzCount Transaksi · ${currencyFormatter.format(reddoorzNominal)}'
-                                : '0 Transaksi',
-                            style: AppTextStyles.bodyMediumMedium.copyWith(
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                        ],
-                      ),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text('Pemesanan Langsung', style: AppTextStyles.caption),
-                          Text(
-                            walkInCount != null
-                                ? '$walkInCount Transaksi · ${currencyFormatter.format(walkInNominal)}'
-                                : '0 Transaksi',
-                            style: AppTextStyles.bodyMediumMedium.copyWith(
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
                   ),
                 ],
               ),
@@ -943,8 +1019,15 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
               padding: const EdgeInsets.all(AppSpacing.md),
               decoration: BoxDecoration(
                 color: AppColors.surface,
-                borderRadius: AppRadius.rounded,
-                border: Border.all(color: AppColors.border, width: 1),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: const Color(0xFFE2E8F0), width: 1),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.02),
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -952,13 +1035,18 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
                   Text(
                     'Hunian Berdasarkan Lantai',
                     style: AppTextStyles.titleSmall.copyWith(
-                      color: AppColors.brandNavyDark,
+                      color: const Color(0xFF0F172A),
+                      fontWeight: FontWeight.w700,
+                      fontSize: 16,
                     ),
                   ),
                   const SizedBox(height: 2),
                   Text(
                     'Distribusi keterisian kamar aktif saat ini',
-                    style: AppTextStyles.caption.copyWith(color: AppColors.textSecondary),
+                    style: AppTextStyles.caption.copyWith(
+                      color: const Color(0xFF64748B),
+                      fontSize: 12,
+                    ),
                   ),
                   const SizedBox(height: AppSpacing.md),
 
@@ -1008,42 +1096,65 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
   }
 
   Widget _buildFloorOccupancyRow(String title, double ratio, String label) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Expanded(
-              child: Text(
+    final isOccupied = ratio > 0;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: const Color(0xFFE2E8F0), width: 0.8),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
                 title,
-                style: AppTypography.caption.copyWith(fontWeight: FontWeight.w600),
-                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF1E293B),
+                ),
               ),
-            ),
-            const SizedBox(width: 8),
-            Text(
-              label,
-              style: AppTypography.caption.copyWith(
-                color: ratio > 0 ? AppColors.orange800 : AppColors.textSecondary,
-                fontWeight: FontWeight.bold,
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                decoration: BoxDecoration(
+                  color: isOccupied ? const Color(0xFFFEF3C7) : Colors.transparent,
+                  borderRadius: BorderRadius.circular(4),
+                  border: isOccupied
+                      ? Border.all(color: const Color(0xFFFCD34D), width: 0.8)
+                      : null,
+                ),
+                child: Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w700,
+                    color: isOccupied
+                        ? const Color(0xFF92400E)
+                        : const Color(0xFF64748B),
+                  ),
+                ),
               ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 5),
-        ClipRRect(
-          borderRadius: BorderRadius.circular(4),
-          child: LinearProgressIndicator(
-            value: ratio,
-            backgroundColor: AppColors.navy50,
-            valueColor: AlwaysStoppedAnimation<Color>(
-              ratio > 0 ? AppColors.orange600 : AppColors.border,
-            ),
-            minHeight: 6,
+            ],
           ),
-        ),
-      ],
+          const SizedBox(height: 8),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(4),
+            child: LinearProgressIndicator(
+              value: ratio,
+              backgroundColor: const Color(0xFFE2E8F0),
+              valueColor: AlwaysStoppedAnimation<Color>(
+                isOccupied ? const Color(0xFF2563EB) : const Color(0xFF94A3B8),
+              ),
+              minHeight: 6,
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -1083,7 +1194,7 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
                 AppButton(
                   label: 'Tambah Kamar Baru',
                   variant: AppButtonVariant.primary,
-                  icon: Icons.add,
+                  icon: AppIcons.add,
                   onPressed: () {
                     showDialog(
                       context: context,
@@ -1176,7 +1287,7 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
                                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                                   visualDensity: VisualDensity.compact,
                                 ),
-                                icon: const Icon(Icons.edit_outlined, size: 15, color: AppColors.navy700),
+                                icon: const AppIcon.small(AppIcons.edit, color: AppColors.navy700),
                                 label: const Text('Ubah', style: TextStyle(fontSize: 12)),
                                 onPressed: () {
                                   showDialog(
@@ -1191,9 +1302,8 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
                                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                                   visualDensity: VisualDensity.compact,
                                 ),
-                                icon: Icon(
-                                  Icons.build_circle_outlined,
-                                  size: 15,
+                                icon: AppIcon.small(
+                                  AppIcons.maintenance,
                                   color: room.isMaintenance ? AppColors.statusAvailable : AppColors.textSecondary,
                                 ),
                                 label: Text(
@@ -1205,7 +1315,7 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
                               const SizedBox(width: 8),
                               IconButton(
                                 tooltip: 'Hapus Kamar',
-                                icon: const Icon(Icons.delete_outline, size: 18, color: AppColors.statusOccupied),
+                                icon: const AppIcon.medium(AppIcons.delete, color: AppColors.statusOccupied),
                                 onPressed: room.isOccupied ? null : () => _handleDeleteRoom(room),
                               ),
                             ],
@@ -1300,7 +1410,7 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
                                     children: [
                                       IconButton(
                                         tooltip: 'Ubah Data Kamar',
-                                        icon: const Icon(Icons.edit_outlined, color: AppColors.navy700),
+                                        icon: const AppIcon.medium(AppIcons.edit, color: AppColors.navy700),
                                         onPressed: () {
                                           showDialog(
                                             context: context,
@@ -1312,13 +1422,13 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
                                       AppButton(
                                         label: room.isMaintenance ? 'Aktifkan' : 'Perawatan',
                                         variant: AppButtonVariant.outline,
-                                        icon: Icons.build_circle_outlined,
+                                        icon: AppIcons.maintenance,
                                         onPressed: room.isOccupied ? null : () => _handleToggleMaintenance(room),
                                       ),
                                       const SizedBox(width: 8),
                                       IconButton(
                                         tooltip: 'Hapus Kamar',
-                                        icon: const Icon(Icons.delete_outline, color: AppColors.statusOccupied),
+                                        icon: const AppIcon.medium(AppIcons.delete, color: AppColors.statusOccupied),
                                         onPressed: room.isOccupied ? null : () => _handleDeleteRoom(room),
                                       ),
                                     ],
@@ -1383,14 +1493,14 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
                     AppButton(
                       label: 'Unduh Excel (.xlsx)',
                       variant: AppButtonVariant.secondary,
-                      icon: Icons.file_download_outlined,
+                      icon: AppIcons.excel,
                       isLoading: _isExportingExcel,
                       onPressed: _handleExportExcel,
                     ),
                     AppButton(
                       label: 'Unduh PDF Resmi',
                       variant: AppButtonVariant.primary,
-                      icon: Icons.picture_as_pdf_outlined,
+                      icon: AppIcons.pdf,
                       isLoading: _isExportingPdf,
                       onPressed: _handleExportPdf,
                     ),
@@ -1412,7 +1522,7 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
             const Padding(
               padding: EdgeInsets.symmetric(vertical: 40),
               child: EmptyStateWidget(
-                icon: Icons.receipt_long_outlined,
+                icon: AppIcons.receipt,
                 title: 'Belum Ada Transaksi Tercatat',
                 message:
                     'Belum ada transaksi pembayaran atau reservasi yang tersimpan di server untuk periode ini. Riwayat transaksi akan tercatat otomatis saat tamu melakukan pembayaran.',
@@ -1565,19 +1675,11 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Row(
-                        children: [
-                          const Icon(Icons.history_toggle_off_rounded, size: 22, color: AppColors.navy900),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              'Rekam Jejak Operasional & Audit Trail',
-                              style: AppTypography.h3,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        ],
+                      Text(
+                        'Rekam Jejak Operasional & Audit Trail',
+                        style: AppTypography.h3,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                       const SizedBox(height: 4),
                       Text(
@@ -1589,7 +1691,7 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
                 ),
                 IconButton(
                   tooltip: 'Muat Ulang Log',
-                  icon: const Icon(Icons.refresh, color: AppColors.navy700),
+                  icon: const AppIcon.medium(AppIcons.refresh, color: AppColors.navy700),
                   onPressed: _loadAuditLogs,
                 ),
               ],
@@ -1630,14 +1732,7 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
               child: Center(
                 child: Column(
                   children: [
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: AppColors.navy50,
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(Icons.inbox_outlined, size: 36, color: AppColors.textDisabled),
-                    ),
+                    const AppIcon.large(AppIcons.emptyState, color: AppColors.textDisabled),
                     const SizedBox(height: 12),
                     Text(
                       'Tidak ada catatan aktivitas pada kategori ini',
@@ -1682,14 +1777,7 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
                           children: [
                             Row(
                               children: [
-                                Container(
-                                  padding: const EdgeInsets.all(7),
-                                  decoration: BoxDecoration(
-                                    color: parsed.iconBg,
-                                    borderRadius: AppRadius.rounded,
-                                  ),
-                                  child: Icon(parsed.icon, size: 16, color: parsed.iconColor),
-                                ),
+                                AppIcon.small(parsed.icon, color: parsed.iconColor),
                                 const SizedBox(width: 8),
                                 Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
@@ -1745,16 +1833,9 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
                                     borderRadius: BorderRadius.circular(4),
                                     border: Border.all(color: AppColors.border),
                                   ),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      const Icon(Icons.person_outline, size: 12, color: AppColors.navy700),
-                                      const SizedBox(width: 4),
-                                      Text(
-                                        actorRole != null ? '$actorName ($actorRole)' : actorName,
-                                        style: const TextStyle(fontSize: 11, color: AppColors.navy900, fontWeight: FontWeight.w500),
-                                      ),
-                                    ],
+                                  child: Text(
+                                    actorRole != null ? '$actorName ($actorRole)' : actorName,
+                                    style: const TextStyle(fontSize: 11, color: AppColors.navy900, fontWeight: FontWeight.w500),
                                   ),
                                 ),
                                 Container(
@@ -1782,16 +1863,7 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
-                          // Icon Avatar Lingkaran
-                          Container(
-                            width: 38,
-                            height: 38,
-                            decoration: BoxDecoration(
-                              color: parsed.iconBg,
-                              borderRadius: AppRadius.rounded,
-                            ),
-                            child: Icon(parsed.icon, size: 19, color: parsed.iconColor),
-                          ),
+                          AppIcon.medium(parsed.icon, color: parsed.iconColor),
                           const SizedBox(width: 14),
 
                           // Konten Tengah: Action, Judul, Subtitle
@@ -1850,8 +1922,6 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
                                       child: Row(
                                         mainAxisSize: MainAxisSize.min,
                                         children: [
-                                          const Icon(Icons.person_outline, size: 12, color: AppColors.navy700),
-                                          const SizedBox(width: 4),
                                           Text(
                                             actorName,
                                             style: const TextStyle(fontSize: 11, color: AppColors.navy900, fontWeight: FontWeight.w600),
@@ -1874,16 +1944,9 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
                                         borderRadius: BorderRadius.circular(4),
                                         border: Border.all(color: AppColors.border),
                                       ),
-                                      child: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          const Icon(Icons.terminal_rounded, size: 12, color: AppColors.textSecondary),
-                                          const SizedBox(width: 4),
-                                          Text(
-                                            cleanIp,
-                                            style: const TextStyle(fontSize: 10.5, color: AppColors.textSecondary, fontFamily: 'monospace'),
-                                          ),
-                                        ],
+                                      child: Text(
+                                        cleanIp,
+                                        style: const TextStyle(fontSize: 10.5, color: AppColors.textSecondary, fontFamily: 'monospace'),
                                       ),
                                     ),
                                   ],
@@ -1988,7 +2051,7 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
         actionLabel: 'CHECK-IN',
         title: 'Check-in Tamu: $guest',
         subtitle: inv != null ? 'Kamar $room · No. Invoice: $inv' : 'Kamar $room · Reservasi berhasil diproses',
-        icon: Icons.login_rounded,
+        icon: AppIcons.checkIn,
         badgeBg: AppColors.availableBg,
         badgeColor: AppColors.availableText,
         iconBg: AppColors.availableBg,
@@ -2014,7 +2077,7 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
           if (paymentStr.isNotEmpty) '$paymentStr$lateStr',
           if (inv != null) 'Invoice: $inv',
         ].join(' · '),
-        icon: Icons.logout_rounded,
+        icon: AppIcons.checkOut,
         badgeBg: AppColors.orange100,
         badgeColor: AppColors.orange800,
         iconBg: AppColors.orange100,
@@ -2045,7 +2108,7 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
         actionLabel: 'STATUS KAMAR',
         title: title,
         subtitle: subtitle,
-        icon: Icons.cleaning_services_rounded,
+        icon: AppIcons.cleaning,
         badgeBg: AppColors.navy50,
         badgeColor: AppColors.navy700,
         iconBg: AppColors.navy50,
@@ -2058,7 +2121,7 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
         actionLabel: isFailed ? 'LOGIN GAGAL' : 'LOGIN BERHASIL',
         title: isFailed ? 'Percobaan Masuk Gagal (Security Alert)' : 'Autentikasi Pengguna Berhasil',
         subtitle: 'Upaya akses sistem untuk akun "$user"',
-        icon: isFailed ? Icons.gpp_maybe_rounded : Icons.verified_user_rounded,
+        icon: isFailed ? AppIcons.warning : AppIcons.shield,
         badgeBg: isFailed ? AppColors.errorBg : AppColors.availableBg,
         badgeColor: isFailed ? AppColors.errorText : AppColors.availableText,
         iconBg: isFailed ? AppColors.errorBg : AppColors.availableBg,
@@ -2070,7 +2133,7 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
         actionLabel: 'HAPUS DATA',
         title: 'Penghapusan Inventaris Kamar $room',
         subtitle: 'Data unit kamar dihapus dari daftar operasional hotel',
-        icon: Icons.delete_outline_rounded,
+        icon: AppIcons.delete,
         badgeBg: AppColors.errorBg,
         badgeColor: AppColors.errorText,
         iconBg: AppColors.errorBg,
@@ -2083,7 +2146,7 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
         actionLabel: 'UNDUH LAPORAN',
         title: 'Ekspor Rekapitulasi Laporan $format',
         subtitle: 'Mengunduh rekapitulasi data keuangan & operasional ($total data)',
-        icon: Icons.file_download_outlined,
+        icon: AppIcons.download,
         badgeBg: AppColors.navy100,
         badgeColor: AppColors.navy900,
         iconBg: AppColors.navy50,
@@ -2094,7 +2157,7 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
         actionLabel: act.replaceAll('_', ' '),
         title: 'Aktivitas ${act.replaceAll('_', ' ')}',
         subtitle: d.isNotEmpty ? d : 'Tidak ada rincian tambahan',
-        icon: Icons.history_rounded,
+        icon: AppIcons.audit,
         badgeBg: AppColors.navy50,
         badgeColor: AppColors.navy700,
         iconBg: AppColors.navy50,
