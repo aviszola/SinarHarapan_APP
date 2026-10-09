@@ -1,4 +1,6 @@
+import 'dart:io' show Platform;
 import 'dart:math' as math;
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -47,6 +49,13 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
   bool _isManualPrice = false;
   String _paymentMethod = 'CASH'; // CASH, QRIS, TRANSFER, REDDOORZ_PREPAID
 
+  final ScrollController _scrollController = ScrollController();
+
+  bool get _isDesktopPlatform {
+    if (kIsWeb) return false;
+    return Platform.isWindows || Platform.isMacOS || Platform.isLinux;
+  }
+
   bool _isOcrLoading = false;
   bool _isOcrExtracted = false;
   double _ocrConfidence = 0.0;
@@ -70,6 +79,7 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
 
   @override
   void dispose() {
+    _scrollController.dispose();
     _bookingCodeController.dispose();
     _nikController.dispose();
     _nameController.dispose();
@@ -117,45 +127,81 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
   // Capture image dari kamera atau galeri untuk OCR
   // image_picker menangani permissions secara otomatis
   Future<void> _requestCameraPermissionAndScan() async {
-    // Show option to take photo or pick from gallery
+    // Pada platform desktop (Windows/macOS/Linux), image_picker tidak memiliki cameraDelegate bawaan.
+    // Langsung buka pemilih berkas (galeri/file) agar alur operasional staf cepat tanpa crash.
+    if (_isDesktopPlatform) {
+      _captureOcrImage(ImageSource.gallery);
+      return;
+    }
+
+    // Untuk platform mobile (Android/iOS), tawarkan opsi kamera dan galeri
     showModalBottomSheet(
       context: context,
-      builder: (ctx) => Container(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              'Ambil Foto KTP',
-              style: AppTypography.bodySm.copyWith(fontWeight: FontWeight.w700),
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: ElevatedButton.icon(
-                    icon: const AppIcon.medium(AppIcons.camera),
-                    label: const Text('Buka Kamera'),
-                    onPressed: () {
-                      Navigator.pop(ctx);
-                      _captureOcrImage(ImageSource.camera);
-                    },
-                  ),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.radius)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                'Ambil Foto Dokumen KTP',
+                style: AppTypography.bodySm.copyWith(
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.navy900,
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: ElevatedButton.icon(
-                    icon: const AppIcon.medium(AppIcons.image),
-                    label: const Text('Pilih Galeri'),
-                    onPressed: () {
-                      Navigator.pop(ctx);
-                      _captureOcrImage(ImageSource.gallery);
-                    },
+              ),
+              const SizedBox(height: 6),
+              Text(
+                'Pilih metode pengambilan gambar kartu identitas tamu.',
+                style: AppTypography.caption.copyWith(color: AppColors.textSecondary),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        side: const BorderSide(color: AppColors.brandNavy),
+                      ),
+                      icon: const AppIcon.small(AppIcons.camera, color: AppColors.brandNavy),
+                      label: const Text(
+                        'Buka Kamera',
+                        style: TextStyle(color: AppColors.navy900, fontWeight: FontWeight.w600),
+                      ),
+                      onPressed: () {
+                        Navigator.pop(ctx);
+                        _captureOcrImage(ImageSource.camera);
+                      },
+                    ),
                   ),
-                ),
-              ],
-            ),
-          ],
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        backgroundColor: AppColors.brandNavy,
+                        foregroundColor: AppColors.white,
+                      ),
+                      icon: const AppIcon.small(AppIcons.image, color: AppColors.white),
+                      label: const Text(
+                        'Pilih Galeri',
+                        style: TextStyle(fontWeight: FontWeight.w600),
+                      ),
+                      onPressed: () {
+                        Navigator.pop(ctx);
+                        _captureOcrImage(ImageSource.gallery);
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -170,12 +216,36 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
 
     try {
       final picker = ImagePicker();
-      final pickedFile = await picker.pickImage(
-        source: source,
-        maxWidth: 1920,
-        maxHeight: 1920,
-        imageQuality: 85,
-      );
+      XFile? pickedFile;
+
+      try {
+        pickedFile = await picker.pickImage(
+          source: source,
+          maxWidth: 1920,
+          maxHeight: 1920,
+          imageQuality: 85,
+        );
+      } catch (pickerErr) {
+        // Fallback otomatis ke galeri jika kamera tidak didukung di perangkat desktop
+        if (source == ImageSource.camera) {
+          try {
+            pickedFile = await picker.pickImage(
+              source: ImageSource.gallery,
+              maxWidth: 1920,
+              maxHeight: 1920,
+              imageQuality: 85,
+            );
+          } catch (_) {
+            setState(() {
+              _isOcrLoading = false;
+              _errorMessage = 'Kamera tidak didukung di perangkat ini. Silakan pilih berkas foto KTP dari penyimpanan.';
+            });
+            return;
+          }
+        } else {
+          rethrow;
+        }
+      }
 
       if (pickedFile == null) {
         setState(() => _isOcrLoading = false);
@@ -297,9 +367,13 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
         );
       }
     } catch (e) {
+      final rawErr = e.toString().replaceAll("Exception: ", "").replaceAll("Bad state: ", "");
+      final friendlyError = rawErr.contains('cameraDelegate')
+          ? 'Kamera tidak didukung pada sistem desktop ini. Silakan gunakan berkas foto KTP dari penyimpanan.'
+          : 'Gagal memproses gambar: $rawErr';
       setState(() {
         _isOcrLoading = false;
-        _errorMessage = 'Gagal memproses gambar: ${e.toString().replaceAll("Exception: ", "")}';
+        _errorMessage = friendlyError;
       });
     }
   }
@@ -546,8 +620,8 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
     );
     final availableHeight = mediaQuery.size.height - mediaQuery.viewInsets.bottom;
     final dialogHeight = math.min(
-      780.0,
-      availableHeight * (isMobile ? 0.96 : 0.90),
+      840.0,
+      availableHeight * (isMobile ? 0.96 : 0.92),
     );
 
     final currencyFormatter = NumberFormat.currency(
@@ -561,9 +635,9 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
       insetAnimationCurve: Curves.linear,
       insetPadding: EdgeInsets.symmetric(
         horizontal: isMobile ? 10 : 24,
-        vertical: isMobile ? 10 : 24,
+        vertical: isMobile ? 10 : 16,
       ),
-      shape: RoundedRectangleBorder(borderRadius: AppRadius.roundedLg),
+      shape: const RoundedRectangleBorder(borderRadius: AppRadius.rounded),
       backgroundColor: AppColors.surface,
       child: ConstrainedBox(
         constraints: BoxConstraints(
@@ -571,7 +645,12 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
           maxHeight: dialogHeight,
         ),
         child: Padding(
-          padding: EdgeInsets.all(isMobile ? AppSpacing.md : AppSpacing.xl),
+          padding: EdgeInsets.fromLTRB(
+            isMobile ? 14 : 24,
+            isMobile ? 14 : 18,
+            isMobile ? 14 : 24,
+            isMobile ? 14 : 16,
+          ),
           child: Form(
             key: _formKey,
             child: Column(
@@ -589,7 +668,7 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
                               horizontal: 10,
                               vertical: 4,
                             ),
-                            decoration: BoxDecoration(
+                            decoration: const BoxDecoration(
                               color: AppColors.navy100,
                               borderRadius: AppRadius.roundedSm,
                             ),
@@ -630,13 +709,19 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
                 const Divider(height: 16),
 
                 Expanded(
-                  child: SingleChildScrollView(
-                    physics: const ClampingScrollPhysics(),
-                    keyboardDismissBehavior:
-                        ScrollViewKeyboardDismissBehavior.onDrag,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
+                  child: Scrollbar(
+                    controller: _scrollController,
+                    thumbVisibility: true,
+                    child: SingleChildScrollView(
+                      controller: _scrollController,
+                      physics: const ClampingScrollPhysics(),
+                      keyboardDismissBehavior:
+                          ScrollViewKeyboardDismissBehavior.onDrag,
+                      child: Padding(
+                        padding: const EdgeInsets.only(right: 8),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
                         if (_errorMessage != null) ...[
                           Container(
                             padding: const EdgeInsets.all(AppSpacing.sm),
@@ -821,7 +906,7 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
                           ),
                         ],
 
-                        const SizedBox(height: AppSpacing.lg),
+                        const SizedBox(height: AppSpacing.md),
 
                         // 2. OCR Section
                         Container(
@@ -895,7 +980,7 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
                           ),
                         ),
 
-                        const SizedBox(height: AppSpacing.lg),
+                        const SizedBox(height: AppSpacing.md),
 
                         // Document Type Selection (KTP / PASSPORT / SIM)
                         Text(
@@ -930,7 +1015,7 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
                             );
                           }).toList(),
                         ),
-                        const SizedBox(height: AppSpacing.md),
+                        const SizedBox(height: AppSpacing.sm),
 
                         // Guest Data Fields - Responsive layout
                         if (isMobile) ...[
@@ -1041,7 +1126,7 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
                           ),
                         ],
 
-                        const SizedBox(height: AppSpacing.lg),
+                        const SizedBox(height: AppSpacing.md),
 
                         // Stay Duration & Payment Method - Simplified Clean Dropdown Section
                         if (isMobile) ...[
@@ -1431,33 +1516,55 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
                     ),
                   ),
                 ),
+              ),
+            ),
 
-                const Divider(height: 16),
+            const Divider(height: 16),
 
-                // Modal Footer - Responsive Wrap
-                Wrap(
-                  alignment: WrapAlignment.end,
-                  crossAxisAlignment: WrapCrossAlignment.center,
-                  spacing: AppSpacing.sm,
-                  runSpacing: AppSpacing.sm,
-                  children: [
-                    AppButton(
+            // Modal Footer - Responsive Layout
+            if (isMobile)
+              Row(
+                children: [
+                  Expanded(
+                    child: AppButton(
                       label: 'Batal',
                       variant: AppButtonVariant.outline,
                       onPressed: () => Navigator.of(context).pop(),
                     ),
-                    // Exactly ONE primary orange CTA per design.md rules
-                    AppButton(
-                      label: 'Pratinjau Invoice & Selesaikan',
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                  Expanded(
+                    flex: 2,
+                    child: AppButton(
+                      label: 'Pratinjau Invoice',
                       variant: AppButtonVariant.primary,
                       icon: AppIcons.checkIn,
                       onPressed: _handleSubmit,
                     ),
-                  ],
-                ),
-              ],
-            ),
-          ),
+                  ),
+                ],
+              )
+            else
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  AppButton(
+                    label: 'Batal',
+                    variant: AppButtonVariant.outline,
+                    onPressed: () => Navigator.of(context).pop(),
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                  AppButton(
+                    label: 'Pratinjau Invoice & Selesaikan',
+                    variant: AppButtonVariant.primary,
+                    icon: AppIcons.checkIn,
+                    onPressed: _handleSubmit,
+                  ),
+                ],
+              ),
+          ],
+        ),
+      ),
         ),
       ),
     );
