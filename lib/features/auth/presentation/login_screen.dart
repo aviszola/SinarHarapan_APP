@@ -295,7 +295,7 @@ class _LeftBrandPanel extends StatelessWidget {
           _ModuleItem(
             icon: AppIcons.room,
             title: 'Operasional Kamar',
-            subtitle: 'Pemantauan status 3 kamar, check-in, dan check-out cepat.',
+            subtitle: 'Pemantauan status kamar, check-in, dan check-out cepat.',
           ),
           const SizedBox(height: 18),
           _ModuleItem(

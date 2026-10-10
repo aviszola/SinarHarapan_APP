@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../theme/app_colors.dart';
@@ -9,7 +10,7 @@ import 'room_controller.dart';
 
 /// Bar Filter Kamar & Ringkasan Okupansi yang tenang dan informatif.
 /// Satu baris statistik sederhana, label Bahasa Indonesia, padding konsisten dengan grid kamar.
-class RoomFilterBar extends ConsumerWidget {
+class RoomFilterBar extends ConsumerStatefulWidget {
   final VoidCallback? onRefresh;
   final bool isRefreshing;
 
@@ -20,11 +21,61 @@ class RoomFilterBar extends ConsumerWidget {
   });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<RoomFilterBar> createState() => _RoomFilterBarState();
+}
+
+class _RoomFilterBarState extends ConsumerState<RoomFilterBar>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _refreshController;
+  late final TextEditingController _searchController;
+  Timer? _debounceTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    _refreshController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 750),
+    );
+    if (widget.isRefreshing) {
+      _refreshController.repeat();
+    }
+    _searchController = TextEditingController(
+      text: ref.read(roomFilterProvider).searchQuery,
+    );
+  }
+
+  @override
+  void didUpdateWidget(RoomFilterBar oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.isRefreshing && !oldWidget.isRefreshing) {
+      _refreshController.repeat();
+    } else if (!widget.isRefreshing && oldWidget.isRefreshing) {
+      _refreshController.animateTo(1.0, duration: const Duration(milliseconds: 200)).then((_) {
+        if (mounted) _refreshController.reset();
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _debounceTimer?.cancel();
+    _searchController.dispose();
+    _refreshController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final filter = ref.watch(roomFilterProvider);
     final notifier = ref.read(roomFilterProvider.notifier);
     final stats = ref.watch(roomStatsProvider);
     final totalRooms = stats.values.fold<int>(0, (a, b) => a + b);
+
+    // Sinkronkan text controller jika filter di-reset dari luar
+    if (_searchController.text != filter.searchQuery && _debounceTimer?.isActive != true) {
+      _searchController.text = filter.searchQuery;
+    }
 
     final available = stats[RoomStatusType.available] ?? 0;
     final occupied = stats[RoomStatusType.occupied] ?? 0;
@@ -139,6 +190,7 @@ class RoomFilterBar extends ConsumerWidget {
         width: width,
         height: 36,
         child: TextField(
+          controller: _searchController,
           style: AppTextStyles.bodyMedium,
           decoration: InputDecoration(
             hintText: 'Cari kamar / tamu...',
@@ -149,14 +201,23 @@ class RoomFilterBar extends ConsumerWidget {
                     padding: EdgeInsets.zero,
                     tooltip: 'Hapus pencarian',
                     icon: const AppIcon.small(AppIcons.close, color: AppColors.textSecondary),
-                    onPressed: () => notifier.state = filter.copyWith(searchQuery: ''),
+                    onPressed: () {
+                      _debounceTimer?.cancel();
+                      _searchController.clear();
+                      notifier.state = filter.copyWith(searchQuery: '');
+                    },
                   )
                 : null,
             contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
             fillColor: AppColors.surface,
             filled: true,
           ),
-          onChanged: (val) => notifier.state = filter.copyWith(searchQuery: val),
+          onChanged: (val) {
+            _debounceTimer?.cancel();
+            _debounceTimer = Timer(const Duration(milliseconds: 150), () {
+              notifier.state = filter.copyWith(searchQuery: val);
+            });
+          },
         ),
       );
     }
@@ -179,7 +240,7 @@ class RoomFilterBar extends ConsumerWidget {
                 Expanded(child: buildStatsLine()),
                 const SizedBox(width: 16),
                 // Kontrol Filter Rata Kanan
-                buildSearchField(width: 180),
+                buildSearchField(width: 240),
                 const SizedBox(width: 8),
                 roomTypeDropdown,
                 const SizedBox(width: 8),
@@ -197,10 +258,14 @@ class RoomFilterBar extends ConsumerWidget {
                     ),
                     icon: const AppIcon.small(AppIcons.close),
                     label: const Text('Reset', style: TextStyle(fontSize: 12)),
-                    onPressed: () => notifier.state = const RoomFilterState(),
+                    onPressed: () {
+                      _debounceTimer?.cancel();
+                      _searchController.clear();
+                      notifier.state = const RoomFilterState();
+                    },
                   ),
                 ],
-                if (onRefresh != null) ...[
+                if (widget.onRefresh != null) ...[
                   const SizedBox(width: 8),
                   OutlinedButton.icon(
                     style: OutlinedButton.styleFrom(
@@ -208,15 +273,12 @@ class RoomFilterBar extends ConsumerWidget {
                       padding: const EdgeInsets.symmetric(horizontal: 10),
                       foregroundColor: AppColors.brandNavy,
                     ),
-                    icon: isRefreshing
-                        ? const SizedBox(
-                            width: 12,
-                            height: 12,
-                            child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.brandNavy),
-                          )
-                        : const AppIcon.small(AppIcons.refresh),
+                    icon: RotationTransition(
+                      turns: _refreshController,
+                      child: const AppIcon.small(AppIcons.refresh),
+                    ),
                     label: const Text('Segarkan', style: TextStyle(fontSize: 12)),
-                    onPressed: isRefreshing ? null : onRefresh,
+                    onPressed: widget.isRefreshing ? null : widget.onRefresh,
                   ),
                 ],
               ],
@@ -251,7 +313,27 @@ class RoomFilterBar extends ConsumerWidget {
                         ),
                         icon: const AppIcon.small(AppIcons.close),
                         label: const Text('Reset', style: TextStyle(fontSize: 12)),
-                        onPressed: () => notifier.state = const RoomFilterState(),
+                        onPressed: () {
+                          _debounceTimer?.cancel();
+                          _searchController.clear();
+                          notifier.state = const RoomFilterState();
+                        },
+                      ),
+                    ],
+                    if (widget.onRefresh != null) ...[
+                      const SizedBox(width: 8),
+                      OutlinedButton.icon(
+                        style: OutlinedButton.styleFrom(
+                          minimumSize: const Size(0, 36),
+                          padding: const EdgeInsets.symmetric(horizontal: 10),
+                          foregroundColor: AppColors.brandNavy,
+                        ),
+                        icon: RotationTransition(
+                          turns: _refreshController,
+                          child: const AppIcon.small(AppIcons.refresh),
+                        ),
+                        label: const Text('Segarkan', style: TextStyle(fontSize: 12)),
+                        onPressed: widget.isRefreshing ? null : widget.onRefresh,
                       ),
                     ],
                   ],

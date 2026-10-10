@@ -565,36 +565,23 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
 
                         const SizedBox(width: 4),
 
-                        // If in Reports tab or Overview: show export buttons
-                        if (_activeNavIndex == 2 || _activeNavIndex == 0) ...[
-                          if (isMobile) ...[
-                            IconButton(
-                              tooltip: 'Ekspor Excel (.xlsx)',
-                              icon: const AppIcon.medium(AppIcons.excel, color: AppColors.statusAvailable),
-                              onPressed: _handleExportExcel,
-                            ),
-                            IconButton(
-                              tooltip: 'Ekspor PDF Resmi',
-                              icon: const AppIcon.medium(AppIcons.pdf, color: AppColors.orange600),
-                              onPressed: _handleExportPdf,
-                            ),
-                          ] else ...[
-                            AppButton(
-                              label: 'Ekspor Excel',
-                              variant: AppButtonVariant.secondary,
-                              icon: AppIcons.excel,
-                              isLoading: _isExportingExcel,
-                              onPressed: _handleExportExcel,
-                            ),
-                            const SizedBox(width: AppSpacing.xs),
-                            AppButton(
-                              label: 'Ekspor PDF',
-                              variant: AppButtonVariant.outline,
-                              icon: AppIcons.pdf,
-                              isLoading: _isExportingPdf,
-                              onPressed: _handleExportPdf,
-                            ),
-                          ],
+                        // If in Reports tab or Overview on desktop: show export buttons
+                        if (!isMobile && (_activeNavIndex == 2 || _activeNavIndex == 0)) ...[
+                          AppButton(
+                            label: 'Ekspor Excel',
+                            variant: AppButtonVariant.secondary,
+                            icon: AppIcons.excel,
+                            isLoading: _isExportingExcel,
+                            onPressed: _handleExportExcel,
+                          ),
+                          const SizedBox(width: AppSpacing.xs),
+                          AppButton(
+                            label: 'Ekspor PDF',
+                            variant: AppButtonVariant.outline,
+                            icon: AppIcons.pdf,
+                            isLoading: _isExportingPdf,
+                            onPressed: _handleExportPdf,
+                          ),
                         ],
 
                         // If in Inventory tab: show add room button
@@ -647,11 +634,11 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
       case 0:
         return 'Ringkasan';
       case 1:
-        return 'Inventaris Kamar';
+        return isMobile ? 'Kamar' : 'Inventaris Kamar';
       case 2:
-        return 'Laporan Keuangan';
+        return isMobile ? 'Laporan' : 'Laporan Keuangan';
       case 3:
-        return 'Catatan Aktivitas';
+        return isMobile ? 'Aktivitas' : 'Catatan Aktivitas';
       default:
         return 'Dashboard Manajer';
     }
@@ -1171,36 +1158,26 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
         children: [
           Padding(
             padding: const EdgeInsets.all(AppSpacing.md),
-            child: Wrap(
-              alignment: WrapAlignment.spaceBetween,
-              crossAxisAlignment: WrapCrossAlignment.center,
-              spacing: AppSpacing.md,
-              runSpacing: AppSpacing.sm,
+            child: Row(
               children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Daftar Seluruh Unit Kamar (${rooms.length} Kamar Terdaftar)',
-                      style: AppTypography.h3,
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      'Manajer berwenang mengubah tarif, mengatur mode perbaikan, atau menambah unit.',
-                      style: AppTypography.caption,
-                    ),
-                  ],
-                ),
-                AppButton(
-                  label: 'Tambah Kamar Baru',
-                  variant: AppButtonVariant.primary,
-                  icon: AppIcons.add,
-                  onPressed: () {
-                    showDialog(
-                      context: context,
-                      builder: (_) => const RoomCrudDialog(),
-                    );
-                  },
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Daftar Seluruh Unit Kamar (${rooms.length} Kamar Terdaftar)',
+                        style: AppTypography.h3.copyWith(
+                          color: AppColors.brandNavyDark,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        'Manajer berwenang mengubah tarif, mengatur mode perbaikan, atau menambah unit.',
+                        style: AppTypography.caption.copyWith(color: AppColors.textSecondary),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -1335,13 +1312,38 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
                   width: contentWidth,
                   child: Column(
                     children: [
+                      // Header Tabel Desktop
+                      Container(
+                        color: AppColors.bgSubtle,
+                        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: 10),
+                        child: Row(
+                          children: [
+                            SizedBox(width: 44, child: Text('UNIT', style: AppTextStyles.badge)),
+                            const SizedBox(width: AppSpacing.md),
+                            Expanded(flex: 2, child: Text('TIPE & LANTAI', style: AppTextStyles.badge)),
+                            Expanded(flex: 2, child: Text('TARIF / MALAM', style: AppTextStyles.badge)),
+                            Expanded(flex: 2, child: Text('STATUS', style: AppTextStyles.badge)),
+                            Expanded(flex: 3, child: Text('FASILITAS', style: AppTextStyles.badge)),
+                            SizedBox(
+                              width: 220,
+                              child: Text(
+                                'AKSI OPERASIONAL',
+                                textAlign: TextAlign.right,
+                                style: AppTextStyles.badge,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const Divider(height: 1),
+
                       for (int index = 0; index < rooms.length; index++) ...[
                         if (index > 0) const Divider(height: 1),
                         Builder(
                           builder: (context) {
                             final room = rooms[index];
                             return Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: 12),
+                              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: 10),
                               child: Row(
                                 children: [
                                   Container(
@@ -1392,7 +1394,10 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
 
                                   Expanded(
                                     flex: 2,
-                                    child: StatusBadge(status: room.status),
+                                    child: Align(
+                                      alignment: Alignment.centerLeft,
+                                      child: StatusBadge(status: room.status),
+                                    ),
                                   ),
 
                                   Expanded(
@@ -1405,33 +1410,55 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
                                     ),
                                   ),
 
-                                  Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      IconButton(
-                                        tooltip: 'Ubah Data Kamar',
-                                        icon: const AppIcon.medium(AppIcons.edit, color: AppColors.navy700),
-                                        onPressed: () {
-                                          showDialog(
-                                            context: context,
-                                            builder: (_) => RoomCrudDialog(roomToEdit: room),
-                                          );
-                                        },
-                                      ),
-                                      const SizedBox(width: 4),
-                                      AppButton(
-                                        label: room.isMaintenance ? 'Aktifkan' : 'Perawatan',
-                                        variant: AppButtonVariant.outline,
-                                        icon: AppIcons.maintenance,
-                                        onPressed: room.isOccupied ? null : () => _handleToggleMaintenance(room),
-                                      ),
-                                      const SizedBox(width: 8),
-                                      IconButton(
-                                        tooltip: 'Hapus Kamar',
-                                        icon: const AppIcon.medium(AppIcons.delete, color: AppColors.statusOccupied),
-                                        onPressed: room.isOccupied ? null : () => _handleDeleteRoom(room),
-                                      ),
-                                    ],
+                                  SizedBox(
+                                    width: 220,
+                                    child: Row(
+                                      mainAxisAlignment: MainAxisAlignment.end,
+                                      children: [
+                                        IconButton(
+                                          visualDensity: VisualDensity.compact,
+                                          padding: EdgeInsets.zero,
+                                          constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                                          tooltip: 'Ubah Data Kamar',
+                                          icon: const AppIcon.small(AppIcons.edit, color: AppColors.navy700),
+                                          onPressed: () {
+                                            showDialog(
+                                              context: context,
+                                              builder: (_) => RoomCrudDialog(roomToEdit: room),
+                                            );
+                                          },
+                                        ),
+                                        const SizedBox(width: 4),
+                                        OutlinedButton.icon(
+                                          style: OutlinedButton.styleFrom(
+                                            visualDensity: VisualDensity.compact,
+                                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                            side: BorderSide(
+                                              color: room.isMaintenance ? AppColors.statusAvailable : AppColors.brandNavy,
+                                            ),
+                                            foregroundColor: room.isMaintenance ? AppColors.statusAvailableText : AppColors.navy900,
+                                          ),
+                                          icon: AppIcon.small(
+                                            AppIcons.maintenance,
+                                            color: room.isMaintenance ? AppColors.statusAvailable : AppColors.brandNavy,
+                                          ),
+                                          label: Text(
+                                            room.isMaintenance ? 'Aktifkan' : 'Perawatan',
+                                            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                                          ),
+                                          onPressed: room.isOccupied ? null : () => _handleToggleMaintenance(room),
+                                        ),
+                                        const SizedBox(width: 4),
+                                        IconButton(
+                                          visualDensity: VisualDensity.compact,
+                                          padding: EdgeInsets.zero,
+                                          constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                                          tooltip: 'Hapus Kamar',
+                                          icon: const AppIcon.small(AppIcons.delete, color: AppColors.statusOccupied),
+                                          onPressed: room.isOccupied ? null : () => _handleDeleteRoom(room),
+                                        ),
+                                      ],
+                                    ),
                                   ),
                                 ],
                               ),
@@ -1462,14 +1489,12 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Padding(
-            padding: const EdgeInsets.all(AppSpacing.md),
-            child: Wrap(
-              alignment: WrapAlignment.spaceBetween,
-              crossAxisAlignment: WrapCrossAlignment.center,
-              spacing: AppSpacing.md,
-              runSpacing: 8,
-              children: [
-                Column(
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: 14),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final isNarrow = constraints.maxWidth < 620;
+
+                final headerText = Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
@@ -1485,28 +1510,76 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
                       style: AppTextStyles.caption.copyWith(color: AppColors.textSecondary),
                     ),
                   ],
-                ),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
+                );
+
+                final exportToolbar = Row(
+                  mainAxisSize: isNarrow ? MainAxisSize.max : MainAxisSize.min,
                   children: [
-                    AppButton(
-                      label: 'Unduh Excel (.xlsx)',
-                      variant: AppButtonVariant.secondary,
-                      icon: AppIcons.excel,
-                      isLoading: _isExportingExcel,
-                      onPressed: _handleExportExcel,
+                    OutlinedButton.icon(
+                      style: OutlinedButton.styleFrom(
+                        visualDensity: VisualDensity.compact,
+                        minimumSize: const Size(0, 36),
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        side: const BorderSide(color: AppColors.navy700, width: 1),
+                        foregroundColor: AppColors.navy900,
+                      ),
+                      icon: _isExportingExcel
+                          ? const SizedBox(
+                              width: 14,
+                              height: 14,
+                              child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.navy700),
+                            )
+                          : const AppIcon.small(AppIcons.excel, color: AppColors.statusAvailable),
+                      label: const Text('Unduh Excel (.xlsx)', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+                      onPressed: _isExportingExcel ? null : _handleExportExcel,
                     ),
-                    AppButton(
-                      label: 'Unduh PDF Resmi',
-                      variant: AppButtonVariant.primary,
-                      icon: AppIcons.pdf,
-                      isLoading: _isExportingPdf,
-                      onPressed: _handleExportPdf,
+                    const SizedBox(width: 8),
+                    ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        visualDensity: VisualDensity.compact,
+                        minimumSize: const Size(0, 36),
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        backgroundColor: AppColors.brandOrange,
+                        foregroundColor: AppColors.white,
+                        elevation: 0,
+                      ),
+                      icon: _isExportingPdf
+                          ? const SizedBox(
+                              width: 14,
+                              height: 14,
+                              child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.white),
+                            )
+                          : const AppIcon.small(AppIcons.pdf, color: AppColors.white),
+                      label: const Text('Unduh PDF Resmi', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+                      onPressed: _isExportingPdf ? null : _handleExportPdf,
                     ),
                   ],
-                ),
-              ],
+                );
+
+                if (isNarrow) {
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      headerText,
+                      const SizedBox(height: 10),
+                      SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: exportToolbar,
+                      ),
+                    ],
+                  );
+                }
+
+                return Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Expanded(child: headerText),
+                    const SizedBox(width: 16),
+                    exportToolbar,
+                  ],
+                );
+              },
             ),
           ),
           const Divider(height: 1),
@@ -1567,12 +1640,12 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
                                   : '-';
                               final channel = tx['bookingSource'] != null && tx['bookingSource'].toString().trim().isNotEmpty
                                   ? tx['bookingSource'].toString()
-                                  : '-';
+                                  : (tx['paymentMethod']?.toString() ?? '-');
                               final rawAmt = tx['totalAmount'] ?? tx['amount'] ?? 0;
                               final amt = rawAmt is num ? rawAmt : num.tryParse(rawAmt.toString()) ?? 0;
                               final status = tx['paymentStatus'] != null && tx['paymentStatus'].toString().trim().isNotEmpty
                                   ? tx['paymentStatus'].toString().toUpperCase()
-                                  : '-';
+                                  : (tx['status']?.toString().toUpperCase() ?? '-');
 
                               return Padding(
                                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -1847,7 +1920,12 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
                                   ),
                                   child: Text(
                                     cleanIp,
-                                    style: const TextStyle(fontSize: 10.5, color: AppColors.textSecondary, fontFamily: 'monospace'),
+                                    style: const TextStyle(
+                                      fontSize: 11,
+                                      color: AppColors.textSecondary,
+                                      fontWeight: FontWeight.w500,
+                                      fontFeatures: [FontFeature.tabularFigures()],
+                                    ),
                                   ),
                                 ),
                               ],
@@ -1946,7 +2024,12 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
                                       ),
                                       child: Text(
                                         cleanIp,
-                                        style: const TextStyle(fontSize: 10.5, color: AppColors.textSecondary, fontFamily: 'monospace'),
+                                        style: const TextStyle(
+                                          fontSize: 11,
+                                          color: AppColors.textSecondary,
+                                          fontWeight: FontWeight.w500,
+                                          fontFeatures: [FontFeature.tabularFigures()],
+                                        ),
                                       ),
                                     ),
                                   ],

@@ -27,8 +27,37 @@ class RoomGridScreen extends ConsumerStatefulWidget {
   ConsumerState<RoomGridScreen> createState() => _RoomGridScreenState();
 }
 
-class _RoomGridScreenState extends ConsumerState<RoomGridScreen> {
+class _RoomGridScreenState extends ConsumerState<RoomGridScreen>
+    with SingleTickerProviderStateMixin {
   bool _isRefreshing = false;
+  bool _hasInitialAnimated = false;
+
+  late final AnimationController _entranceController;
+  late final Animation<double> _fadeAnim;
+  late final Animation<Offset> _slideAnim;
+
+  @override
+  void initState() {
+    super.initState();
+    _entranceController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 200),
+    );
+    _fadeAnim = CurvedAnimation(
+      parent: _entranceController,
+      curve: Curves.easeOutCubic,
+    );
+    _slideAnim = Tween<Offset>(
+      begin: const Offset(0, 0.02), // Geser vertikal sangat halus ~4-6px
+      end: Offset.zero,
+    ).animate(_fadeAnim);
+  }
+
+  @override
+  void dispose() {
+    _entranceController.dispose();
+    super.dispose();
+  }
 
   Future<void> _handleRefresh() async {
     if (_isRefreshing) return;
@@ -40,15 +69,50 @@ class _RoomGridScreenState extends ConsumerState<RoomGridScreen> {
     }
   }
 
+  Future<T?> _showRoomDialog<T>({
+    required BuildContext context,
+    required WidgetBuilder builder,
+    bool barrierDismissible = false,
+  }) {
+    final disableAnimations = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
+    if (disableAnimations) {
+      return showDialog<T>(
+        context: context,
+        barrierDismissible: barrierDismissible,
+        builder: builder,
+      );
+    }
+
+    return showGeneralDialog<T>(
+      context: context,
+      barrierDismissible: barrierDismissible,
+      barrierLabel: 'Tutup Dialog',
+      barrierColor: Colors.black54,
+      transitionDuration: const Duration(milliseconds: 180),
+      pageBuilder: (ctx, _, _) => builder(ctx),
+      transitionBuilder: (ctx, anim1, _, child) {
+        final curveValue = Curves.easeOutCubic.transform(anim1.value);
+        final scale = 0.985 + (0.015 * curveValue);
+        return Opacity(
+          opacity: anim1.value,
+          child: Transform.scale(
+            scale: scale,
+            child: child,
+          ),
+        );
+      },
+    );
+  }
+
   void _handleRoomTap(RoomModel room) {
     if (room.isAvailable) {
-      showDialog(
+      _showRoomDialog(
         context: context,
         barrierDismissible: false,
         builder: (_) => CheckInModal(room: room),
       );
     } else if (room.isOccupied) {
-      showDialog(
+      _showRoomDialog(
         context: context,
         barrierDismissible: false,
         builder: (_) => CheckOutDialog(room: room),
@@ -101,8 +165,9 @@ class _RoomGridScreenState extends ConsumerState<RoomGridScreen> {
   void _handleOpenActiveGuests() {
     final rooms = ref.read(roomListProvider).value ?? [];
     final occupied = rooms.where((r) => r.isOccupied).toList();
-    showDialog(
+    _showRoomDialog(
       context: context,
+      barrierDismissible: true,
       builder: (_) => ActiveGuestsModal(occupiedRooms: occupied),
     );
   }
@@ -192,6 +257,18 @@ class _RoomGridScreenState extends ConsumerState<RoomGridScreen> {
                 ),
               ),
               data: (_) {
+                if (!_hasInitialAnimated) {
+                  _hasInitialAnimated = true;
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    if (!mounted) return;
+                    if (MediaQuery.maybeDisableAnimationsOf(context) ?? false) {
+                      _entranceController.value = 1.0;
+                    } else {
+                      _entranceController.forward();
+                    }
+                  });
+                }
+
                 if (filteredRooms.isEmpty) {
                   return Center(
                     child: EmptyStateWidget(
@@ -208,10 +285,16 @@ class _RoomGridScreenState extends ConsumerState<RoomGridScreen> {
                   );
                 }
 
-                return _RoomGrid(
-                  rooms: filteredRooms,
-                  onTap: _handleRoomTap,
-                  onRefresh: _handleRefresh,
+                return FadeTransition(
+                  opacity: _fadeAnim,
+                  child: SlideTransition(
+                    position: _slideAnim,
+                    child: _RoomGrid(
+                      rooms: filteredRooms,
+                      onTap: _handleRoomTap,
+                      onRefresh: _handleRefresh,
+                    ),
+                  ),
                 );
               },
             ),
@@ -361,11 +444,12 @@ class _RoomGridSkeleton extends StatelessWidget {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          SkeletonBox(width: 70, height: 16),
-                          SkeletonBox(width: 55, height: 18),
+                          Flexible(child: SkeletonBox(width: 55, height: 16)),
+                          SizedBox(width: 6),
+                          SkeletonBox(width: 44, height: 18),
                         ],
                       ),
-                      SkeletonBox(width: 120, height: 14),
+                      SkeletonBox(width: 80, height: 14),
                       SkeletonBox(width: double.infinity, height: 32),
                     ],
                   ),

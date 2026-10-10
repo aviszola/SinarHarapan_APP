@@ -48,38 +48,49 @@ class StatusBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     final s = _style;
     final label = customLabel ?? s.label;
+    final disableAnimations = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
+    final animDuration = disableAnimations ? Duration.zero : const Duration(milliseconds: 180);
 
-    return Container(
-      padding: compact
-          ? const EdgeInsets.all(5)
-          : const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: s.bg,
-        borderRadius: AppRadius.roundedSm,
-        border: Border.all(color: s.fg.withAlpha(40), width: 1),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 6,
-            height: 6,
-            decoration: BoxDecoration(
-              color: s.fg,
-              shape: BoxShape.circle,
-            ),
-          ),
-          if (!compact) ...[
-            const SizedBox(width: 6),
-            Text(
-              label,
-              style: AppTextStyles.badge.copyWith(
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: AnimatedContainer(
+        duration: animDuration,
+        curve: Curves.easeInOut,
+        padding: compact
+            ? const EdgeInsets.all(5)
+            : const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        decoration: BoxDecoration(
+          color: s.bg,
+          borderRadius: AppRadius.roundedSm,
+          border: Border.all(color: s.fg.withAlpha(40), width: 1),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            AnimatedContainer(
+              duration: animDuration,
+              curve: Curves.easeInOut,
+              width: 6,
+              height: 6,
+              decoration: BoxDecoration(
                 color: s.fg,
-                fontSize: 12,
+                shape: BoxShape.circle,
               ),
             ),
+            if (!compact) ...[
+              const SizedBox(width: 6),
+              AnimatedDefaultTextStyle(
+                duration: animDuration,
+                curve: Curves.easeInOut,
+                style: AppTextStyles.badge.copyWith(
+                  color: s.fg,
+                  fontSize: 12,
+                ),
+                child: Text(label),
+              ),
+            ],
           ],
-        ],
+        ),
       ),
     );
   }
