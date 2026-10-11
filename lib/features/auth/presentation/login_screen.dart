@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -22,6 +23,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _usernameFocusNode = FocusNode();
+  final _passwordFocusNode = FocusNode();
 
   @override
   void initState() {
@@ -37,6 +40,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   void dispose() {
     _usernameController.dispose();
     _passwordController.dispose();
+    _usernameFocusNode.dispose();
+    _passwordFocusNode.dispose();
     super.dispose();
   }
 
@@ -50,22 +55,26 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
     if (success && mounted) {
       final user = ref.read(authStateProvider).user!;
-      if (user.isManager) {
-        context.go('/manager/dashboard');
-      } else {
-        context.go('/receptionist/rooms');
-      }
+      try {
+        if (user.isManager) {
+          context.go('/manager/dashboard');
+        } else {
+          context.go('/receptionist/rooms');
+        }
+      } catch (_) {}
     }
   }
 
   void _handleQuickLogin(UserRole role) async {
     final success = await ref.read(authStateProvider.notifier).quickLogin(role);
     if (success && mounted) {
-      if (role == UserRole.manager) {
-        context.go('/manager/dashboard');
-      } else {
-        context.go('/receptionist/rooms');
-      }
+      try {
+        if (role == UserRole.manager) {
+          context.go('/manager/dashboard');
+        } else {
+          context.go('/receptionist/rooms');
+        }
+      } catch (_) {}
     }
   }
 
@@ -77,16 +86,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
     if (isDesktop) {
       return Scaffold(
+        resizeToAvoidBottomInset: true,
         backgroundColor: AppColors.bg,
         body: Row(
           children: [
-            // Panel Kiri: Identitas Hotel yang Tenang & Kokoh
-            Expanded(
+            // Panel Kiri: Identitas Hotel & Informasi Operasional Frontdesk
+            const Expanded(
               flex: 5,
               child: _LeftBrandPanel(),
             ),
 
-            // Panel Kanan: Form Login Proporsional
+            // Panel Kanan: Kartu Form Login Staf
             Expanded(
               flex: 6,
               child: Container(
@@ -96,8 +106,22 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   child: SingleChildScrollView(
                     padding: const EdgeInsets.symmetric(horizontal: 48, vertical: 36),
                     child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 420),
-                      child: _buildFormCard(context, authState, isDesktop: true),
+                      constraints: const BoxConstraints(maxWidth: 440),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          _buildDesktopCard(context, authState),
+                          const SizedBox(height: 20),
+                          Text(
+                            'Hotel Sinar Harapan · Frontdesk PMS v1.0',
+                            style: AppTextStyles.caption.copyWith(
+                              color: AppColors.textDisabled,
+                              fontSize: 12,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -108,25 +132,27 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       );
     }
 
-    // Layar Tablet / Mobile
+    // Layar Mobile & Tablet (< 900px)
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       backgroundColor: AppColors.bg,
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
             child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 420),
+              constraints: const BoxConstraints(maxWidth: 480),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  _MobileBrandHeader(),
-                  const SizedBox(height: AppSpacing.md),
-                  _buildFormCard(context, authState, isDesktop: false),
-                  const SizedBox(height: AppSpacing.lg),
+                  _buildUnifiedMobileCard(context, authState),
+                  const SizedBox(height: 16),
                   Text(
                     'Hotel Sinar Harapan · Frontdesk PMS v1.0',
-                    style: AppTextStyles.caption.copyWith(color: AppColors.textSecondary),
+                    style: AppTextStyles.caption.copyWith(
+                      color: AppColors.textDisabled,
+                      fontSize: 12,
+                    ),
                     textAlign: TextAlign.center,
                   ),
                 ],
@@ -138,16 +164,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     );
   }
 
-  Widget _buildFormCard(
-    BuildContext context,
-    AuthState authState, {
-    required bool isDesktop,
-  }) {
+  /// Kartu Login Desktop (lebar >= 900px)
+  Widget _buildDesktopCard(BuildContext context, AuthState authState) {
     return Container(
-      padding: const EdgeInsets.all(28),
+      padding: const EdgeInsets.all(40),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: AppRadius.rounded,
+        borderRadius: AppRadius.roundedMd,
         border: Border.all(color: AppColors.border, width: 1),
       ),
       child: Form(
@@ -155,81 +178,158 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            // Header Form: Identitas SH Mini + Status Terminal
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: AppColors.brandOrange,
+                    borderRadius: AppRadius.roundedSm,
+                  ),
+                  child: Center(
+                    child: Text(
+                      'SH',
+                      style: AppTextStyles.titleSmall.copyWith(
+                        color: AppColors.navy900,
+                        fontWeight: FontWeight.w800,
+                        fontSize: 15,
+                        letterSpacing: -0.5,
+                      ),
+                    ),
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: AppColors.brandNavyTint,
+                    borderRadius: AppRadius.roundedSm,
+                    border: Border.all(color: AppColors.brandNavyBorder, width: 1),
+                  ),
+                  child: Text(
+                    'TERMINAL FRONTDESK',
+                    style: AppTextStyles.caption.copyWith(
+                      color: AppColors.brandNavy,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 10.5,
+                      letterSpacing: 0.6,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
+
             Text(
               'Masuk ke Sistem',
-              style: AppTextStyles.titleMedium.copyWith(
+              style: AppTextStyles.titleLarge.copyWith(
                 color: AppColors.brandNavyDark,
                 fontWeight: FontWeight.w700,
+                fontSize: 24,
+                letterSpacing: -0.4,
               ),
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: 6),
             Text(
               'Masukkan akun staf untuk membuka sistem PMS.',
               style: AppTextStyles.bodyMedium.copyWith(
                 color: AppColors.textSecondary,
+                fontSize: 14,
               ),
             ),
-            const SizedBox(height: AppSpacing.lg),
+            const SizedBox(height: 24),
 
             // Inline Error Banner
             if (authState.errorMessage != null) ...[
               _ErrorBanner(message: authState.errorMessage!),
-              const SizedBox(height: AppSpacing.md),
+              const SizedBox(height: 20),
             ],
 
-            // Input Nama Pengguna (tanpa ikon dekoratif)
+            // Input Nama Pengguna (tanpa ikon prefix dekoratif)
             AppTextField(
               label: 'Nama Pengguna',
               hint: 'Contoh: resepsionis01',
               controller: _usernameController,
+              focusNode: _usernameFocusNode,
+              autofocus: true,
+              textInputAction: TextInputAction.next,
+              autofillHints: const [AutofillHints.username],
+              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
               validator: (v) => (v == null || v.trim().isEmpty)
                   ? 'Nama pengguna wajib diisi'
                   : null,
             ),
-            const SizedBox(height: AppSpacing.md),
+            const SizedBox(height: 20),
 
-            // Input Kata Sandi (tanpa ikon dekoratif, aksi visibilitas tetap ada)
+            // Input Kata Sandi
             AppTextField(
               label: 'Kata Sandi',
               hint: 'Masukkan kata sandi staf',
               controller: _passwordController,
+              focusNode: _passwordFocusNode,
               isPassword: true,
+              textInputAction: TextInputAction.done,
+              autofillHints: const [AutofillHints.password],
+              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
               validator: (v) =>
                   (v == null || v.isEmpty) ? 'Kata sandi wajib diisi' : null,
               onSubmitted: (_) => _handleLogin(),
             ),
-            const SizedBox(height: AppSpacing.lg),
+            const SizedBox(height: 24),
 
-            // Tombol Utama Masuk
+            // Tombol Utama Masuk (Tinggi >= 52px, teks navy900 kontras 5.65:1 pada oranye)
             AppButton(
               label: 'Masuk ke Sistem',
               variant: AppButtonVariant.primary,
               icon: AppIcons.login,
+              height: 52,
+              fontSize: 15.5,
               isLoading: authState.isLoading,
-              onPressed: _handleLogin,
+              onPressed: authState.isLoading ? null : _handleLogin,
+            ),
+            const SizedBox(height: 12),
+
+            // Teks Bantuan Staf
+            Center(
+              child: Text(
+                'Lupa kata sandi? Hubungi Manajer Hotel.',
+                style: AppTextStyles.caption.copyWith(
+                  color: AppColors.textSecondary,
+                  fontSize: 12,
+                ),
+              ),
             ),
 
-            // Akses Cepat Evaluasi (Hanya aktif dalam Mode Pengembangan / kDebugMode)
-            if (kDebugMode) ...[
-              const SizedBox(height: AppSpacing.lg),
+            // Mode Pengembangan (Hanya aktif jika BUKAN Release Mode)
+            if (!kReleaseMode) ...[
+              const SizedBox(height: 24),
               const _DividerLabel(label: 'Mode Pengembangan'),
-              const SizedBox(height: AppSpacing.sm),
+              const SizedBox(height: 16),
               Row(
                 children: [
                   Expanded(
                     child: AppButton(
                       label: 'Resepsionis',
                       variant: AppButtonVariant.outline,
+                      icon: Icons.person_outline,
+                      height: 38,
+                      fontSize: 13,
                       onPressed: authState.isLoading
                           ? null
                           : () => _handleQuickLogin(UserRole.receptionist),
                     ),
                   ),
-                  const SizedBox(width: AppSpacing.sm),
+                  const SizedBox(width: 12),
                   Expanded(
                     child: AppButton(
                       label: 'Manajer Hotel',
                       variant: AppButtonVariant.outline,
+                      icon: Icons.admin_panel_settings_outlined,
+                      height: 38,
+                      fontSize: 13,
                       onPressed: authState.isLoading
                           ? null
                           : () => _handleQuickLogin(UserRole.manager),
@@ -243,98 +343,207 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       ),
     );
   }
-}
 
-// ── Left Panel (Desktop) ───────────────────────────────────────────
-class _LeftBrandPanel extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
+  /// Kartu Terpadu Mobile (< 900px): Menyatu tanpa kesan dua kotak terpisah
+  Widget _buildUnifiedMobileCard(BuildContext context, AuthState authState) {
     return Container(
-      color: AppColors.brandNavyDark,
-      padding: const EdgeInsets.symmetric(horizontal: 48, vertical: 48),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: AppRadius.roundedMd,
+        border: Border.all(color: AppColors.border, width: 1),
+      ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Logo Mark SH
+          // Header Brand Terintegrasi di Atas Kartu
           Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              color: AppColors.brandOrange,
-              borderRadius: AppRadius.rounded,
-            ),
-            child: Center(
-              child: Text(
-                'SH',
-                style: AppTextStyles.titleMedium.copyWith(
-                  color: AppColors.white,
-                  fontWeight: FontWeight.w800,
-                  fontSize: 20,
-                  letterSpacing: -0.5,
-                ),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+            decoration: const BoxDecoration(
+              color: AppColors.brandNavyDark,
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(AppRadius.radius),
+                topRight: Radius.circular(AppRadius.radius),
               ),
-            ),
-          ),
-          const SizedBox(height: 20),
-          Text(
-            'Hotel Sinar Harapan',
-            style: AppTextStyles.titleLarge.copyWith(
-              color: AppColors.white,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            'Frontdesk & Property Management System',
-            style: AppTextStyles.bodyMedium.copyWith(
-              color: AppColors.brandNavyTint.withAlpha(220),
-            ),
-          ),
-          const Spacer(),
-          // Modul Operasional Hotel
-          _ModuleItem(
-            icon: AppIcons.room,
-            title: 'Operasional Kamar',
-            subtitle: 'Pemantauan status kamar, check-in, dan check-out cepat.',
-          ),
-          const SizedBox(height: 18),
-          _ModuleItem(
-            icon: AppIcons.reception,
-            title: 'Verifikasi Tamu & KTP',
-            subtitle: 'Pencatatan data identitas tamu walk-in maupun channel.',
-          ),
-          const SizedBox(height: 18),
-          _ModuleItem(
-            icon: AppIcons.report,
-            title: 'Laporan Keuangan',
-            subtitle: 'Rekapitulasi pendapatan harian dan riwayat transaksi.',
-          ),
-          const Spacer(),
-          // Status Keamanan Sistem
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-            decoration: BoxDecoration(
-              color: AppColors.brandNavy,
-              borderRadius: AppRadius.rounded,
-              border: Border.all(color: AppColors.white.withAlpha(20), width: 1),
             ),
             child: Row(
               children: [
-                const AppIcon.small(
-                  AppIcons.shield,
-                  color: AppColors.white,
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    'Koneksi lokal aman untuk staf hotel.',
-                    style: AppTextStyles.caption.copyWith(
-                      color: AppColors.white,
-                      fontSize: 12,
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: AppColors.brandOrange,
+                    borderRadius: AppRadius.roundedSm,
+                  ),
+                  child: Center(
+                    child: Text(
+                      'SH',
+                      style: AppTextStyles.titleSmall.copyWith(
+                        color: AppColors.navy900,
+                        fontWeight: FontWeight.w800,
+                        fontSize: 16,
+                      ),
                     ),
                   ),
                 ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Hotel Sinar Harapan',
+                        style: AppTextStyles.titleSmall.copyWith(
+                          color: AppColors.white,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 15,
+                        ),
+                      ),
+                      Text(
+                        'Frontdesk PMS · Terminal Resepsionis',
+                        style: AppTextStyles.caption.copyWith(
+                          color: AppColors.brandNavyTint.withAlpha(200),
+                          fontSize: 11.5,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Container(
+                  width: 8,
+                  height: 8,
+                  decoration: const BoxDecoration(
+                    color: AppColors.statusAvailable,
+                    shape: BoxShape.circle,
+                  ),
+                ),
               ],
+            ),
+          ),
+
+          // Form Body
+          Padding(
+            padding: const EdgeInsets.all(24),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    'Masuk ke Sistem',
+                    style: AppTextStyles.titleMedium.copyWith(
+                      color: AppColors.brandNavyDark,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 20,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Masukkan akun staf untuk membuka sistem PMS.',
+                    style: AppTextStyles.bodyMedium.copyWith(
+                      color: AppColors.textSecondary,
+                      fontSize: 13.5,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+
+                  // Inline Error Banner
+                  if (authState.errorMessage != null) ...[
+                    _ErrorBanner(message: authState.errorMessage!),
+                    const SizedBox(height: 16),
+                  ],
+
+                  // Input Nama Pengguna
+                  AppTextField(
+                    label: 'Nama Pengguna',
+                    hint: 'Contoh: resepsionis01',
+                    controller: _usernameController,
+                    focusNode: _usernameFocusNode,
+                    textInputAction: TextInputAction.next,
+                    autofillHints: const [AutofillHints.username],
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+                    validator: (v) => (v == null || v.trim().isEmpty)
+                        ? 'Nama pengguna wajib diisi'
+                        : null,
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Input Kata Sandi
+                  AppTextField(
+                    label: 'Kata Sandi',
+                    hint: 'Masukkan kata sandi staf',
+                    controller: _passwordController,
+                    focusNode: _passwordFocusNode,
+                    isPassword: true,
+                    textInputAction: TextInputAction.done,
+                    autofillHints: const [AutofillHints.password],
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+                    validator: (v) =>
+                        (v == null || v.isEmpty) ? 'Kata sandi wajib diisi' : null,
+                    onSubmitted: (_) => _handleLogin(),
+                  ),
+                  const SizedBox(height: 20),
+
+                  // Tombol Utama Masuk
+                  AppButton(
+                    label: 'Masuk ke Sistem',
+                    variant: AppButtonVariant.primary,
+                    icon: AppIcons.login,
+                    height: 52,
+                    fontSize: 15.5,
+                    isLoading: authState.isLoading,
+                    onPressed: authState.isLoading ? null : _handleLogin,
+                  ),
+                  const SizedBox(height: 12),
+
+                  Center(
+                    child: Text(
+                      'Lupa kata sandi? Hubungi Manajer Hotel.',
+                      style: AppTextStyles.caption.copyWith(
+                        color: AppColors.textSecondary,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ),
+
+                  // Mode Pengembangan (Hanya jika BUKAN Release Mode)
+                  if (!kReleaseMode) ...[
+                    const SizedBox(height: 24),
+                    const _DividerLabel(label: 'Mode Pengembangan'),
+                    const SizedBox(height: 14),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: AppButton(
+                            label: 'Resepsionis',
+                            variant: AppButtonVariant.outline,
+                            icon: Icons.person_outline,
+                            height: 38,
+                            fontSize: 12,
+                            padding: const EdgeInsets.symmetric(horizontal: 6),
+                            onPressed: authState.isLoading
+                                ? null
+                                : () => _handleQuickLogin(UserRole.receptionist),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: AppButton(
+                            label: 'Manajer Hotel',
+                            variant: AppButtonVariant.outline,
+                            icon: Icons.admin_panel_settings_outlined,
+                            height: 38,
+                            fontSize: 12,
+                            padding: const EdgeInsets.symmetric(horizontal: 6),
+                            onPressed: authState.isLoading
+                                ? null
+                                : () => _handleQuickLogin(UserRole.manager),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ],
+              ),
             ),
           ),
         ],
@@ -343,103 +552,267 @@ class _LeftBrandPanel extends StatelessWidget {
   }
 }
 
-class _ModuleItem extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final String subtitle;
-
-  const _ModuleItem({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-  });
+// ── Left Brand Panel (Desktop) ───────────────────────────────────────
+class _LeftBrandPanel extends StatefulWidget {
+  const _LeftBrandPanel();
 
   @override
-  Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.only(top: 2),
-          child: AppIcon(
-            icon,
-            size: AppIconSize.medium,
-            color: AppColors.brandOrange,
-          ),
-        ),
-        const SizedBox(width: 14),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: AppTextStyles.titleSmall.copyWith(
-                  color: AppColors.white,
-                  fontSize: 14,
-                ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                subtitle,
-                style: AppTextStyles.caption.copyWith(
-                  color: AppColors.brandNavyTint.withAlpha(180),
-                  fontSize: 12,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
+  State<_LeftBrandPanel> createState() => _LeftBrandPanelState();
 }
 
-// ── Mobile Header ───────────────────────────────────────────────────
-class _MobileBrandHeader extends StatelessWidget {
+class _LeftBrandPanelState extends State<_LeftBrandPanel> {
+  late DateTime _now;
+  Timer? _timer;
+
+  static const _days = [
+    'Senin',
+    'Selasa',
+    'Rabu',
+    'Kamis',
+    'Jumat',
+    'Sabtu',
+    'Minggu'
+  ];
+
+  static const _months = [
+    'Januari',
+    'Februari',
+    'Maret',
+    'April',
+    'Mei',
+    'Juni',
+    'Juli',
+    'Agustus',
+    'September',
+    'Oktober',
+    'November',
+    'Desember'
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _now = DateTime.now();
+    _timer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (mounted) {
+        setState(() => _now = DateTime.now());
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  String _formatDate(DateTime dt) {
+    final dayName = _days[dt.weekday - 1];
+    final monthName = _months[dt.month - 1];
+    return '$dayName, ${dt.day} $monthName ${dt.year}';
+  }
+
+  String _formatTime(DateTime dt) {
+    final h = dt.hour.toString().padLeft(2, '0');
+    final m = dt.minute.toString().padLeft(2, '0');
+    final s = dt.second.toString().padLeft(2, '0');
+    return '$h:$m:$s WIB';
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.brandNavyDark,
-        borderRadius: AppRadius.rounded,
-      ),
-      child: Row(
+      color: AppColors.brandNavyDark,
+      child: Stack(
         children: [
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: AppColors.brandOrange,
-              borderRadius: AppRadius.rounded,
-            ),
-            child: Center(
+          // Watermark SH Monogram Besar (Opasitas sangat rendah ~3%, anti-slop identitas khas)
+          Positioned(
+            right: -24,
+            bottom: 40,
+            child: IgnorePointer(
               child: Text(
                 'SH',
-                style: AppTextStyles.titleSmall.copyWith(
-                  color: AppColors.white,
-                  fontWeight: FontWeight.w800,
+                style: TextStyle(
+                  fontSize: 240,
+                  fontWeight: FontWeight.w900,
+                  color: AppColors.white.withAlpha(9),
+                  letterSpacing: -12,
+                  height: 1,
                 ),
               ),
             ),
           ),
-          const SizedBox(width: 12),
-          Expanded(
+
+          // Konten Operasional Panel Kiri
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 48, vertical: 48),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  'Hotel Sinar Harapan',
-                  style: AppTextStyles.titleSmall.copyWith(
-                    color: AppColors.white,
-                    fontWeight: FontWeight.w700,
+                // Blok Brand Atas
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: AppColors.brandOrange,
+                        borderRadius: AppRadius.roundedMd,
+                      ),
+                      child: Center(
+                        child: Text(
+                          'SH',
+                          style: AppTextStyles.titleMedium.copyWith(
+                            color: AppColors.navy900,
+                            fontWeight: FontWeight.w800,
+                            fontSize: 20,
+                            letterSpacing: -0.5,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    Text(
+                      'Hotel Sinar Harapan',
+                      style: AppTextStyles.titleLarge.copyWith(
+                        color: AppColors.white,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: -0.3,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      'Frontdesk & Property Management System',
+                      style: AppTextStyles.bodyMedium.copyWith(
+                        color: AppColors.brandNavyTint.withAlpha(210),
+                      ),
+                    ),
+                  ],
+                ),
+
+                // Blok Operasional Riil Tengah (Bukan marketing/fitur promo)
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    color: AppColors.brandNavy.withAlpha(180),
+                    borderRadius: AppRadius.rounded,
+                    border: Border.all(
+                      color: AppColors.white.withAlpha(22),
+                      width: 1,
+                    ),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          const Icon(
+                            Icons.access_time_rounded,
+                            size: 16,
+                            color: AppColors.brandOrange,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'WAKTU OPERASIONAL FRONTDESK',
+                            style: AppTextStyles.caption.copyWith(
+                              color: AppColors.brandNavyTint.withAlpha(200),
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: 0.8,
+                              fontSize: 11,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 14),
+                      Text(
+                        _formatTime(_now),
+                        style: AppTextStyles.numberHero.copyWith(
+                          color: AppColors.white,
+                          fontSize: 32,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        _formatDate(_now),
+                        style: AppTextStyles.bodyMedium.copyWith(
+                          color: AppColors.brandNavyTint.withAlpha(220),
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Divider(
+                        color: AppColors.white.withAlpha(20),
+                        height: 1,
+                      ),
+                      const SizedBox(height: 14),
+                      Row(
+                        children: [
+                          const Icon(
+                            Icons.desktop_windows_outlined,
+                            size: 15,
+                            color: AppColors.brandNavyTint,
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              'Terminal Resepsionis Utama · Lobby 1',
+                              style: AppTextStyles.caption.copyWith(
+                                color: AppColors.brandNavyTint.withAlpha(200),
+                                fontSize: 12,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
                 ),
-                Text(
-                  'Frontdesk PMS',
-                  style: AppTextStyles.caption.copyWith(
-                    color: AppColors.brandNavyTint.withAlpha(200),
+
+                // Blok Status Koneksi Bawah
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  decoration: BoxDecoration(
+                    color: AppColors.brandNavy,
+                    borderRadius: AppRadius.rounded,
+                    border: Border.all(
+                      color: AppColors.white.withAlpha(22),
+                      width: 1,
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 8,
+                        height: 8,
+                        decoration: const BoxDecoration(
+                          color: AppColors.statusAvailable,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          'Sistem Lokal Aktif · Terhubung ke Server',
+                          style: AppTextStyles.caption.copyWith(
+                            color: AppColors.white,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                      Text(
+                        'v1.0',
+                        style: AppTextStyles.caption.copyWith(
+                          color: AppColors.brandNavyTint.withAlpha(180),
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],
@@ -462,14 +835,18 @@ class _ErrorBanner extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
         color: AppColors.errorBg,
-        borderRadius: AppRadius.rounded,
-        border: Border.all(color: AppColors.error.withAlpha(80), width: 1),
+        borderRadius: AppRadius.roundedSm,
+        border: Border.all(color: AppColors.error.withAlpha(90), width: 1),
       ),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const AppIcon.small(
-            AppIcons.error,
-            color: AppColors.errorText,
+          Padding(
+            padding: const EdgeInsets.only(top: 1),
+            child: AppIcon.small(
+              AppIcons.error,
+              color: AppColors.errorText,
+            ),
           ),
           const SizedBox(width: 10),
           Expanded(
@@ -478,6 +855,8 @@ class _ErrorBanner extends StatelessWidget {
               style: AppTextStyles.caption.copyWith(
                 color: AppColors.errorText,
                 fontWeight: FontWeight.w600,
+                fontSize: 12.5,
+                height: 1.3,
               ),
             ),
           ),
@@ -498,14 +877,26 @@ class _DividerLabel extends StatelessWidget {
       children: [
         const Expanded(child: Divider()),
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 10),
-          child: Text(
-            label.toUpperCase(),
-            style: AppTextStyles.caption.copyWith(
-              color: AppColors.textDisabled,
-              fontWeight: FontWeight.w600,
-              fontSize: 11,
-            ),
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(
+                Icons.bug_report_outlined,
+                size: 13,
+                color: AppColors.textDisabled,
+              ),
+              const SizedBox(width: 6),
+              Text(
+                label.toUpperCase(),
+                style: AppTextStyles.caption.copyWith(
+                  color: AppColors.textSecondary,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 11,
+                  letterSpacing: 0.5,
+                ),
+              ),
+            ],
           ),
         ),
         const Expanded(child: Divider()),

@@ -13,6 +13,11 @@ class AppButton extends StatelessWidget {
   final IconData? icon;
   final bool isLoading;
   final double? width;
+  final double? height;
+  final double? fontSize;
+  final FontWeight? fontWeight;
+  final BorderRadius? borderRadius;
+  final EdgeInsetsGeometry? padding;
 
   const AppButton({
     super.key,
@@ -22,6 +27,11 @@ class AppButton extends StatelessWidget {
     this.icon,
     this.isLoading = false,
     this.width,
+    this.height,
+    this.fontSize,
+    this.fontWeight,
+    this.borderRadius,
+    this.padding,
   });
 
   @override
@@ -61,61 +71,71 @@ class AppButton extends StatelessWidget {
         ),
     };
 
+    final effectiveRadius = borderRadius ?? AppRadius.roundedMd;
+
     return SizedBox(
-      height: 50,
+      height: height ?? 50,
       width: width,
-      child: Material(
-        color: isEnabled
-            ? bg
-            : (variant == AppButtonVariant.outline
-                ? Colors.transparent
-                : AppColors.textDisabled.withAlpha(40)),
-        shape: RoundedRectangleBorder(
-          borderRadius: AppRadius.roundedMd,
-          side: isEnabled
-              ? border
-              : const BorderSide(color: AppColors.border, width: 1),
-        ),
-        child: InkWell(
-          onTap: isEnabled ? onPressed : null,
-          borderRadius: AppRadius.roundedMd,
-          splashColor: splash.withAlpha(60),
-          highlightColor: splash.withAlpha(30),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Center(
-              child: isLoading
-                  ? SizedBox(
-                      width: 22,
-                      height: 22,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2.2,
-                        valueColor: AlwaysStoppedAnimation<Color>(fg),
-                      ),
-                    )
-                  : Row(
-                      mainAxisSize: MainAxisSize.min,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        if (icon != null) ...[
-                          AppIcon.small(icon!,
-                              color: isEnabled ? fg : AppColors.textDisabled),
-                          const SizedBox(width: 8),
-                        ],
-                        Flexible(
-                          child: Text(
-                            label,
-                            style: AppTypography.body.copyWith(
-                              color: isEnabled ? fg : AppColors.textDisabled,
-                              fontWeight: FontWeight.w600,
-                              fontSize: 14.5,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
+      child: Semantics(
+        button: true,
+        enabled: isEnabled,
+        label: label,
+        child: Material(
+          color: isEnabled
+              ? bg
+              : (variant == AppButtonVariant.outline
+                  ? Colors.transparent
+                  : AppColors.textDisabled.withAlpha(40)),
+          shape: RoundedRectangleBorder(
+            borderRadius: effectiveRadius,
+            side: isEnabled
+                ? border
+                : const BorderSide(color: AppColors.border, width: 1),
+          ),
+          child: InkWell(
+            mouseCursor:
+                isEnabled ? SystemMouseCursors.click : SystemMouseCursors.basic,
+            onTap: isEnabled ? onPressed : null,
+            borderRadius: effectiveRadius,
+            splashColor: splash.withAlpha(60),
+            highlightColor: splash.withAlpha(30),
+            hoverColor: splash.withAlpha(25),
+            child: Padding(
+              padding: padding ?? const EdgeInsets.symmetric(horizontal: 20),
+              child: Center(
+                child: isLoading
+                    ? SizedBox(
+                        width: 22,
+                        height: 22,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2.2,
+                          valueColor: AlwaysStoppedAnimation<Color>(fg),
                         ),
-                      ],
-                    ),
+                      )
+                    : Row(
+                        mainAxisSize: MainAxisSize.min,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          if (icon != null) ...[
+                            AppIcon.small(icon!,
+                                color: isEnabled ? fg : AppColors.textDisabled),
+                            const SizedBox(width: 8),
+                          ],
+                          Flexible(
+                            child: Text(
+                              label,
+                              style: AppTypography.body.copyWith(
+                                color: isEnabled ? fg : AppColors.textDisabled,
+                                fontWeight: fontWeight ?? FontWeight.w600,
+                                fontSize: fontSize ?? 14.5,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+              ),
             ),
           ),
         ),
