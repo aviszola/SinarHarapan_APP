@@ -61,3 +61,62 @@ This skill defines the standardized, reproducible Quality Assurance workflow for
 ### 6. Evidence-Based Reporting
 - Produce structured report at `docs/qa/QA_REPORT.md`.
 - Detail: Target commit, Environment, Test Suite breakdown, Defect triage (Critical/High/Medium/Low), Coverage gaps, and Final recommendation.
+
+---
+name: sinarharapan-ui-design
+description: UI/UX design system and layout standards for Sinar Harapan PMS (Flutter). Enforces color immutability, responsive layout, typography, spacing, form patterns, accessibility, and desktop/mobile parity for a hotel frontdesk check-in/check-out application.
+---
+
+# Sinar Harapan PMS — UI Design Skill
+
+## Core Principles
+1. **Color Immutability**: Never change existing brand colors (navy, orange, neutrals). Only reuse existing theme tokens. Opacity variations of existing colors are allowed; new hex values are not.
+2. **Frontdesk-First**: Staff work fast, under bright light, often on tablets/desktops. Prioritize legibility, large targets, and clear status feedback.
+3. **Consistency over Novelty**: Reuse shared widgets and tokens; no one-off styles.
+4. **Evidence over Opinion**: Verify contrast, overflow, and responsiveness by running, not assuming.
+
+## Design Tokens
+- Spacing scale: 4, 8, 12, 16, 24, 32, 48.
+- Radius: inputs/buttons 10–12, cards 16, chips 8.
+- Type scale: Title 24–26 w700, Heading 18–20 w600, Body 14–15, Label 14 w500, Caption 12, Button 15–16 w600.
+- Touch target: ≥ 48x48. Input/button height: 52–56.
+- Elevation: minimal; subtle shadow only on floating cards.
+
+## Responsive Rules
+- Breakpoints: mobile < 600, tablet 600–899, desktop ≥ 900.
+- Test widths: 360, 390, 768, 1280, 1920; text scale 1.0 and 1.3.
+- Mobile: single column, `SafeArea`, `SingleChildScrollView`, keyboard-safe.
+- Desktop: split or max-width centered layouts; cap content width (forms ≤ 440, content ≤ 1200).
+- No RenderFlex overflow at any tested size.
+
+## Form Patterns
+- Label above field, 8px gap; 20px between fields.
+- Always: focus border, error border, inline error text, disabled state.
+- `TextInputAction` and Enter-to-submit; autofill hints; password toggle with tooltip and Semantics.
+- Primary button states: normal, hover, pressed, disabled, loading (no double-submit).
+- Error feedback inline (icon + text), not SnackBar only.
+
+## Contrast & Accessibility
+- WCAG AA: 4.5:1 body text, 3:1 large text and UI components. Compute, don't guess.
+- Visible keyboard focus, logical tab order, `Semantics` labels for icon-only controls.
+- Respect reduced motion (`MediaQuery.maybeDisableAnimationsOf`).
+
+## Dev/Debug UI
+- Any developer shortcut (e.g., "Mode Pengembangan") must be gated by `!kReleaseMode` and visually de-emphasized.
+
+## Verification Checklist
+- [ ] `git diff` shows zero color value changes
+- [ ] `flutter analyze` no new warnings
+- [ ] `flutter test` passes, new widget tests added
+- [ ] Screenshots before/after at mobile and desktop widths
+- [ ] No overflow at listed widths and 1.3x text scale
+- [ ] Controllers/FocusNodes/AnimationControllers disposed
+
+## Anti-Slop Rules
+- Every element must justify its function or brand identity; decoration without purpose is removed.
+- Forbidden by default: tinted icon-chips, gradients, glassmorphism, layered shadows, decorative entrance animations, generic marketing copy, emoji.
+- Motion is functional only (focus, hover, loading), ≤ 150ms, and respects reduced motion.
+- Each screen needs one distinctive, hotel-specific identity cue built from existing theme colors only.
+- Prefer real operational information (date/time, connection status, shift context) over promotional text.
+- Template test: if swapping the logo makes the screen indistinguishable from a generic template, redesign.
+- Report must list removed elements and the reason for each.

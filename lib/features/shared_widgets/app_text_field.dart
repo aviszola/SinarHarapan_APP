@@ -23,6 +23,10 @@ class AppTextField extends StatefulWidget {
   final int maxLines;
   final List<TextInputFormatter>? inputFormatters;
   final bool autofocus;
+  final TextInputAction? textInputAction;
+  final Iterable<String>? autofillHints;
+  final EdgeInsetsGeometry? contentPadding;
+  final BorderRadius? borderRadius;
 
   const AppTextField({
     super.key,
@@ -43,6 +47,10 @@ class AppTextField extends StatefulWidget {
     this.maxLines = 1,
     this.inputFormatters,
     this.autofocus = false,
+    this.textInputAction,
+    this.autofillHints,
+    this.contentPadding,
+    this.borderRadius,
   });
 
   @override
@@ -52,6 +60,7 @@ class AppTextField extends StatefulWidget {
 class _AppTextFieldState extends State<AppTextField> {
   bool _obscure = true;
   bool _focused = false;
+  bool _capsLockOn = false;
   FocusNode? _internalFocusNode;
 
   FocusNode get _effectiveFocusNode =>
@@ -62,6 +71,27 @@ class _AppTextFieldState extends State<AppTextField> {
     super.initState();
     _obscure = widget.isPassword;
     _effectiveFocusNode.addListener(_handleFocusChange);
+    if (widget.isPassword) {
+      HardwareKeyboard.instance.addHandler(_handleKeyEvent);
+      _checkCapsLock();
+    }
+  }
+
+  bool _handleKeyEvent(KeyEvent event) {
+    _checkCapsLock();
+    return false;
+  }
+
+  void _checkCapsLock() {
+    if (widget.isPassword) {
+      try {
+        final isCaps = HardwareKeyboard.instance.lockModesEnabled
+            .contains(KeyboardLockMode.capsLock);
+        if (mounted && isCaps != _capsLockOn) {
+          setState(() => _capsLockOn = isCaps);
+        }
+      } catch (_) {}
+    }
   }
 
   @override
@@ -95,6 +125,9 @@ class _AppTextFieldState extends State<AppTextField> {
 
   @override
   void dispose() {
+    if (widget.isPassword) {
+      HardwareKeyboard.instance.removeHandler(_handleKeyEvent);
+    }
     _effectiveFocusNode.removeListener(_handleFocusChange);
     _internalFocusNode?.dispose();
     super.dispose();
@@ -159,6 +192,8 @@ class _AppTextFieldState extends State<AppTextField> {
           scrollPhysics: const ClampingScrollPhysics(),
           obscureText: widget.isPassword && _obscure,
           keyboardType: widget.keyboardType,
+          textInputAction: widget.textInputAction,
+          autofillHints: widget.autofillHints,
           validator: widget.validator,
           onChanged: widget.onChanged,
           onFieldSubmitted: widget.onSubmitted,
@@ -171,8 +206,39 @@ class _AppTextFieldState extends State<AppTextField> {
           ),
           decoration: InputDecoration(
             hintText: widget.hint,
+            contentPadding: widget.contentPadding,
             filled: true,
             fillColor: widget.readOnly ? AppColors.bg : AppColors.surface,
+            border: widget.borderRadius != null
+                ? OutlineInputBorder(
+                    borderRadius: widget.borderRadius!,
+                    borderSide: const BorderSide(color: AppColors.border, width: 1),
+                  )
+                : null,
+            enabledBorder: widget.borderRadius != null
+                ? OutlineInputBorder(
+                    borderRadius: widget.borderRadius!,
+                    borderSide: const BorderSide(color: AppColors.border, width: 1),
+                  )
+                : null,
+            focusedBorder: widget.borderRadius != null
+                ? OutlineInputBorder(
+                    borderRadius: widget.borderRadius!,
+                    borderSide: const BorderSide(color: AppColors.brandNavy, width: 1.5),
+                  )
+                : null,
+            errorBorder: widget.borderRadius != null
+                ? OutlineInputBorder(
+                    borderRadius: widget.borderRadius!,
+                    borderSide: const BorderSide(color: AppColors.error, width: 1),
+                  )
+                : null,
+            focusedErrorBorder: widget.borderRadius != null
+                ? OutlineInputBorder(
+                    borderRadius: widget.borderRadius!,
+                    borderSide: const BorderSide(color: AppColors.error, width: 1.5),
+                  )
+                : null,
             prefixIcon: widget.prefixIcon != null
                 ? AppIcon(
                     widget.prefixIcon!,
@@ -181,18 +247,44 @@ class _AppTextFieldState extends State<AppTextField> {
                   )
                 : null,
             suffixIcon: widget.isPassword
-                ? IconButton(
-                    icon: AppIcon(
-                      _obscure ? AppIcons.eye : AppIcons.eyeOff,
-                      size: AppIconSize.medium,
-                      color: AppColors.textSecondary,
-                      tooltip: _obscure ? 'Tampilkan sandi' : 'Sembunyikan sandi',
+                ? Semantics(
+                    button: true,
+                    label: _obscure ? 'Tampilkan kata sandi' : 'Sembunyikan kata sandi',
+                    child: IconButton(
+                      icon: AppIcon(
+                        _obscure ? AppIcons.eye : AppIcons.eyeOff,
+                        size: AppIconSize.medium,
+                        color: AppColors.textSecondary,
+                      ),
+                      tooltip: _obscure ? 'Tampilkan kata sandi' : 'Sembunyikan kata sandi',
+                      onPressed: () => setState(() => _obscure = !_obscure),
                     ),
-                    onPressed: () => setState(() => _obscure = !_obscure),
                   )
                 : widget.suffix,
           ),
         ),
+
+        if (widget.isPassword && _capsLockOn && _focused) ...[
+          const SizedBox(height: 6),
+          Row(
+            children: [
+              const Icon(
+                Icons.keyboard_capslock_rounded,
+                size: 14,
+                color: AppColors.statusDirty,
+              ),
+              const SizedBox(width: 4),
+              Text(
+                'Caps Lock aktif',
+                style: AppTextStyles.caption.copyWith(
+                  color: AppColors.statusDirtyText,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 12,
+                ),
+              ),
+            ],
+          ),
+        ],
       ],
     );
   }

@@ -44,10 +44,19 @@ class AuthNotifier extends StateNotifier<AuthState> {
     });
   }
 
-  Future<bool> login(String username, String password) async {
+  Future<bool> login(
+    String username,
+    String password, {
+    Future<void> Function(UserModel user)? beforeStateChange,
+  }) async {
     state = state.copyWith(isLoading: true, errorMessage: null);
     try {
       final user = await _repo.login(username: username, password: password);
+      if (beforeStateChange != null) {
+        try {
+          await beforeStateChange(user);
+        } catch (_) {}
+      }
       state = AuthState(user: user, isLoading: false, errorMessage: null);
       return true;
     } catch (e) {
@@ -59,10 +68,18 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
-  Future<bool> quickLogin(UserRole role) async {
+  Future<bool> quickLogin(
+    UserRole role, {
+    Future<void> Function(UserModel user)? beforeStateChange,
+  }) async {
     state = state.copyWith(isLoading: true, errorMessage: null);
     try {
       final user = await _repo.quickLogin(role);
+      if (beforeStateChange != null) {
+        try {
+          await beforeStateChange(user);
+        } catch (_) {}
+      }
       state = AuthState(user: user, isLoading: false, errorMessage: null);
       return true;
     } catch (e) {
