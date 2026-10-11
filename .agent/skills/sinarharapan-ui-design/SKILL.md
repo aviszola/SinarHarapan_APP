@@ -70,3 +70,9 @@ Skill ini menetapkan panduan desain, token visual, dan standar anti-slop untuk a
   - Header brand terintegrasi menyatu dengan kartu formulir dalam satu alur visual terpadu.
   - `SafeArea` + `SingleChildScrollView` + `ConstrainedBox` + `resizeToAvoidBottomInset: true` agar input tidak tertutup virtual keyboard.
   - Padding horizontal 20–24px, `maxWidth: 480`.
+
+
+## Signature Transition (allowed exception)
+- Exactly one decorative-looking motion is permitted: the split-door reveal on successful login (≤ 700 ms, easeInOutCubic, existing theme colors only).
+- Must be skipped when reduced motion is on, never run on failed login, and never block or double-trigger navigation.
+- No other entrance or decorative animations are allowed without an explicit request.

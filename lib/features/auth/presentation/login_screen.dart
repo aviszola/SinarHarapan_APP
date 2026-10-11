@@ -2,15 +2,14 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import '../../../theme/app_colors.dart';
 import '../../../theme/app_text_styles.dart';
-import '../../../theme/app_spacing.dart';
 import '../../../theme/app_icons.dart';
 import '../../shared_widgets/app_button.dart';
 import '../../shared_widgets/app_text_field.dart';
 import '../domain/user_model.dart';
 import 'auth_controller.dart';
+import 'widgets/split_door_transition.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -20,11 +19,13 @@ class LoginScreen extends ConsumerStatefulWidget {
 }
 
 class _LoginScreenState extends ConsumerState<LoginScreen> {
+  final _repaintBoundaryKey = GlobalKey();
   final _formKey = GlobalKey<FormState>();
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
   final _usernameFocusNode = FocusNode();
   final _passwordFocusNode = FocusNode();
+  bool _isTransitioning = false;
 
   @override
   void initState() {
@@ -46,39 +47,63 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 
   void _handleLogin() async {
+    if (_isTransitioning) return;
     if (!_formKey.currentState!.validate()) return;
 
-    final success = await ref.read(authStateProvider.notifier).login(
-          _usernameController.text.trim(),
-          _passwordController.text,
-        );
+    setState(() => _isTransitioning = true);
 
-    if (success && mounted) {
-      final user = ref.read(authStateProvider).user!;
-      try {
-        if (user.isManager) {
-          context.go('/manager/dashboard');
-        } else {
-          context.go('/receptionist/rooms');
-        }
-      } catch (_) {}
+    _usernameFocusNode.unfocus();
+    _passwordFocusNode.unfocus();
+    FocusScope.of(context).unfocus();
+
+    try {
+      await ref.read(authStateProvider.notifier).login(
+            _usernameController.text.trim(),
+            _passwordController.text,
+            beforeStateChange: (user) async {
+              if (mounted) {
+                await SplitDoorOverlay.run(
+                  context: context,
+                  boundaryKey: _repaintBoundaryKey,
+                );
+              }
+            },
+          );
+    } finally {
+      if (mounted) {
+        setState(() => _isTransitioning = false);
+      }
     }
   }
 
   void _handleQuickLogin(UserRole role) async {
+    if (_isTransitioning) return;
     // Audit keamanan release: gate fungsi pemanggil secara ketat
     if (kReleaseMode) return;
     assert(!kReleaseMode, 'Quick login tidak diizinkan di mode rilis');
 
-    final success = await ref.read(authStateProvider.notifier).quickLogin(role);
-    if (success && mounted) {
-      try {
-        if (role == UserRole.manager) {
-          context.go('/manager/dashboard');
-        } else {
-          context.go('/receptionist/rooms');
-        }
-      } catch (_) {}
+    setState(() => _isTransitioning = true);
+
+    _usernameFocusNode.unfocus();
+    _passwordFocusNode.unfocus();
+    FocusScope.of(context).unfocus();
+
+    try {
+      await ref.read(authStateProvider.notifier).quickLogin(
+            role,
+            beforeStateChange: (user) async {
+              if (mounted) {
+                await SplitDoorOverlay.run(
+                  context: context,
+                  boundaryKey: _repaintBoundaryKey,
+                );
+              }
+            },
+          );
+    } finally {
+      if (mounted) {
+        setState(() => _isTransitioning = false);
+      }
     }
   }
 
@@ -88,81 +113,89 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final size = MediaQuery.of(context).size;
     final isDesktop = size.width >= 900;
 
-    if (isDesktop) {
-      return Scaffold(
-        resizeToAvoidBottomInset: true,
-        backgroundColor: AppColors.bg,
-        body: Row(
-          children: [
-            // Panel Kiri: Identitas Hotel & Informasi Operasional Frontdesk
-            const Expanded(
-              flex: 5,
-              child: _LeftBrandPanel(),
-            ),
+    final Widget scaffold = isDesktop
+        ? Scaffold(
+            resizeToAvoidBottomInset: true,
+            backgroundColor: AppColors.bg,
+            body: Row(
+              children: [
+                // Panel Kiri: Identitas Hotel & Informasi Operasional Frontdesk
+                const Expanded(
+                  flex: 5,
+                  child: _LeftBrandPanel(),
+                ),
 
-            // Panel Kanan: Kartu Form Login Staf
-            Expanded(
-              flex: 6,
-              child: Container(
-                height: double.infinity,
-                color: AppColors.bg,
-                child: Center(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.symmetric(horizontal: 48, vertical: 36),
-                    child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 440),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          _buildDesktopCard(context, authState),
-                          const SizedBox(height: 20),
-                          Text(
-                            'Hotel Sinar Harapan · Frontdesk PMS v1.0',
-                            style: AppTextStyles.caption.copyWith(
-                              color: AppColors.textDisabled,
-                              fontSize: 12,
-                            ),
-                            textAlign: TextAlign.center,
+                // Panel Kanan: Kartu Form Login Staf
+                Expanded(
+                  flex: 6,
+                  child: Container(
+                    height: double.infinity,
+                    color: AppColors.bg,
+                    child: Center(
+                      child: SingleChildScrollView(
+                        padding: const EdgeInsets.symmetric(horizontal: 48, vertical: 36),
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 440),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              _buildDesktopCard(context, authState),
+                              const SizedBox(height: 20),
+                              Text(
+                                'Hotel Sinar Harapan · Frontdesk PMS v1.0',
+                                style: AppTextStyles.caption.copyWith(
+                                  color: AppColors.textDisabled,
+                                  fontSize: 12,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ],
                           ),
-                        ],
+                        ),
                       ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          )
+        : Scaffold(
+            resizeToAvoidBottomInset: true,
+            backgroundColor: AppColors.bg,
+            body: SafeArea(
+              child: Center(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 480),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        _buildUnifiedMobileCard(context, authState),
+                        const SizedBox(height: 16),
+                        Text(
+                          'Hotel Sinar Harapan · Frontdesk PMS v1.0',
+                          style: AppTextStyles.caption.copyWith(
+                            color: AppColors.textDisabled,
+                            fontSize: 12,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
                     ),
                   ),
                 ),
               ),
             ),
-          ],
-        ),
-      );
-    }
+          );
 
-    // Layar Mobile & Tablet (< 900px)
-    return Scaffold(
-      resizeToAvoidBottomInset: true,
-      backgroundColor: AppColors.bg,
-      body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 480),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  _buildUnifiedMobileCard(context, authState),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Hotel Sinar Harapan · Frontdesk PMS v1.0',
-                    style: AppTextStyles.caption.copyWith(
-                      color: AppColors.textDisabled,
-                      fontSize: 12,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ],
-              ),
-            ),
-          ),
+    return RepaintBoundary(
+      key: _repaintBoundaryKey,
+      child: PopScope(
+        canPop: !_isTransitioning,
+        child: IgnorePointer(
+          ignoring: _isTransitioning,
+          child: scaffold,
         ),
       ),
     );
@@ -170,6 +203,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   /// Kartu Login Desktop (lebar >= 900px)
   Widget _buildDesktopCard(BuildContext context, AuthState authState) {
+    final isBusy = authState.isLoading || _isTransitioning;
+
     return Container(
       padding: const EdgeInsets.all(40),
       decoration: BoxDecoration(
@@ -294,8 +329,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               height: 52,
               borderRadius: BorderRadius.circular(10),
               fontSize: 15.5,
-              isLoading: authState.isLoading,
-              onPressed: authState.isLoading ? null : _handleLogin,
+              isLoading: isBusy,
+              onPressed: isBusy ? null : _handleLogin,
             ),
             const SizedBox(height: 12),
 
@@ -329,7 +364,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           borderRadius: BorderRadius.circular(8),
                           fontSize: 12.5,
                           padding: const EdgeInsets.symmetric(horizontal: 8),
-                          onPressed: authState.isLoading
+                          onPressed: isBusy
                               ? null
                               : () => _handleQuickLogin(UserRole.receptionist),
                         ),
@@ -349,7 +384,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           borderRadius: BorderRadius.circular(8),
                           fontSize: 12.5,
                           padding: const EdgeInsets.symmetric(horizontal: 8),
-                          onPressed: authState.isLoading
+                          onPressed: isBusy
                               ? null
                               : () => _handleQuickLogin(UserRole.manager),
                         ),
@@ -367,6 +402,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   /// Kartu Terpadu Mobile (< 900px): Menyatu tanpa kesan dua kotak terpisah
   Widget _buildUnifiedMobileCard(BuildContext context, AuthState authState) {
+    final isBusy = authState.isLoading || _isTransitioning;
+
     return Container(
       decoration: BoxDecoration(
         color: AppColors.surface,
@@ -506,8 +543,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     height: 52,
                     borderRadius: BorderRadius.circular(10),
                     fontSize: 15.5,
-                    isLoading: authState.isLoading,
-                    onPressed: authState.isLoading ? null : _handleLogin,
+                    isLoading: isBusy,
+                    onPressed: isBusy ? null : _handleLogin,
                   ),
                   const SizedBox(height: 12),
 
@@ -540,7 +577,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                 borderRadius: BorderRadius.circular(8),
                                 fontSize: 12,
                                 padding: const EdgeInsets.symmetric(horizontal: 6),
-                                onPressed: authState.isLoading
+                                onPressed: isBusy
                                     ? null
                                     : () => _handleQuickLogin(UserRole.receptionist),
                               ),
@@ -560,7 +597,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                 borderRadius: BorderRadius.circular(8),
                                 fontSize: 12,
                                 padding: const EdgeInsets.symmetric(horizontal: 6),
-                                onPressed: authState.isLoading
+                                onPressed: isBusy
                                     ? null
                                     : () => _handleQuickLogin(UserRole.manager),
                               ),

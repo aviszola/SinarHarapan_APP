@@ -7,11 +7,19 @@ import '../features/auth/presentation/login_screen.dart';
 import '../features/reporting/presentation/manager_dashboard_screen.dart';
 import '../features/room_management/presentation/room_grid_screen.dart';
 
+class _AuthChangeNotifier extends ChangeNotifier {
+  _AuthChangeNotifier(Ref ref) {
+    ref.listen<AuthState>(authStateProvider, (previous, next) => notifyListeners());
+  }
+}
+
 final routerProvider = Provider<GoRouter>((ref) {
-  final authState = ref.watch(authStateProvider);
+  final refreshNotifier = _AuthChangeNotifier(ref);
+  ref.onDispose(refreshNotifier.dispose);
 
   return GoRouter(
     initialLocation: '/login',
+    refreshListenable: refreshNotifier,
     routes: [
       GoRoute(
         path: '/login',
@@ -20,6 +28,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/receptionist/rooms',
         builder: (context, state) {
+          final authState = ref.read(authStateProvider);
           // Guard di sisi Flutter: Resepsionis tidak boleh akses manager route.
           // Backend adalah penentu akhir via 403.
           if (!authState.isAuthenticated) return const LoginScreen();
@@ -29,6 +38,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/manager/dashboard',
         builder: (context, state) {
+          final authState = ref.read(authStateProvider);
           if (!authState.isAuthenticated) return const LoginScreen();
           // Jika Resepsionis mencoba akses route Manager, arahkan ke halaman mereka
           if (authState.user?.role == UserRole.receptionist) {
@@ -39,6 +49,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
     ],
     redirect: (BuildContext context, GoRouterState state) {
+      final authState = ref.read(authStateProvider);
       final isLoggingIn = state.matchedLocation == '/login';
       final isLoggedIn = authState.isAuthenticated;
       final user = authState.user;
