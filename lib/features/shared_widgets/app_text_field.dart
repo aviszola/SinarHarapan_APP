@@ -26,6 +26,7 @@ class AppTextField extends StatefulWidget {
   final TextInputAction? textInputAction;
   final Iterable<String>? autofillHints;
   final EdgeInsetsGeometry? contentPadding;
+  final BorderRadius? borderRadius;
 
   const AppTextField({
     super.key,
@@ -49,6 +50,7 @@ class AppTextField extends StatefulWidget {
     this.textInputAction,
     this.autofillHints,
     this.contentPadding,
+    this.borderRadius,
   });
 
   @override
@@ -207,6 +209,36 @@ class _AppTextFieldState extends State<AppTextField> {
             contentPadding: widget.contentPadding,
             filled: true,
             fillColor: widget.readOnly ? AppColors.bg : AppColors.surface,
+            border: widget.borderRadius != null
+                ? OutlineInputBorder(
+                    borderRadius: widget.borderRadius!,
+                    borderSide: const BorderSide(color: AppColors.border, width: 1),
+                  )
+                : null,
+            enabledBorder: widget.borderRadius != null
+                ? OutlineInputBorder(
+                    borderRadius: widget.borderRadius!,
+                    borderSide: const BorderSide(color: AppColors.border, width: 1),
+                  )
+                : null,
+            focusedBorder: widget.borderRadius != null
+                ? OutlineInputBorder(
+                    borderRadius: widget.borderRadius!,
+                    borderSide: const BorderSide(color: AppColors.brandNavy, width: 1.5),
+                  )
+                : null,
+            errorBorder: widget.borderRadius != null
+                ? OutlineInputBorder(
+                    borderRadius: widget.borderRadius!,
+                    borderSide: const BorderSide(color: AppColors.error, width: 1),
+                  )
+                : null,
+            focusedErrorBorder: widget.borderRadius != null
+                ? OutlineInputBorder(
+                    borderRadius: widget.borderRadius!,
+                    borderSide: const BorderSide(color: AppColors.error, width: 1.5),
+                  )
+                : null,
             prefixIcon: widget.prefixIcon != null
                 ? AppIcon(
                     widget.prefixIcon!,

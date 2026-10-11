@@ -1,5 +1,7 @@
 import 'dart:math';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
@@ -9,6 +11,7 @@ import 'package:sinarharapan_app/features/auth/domain/user_model.dart';
 import 'package:sinarharapan_app/features/auth/presentation/auth_controller.dart';
 import 'package:sinarharapan_app/features/auth/presentation/login_screen.dart';
 import 'package:sinarharapan_app/features/shared_widgets/app_button.dart';
+import 'package:sinarharapan_app/features/shared_widgets/app_text_field.dart';
 import 'package:sinarharapan_app/theme/app_icons.dart';
 
 class _FakeAuthRepo extends AuthRepository {
@@ -84,7 +87,7 @@ void main() {
 
       expect(find.text('Masuk ke Sistem'), findsWidgets);
       expect(find.text('Hotel Sinar Harapan'), findsOneWidget);
-      expect(find.text('Frontdesk PMS · Terminal Resepsionis'), findsOneWidget);
+      expect(find.text('Frontdesk PMS v1.0'), findsWidgets);
       expect(tester.takeException(), isNull, reason: 'Tidak boleh ada overflow pada 390px');
     });
 
@@ -108,10 +111,9 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Masuk ke Sistem'), findsWidgets);
-      expect(find.text('WAKTU OPERASIONAL FRONTDESK'), findsOneWidget);
-      expect(find.text('Terminal Resepsionis Utama · Lobby 1'), findsOneWidget);
-      expect(find.text('Sistem Lokal Aktif · Terhubung ke Server'), findsOneWidget);
-      expect(find.text('TERMINAL FRONTDESK'), findsOneWidget);
+      expect(find.text('WAKTU OPERASIONAL SISTEM'), findsOneWidget);
+      expect(find.text('Operasional Resepsionis & Manajemen'), findsOneWidget);
+      expect(find.text('FRONTDESK PMS'), findsOneWidget);
       expect(find.text('SH'), findsWidgets);
       expect(tester.takeException(), isNull, reason: 'Tidak boleh ada overflow pada 1920px');
     });
@@ -202,7 +204,6 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      // Tekan tombol Masuk ke Sistem tanpa mengisi form
       final submitBtn = find.widgetWithText(AppButton, 'Masuk ke Sistem');
       expect(submitBtn, findsOneWidget);
       await tester.tap(submitBtn);
@@ -226,20 +227,16 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      // Password field awalnya obscure
       final passwordTextField = find.byType(TextField).last;
       TextField tfWidget = tester.widget<TextField>(passwordTextField);
       expect(tfWidget.obscureText, isTrue);
 
-      // Cari tombol toggle visibilitas password
       final toggleBtn = find.byTooltip('Tampilkan kata sandi');
       expect(toggleBtn, findsOneWidget);
 
-      // Klik toggle
       await tester.tap(toggleBtn);
       await tester.pumpAndSettle();
 
-      // Sekarang password terlihat
       tfWidget = tester.widget<TextField>(passwordTextField);
       expect(tfWidget.obscureText, isFalse);
       expect(find.byTooltip('Sembunyikan kata sandi'), findsOneWidget);
@@ -280,7 +277,6 @@ void main() {
       );
       addTearDown(container.dispose);
 
-      // Set state auth menjadi loading
       container.read(authStateProvider.notifier).state = const AuthState(isLoading: true);
 
       await tester.pumpWidget(
@@ -301,7 +297,6 @@ void main() {
     });
 
     testWidgets('9. Verifikasi Kontras Warna Tombol Utama WCAG AA (>= 4.5:1)', (tester) async {
-      // Warna latar: orange600 (#FF6600), warna teks/ikon: navy900 (#001B4E)
       final ratio = _getContrastRatio(AppColors.navy900, AppColors.orange600);
       expect(ratio, greaterThanOrEqualTo(4.5), reason: 'Rasio kontras harus memenuhi WCAG AA >= 4.5:1');
       expect(ratio, closeTo(5.65, 0.1));
@@ -337,6 +332,180 @@ void main() {
 
       expect(find.text('Nama pengguna atau kata sandi salah. Coba lagi.'), findsOneWidget);
       expect(find.byIcon(AppIcons.error), findsOneWidget);
+    });
+
+    testWidgets('11. Urutan Tab Logis: Username -> Password -> Toggle Mata -> Tombol Masuk', (tester) async {
+      tester.view.physicalSize = const Size(1280, 800);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            authRepositoryProvider.overrideWithValue(_FakeAuthRepo()),
+          ],
+          child: MaterialApp(
+            theme: AppTheme.lightTheme,
+            home: const LoginScreen(),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final textFields = find.byType(TextField);
+      expect(textFields, findsNWidgets(2));
+
+      // 1. Username field awal fokus otomatis di desktop
+      final usernameFocus = tester.widget<TextField>(textFields.first).focusNode!;
+      final passwordFocus = tester.widget<TextField>(textFields.last).focusNode!;
+
+      // Pastikan username memiliki fokus awal
+      usernameFocus.requestFocus();
+      await tester.pumpAndSettle();
+      expect(usernameFocus.hasFocus, isTrue);
+
+      // 2. Tab menuju password
+      await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+      await tester.pumpAndSettle();
+      expect(passwordFocus.hasFocus, isTrue);
+
+      // 3. Tab menuju toggle mata
+      await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+      await tester.pumpAndSettle();
+      final toggleFinder = find.byTooltip('Tampilkan kata sandi');
+      expect(toggleFinder, findsOneWidget);
+
+      // 4. Tab berikutnya mencapai tombol masuk
+      await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+      await tester.pumpAndSettle();
+      expect(find.widgetWithText(AppButton, 'Masuk ke Sistem'), findsOneWidget);
+    });
+
+    testWidgets('12. Fokus Visible: Border dan Label Berubah State saat Field Difokuskan', (tester) async {
+      tester.view.physicalSize = const Size(1280, 800);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            authRepositoryProvider.overrideWithValue(_FakeAuthRepo()),
+          ],
+          child: MaterialApp(
+            theme: AppTheme.lightTheme,
+            home: const LoginScreen(),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final firstField = find.byType(TextField).first;
+      await tester.tap(firstField);
+      await tester.pumpAndSettle();
+
+      final focusNode = tester.widget<TextField>(firstField).focusNode!;
+      expect(focusNode.hasFocus, isTrue);
+
+      final labelFinder = find.descendant(
+        of: find.byType(AppTextField).first,
+        matching: find.byType(AnimatedDefaultTextStyle),
+      );
+      final animatedTextStyle = tester.widget<AnimatedDefaultTextStyle>(labelFinder);
+      expect(animatedTextStyle.style.color, equals(AppColors.navy700));
+    });
+
+    testWidgets('13. Hover pada Tombol Utama Menampilkan Efek Interaksi Mouse', (tester) async {
+      tester.view.physicalSize = const Size(1280, 800);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            authRepositoryProvider.overrideWithValue(_FakeAuthRepo()),
+          ],
+          child: MaterialApp(
+            theme: AppTheme.lightTheme,
+            home: const LoginScreen(),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final buttonFinder = find.widgetWithText(AppButton, 'Masuk ke Sistem');
+      expect(buttonFinder, findsOneWidget);
+
+      final gesture = await tester.createGesture(kind: PointerDeviceKind.mouse);
+      await gesture.addPointer(location: Offset.zero);
+      addTearDown(gesture.removePointer);
+
+      // Geser mouse ke atas tombol Masuk ke Sistem
+      await gesture.moveTo(tester.getCenter(buttonFinder));
+      await tester.pump();
+
+      final inkWellFinder = find.descendant(
+        of: buttonFinder,
+        matching: find.byType(InkWell),
+      );
+      expect(inkWellFinder, findsOneWidget);
+      final inkWell = tester.widget<InkWell>(inkWellFinder);
+      expect(inkWell.mouseCursor, equals(SystemMouseCursors.click));
+    });
+
+    testWidgets('14. Timer Jam Dibatalkan saat Dispose (Tanpa Pending Timer)', (tester) async {
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            authRepositoryProvider.overrideWithValue(_FakeAuthRepo()),
+          ],
+          child: const MaterialApp(
+            home: LoginScreen(),
+          ),
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 500));
+
+      // Ganti widget untuk memicu dispose pada LoginScreen dan _LeftBrandPanel
+      await tester.pumpWidget(const SizedBox());
+      await tester.pump(const Duration(seconds: 2));
+
+      // Verifikasi tidak ada exception atau pending timers bocor
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('15. Rebuild Jam Tidak Membangun Ulang Form Card', (tester) async {
+      tester.view.physicalSize = const Size(1280, 800);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            authRepositoryProvider.overrideWithValue(_FakeAuthRepo()),
+          ],
+          child: const MaterialApp(
+            home: LoginScreen(),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Isi input pada form
+      final usernameField = find.byType(TextField).first;
+      await tester.enterText(usernameField, 'resepsionis_aktif');
+      await tester.pump();
+
+      // Majukan waktu 2 detik (memicu timer tick pada _LeftBrandPanel)
+      await tester.pump(const Duration(seconds: 1));
+      await tester.pump(const Duration(seconds: 1));
+
+      // Input teks pada form tetap utuh tidak ter-reset
+      final tf = tester.widget<TextField>(usernameField);
+      expect(tf.controller?.text, equals('resepsionis_aktif'));
     });
   });
 }

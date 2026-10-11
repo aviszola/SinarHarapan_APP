@@ -66,6 +66,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 
   void _handleQuickLogin(UserRole role) async {
+    // Audit keamanan release: gate fungsi pemanggil secara ketat
+    if (kReleaseMode) return;
+    assert(!kReleaseMode, 'Quick login tidak diizinkan di mode rilis');
+
     final success = await ref.read(authStateProvider.notifier).quickLogin(role);
     if (success && mounted) {
       try {
@@ -170,7 +174,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       padding: const EdgeInsets.all(40),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: AppRadius.roundedMd,
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(color: AppColors.border, width: 1),
       ),
       child: Form(
@@ -188,7 +192,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   height: 36,
                   decoration: BoxDecoration(
                     color: AppColors.brandOrange,
-                    borderRadius: AppRadius.roundedSm,
+                    borderRadius: BorderRadius.circular(8),
                   ),
                   child: Center(
                     child: Text(
@@ -206,11 +210,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
                     color: AppColors.brandNavyTint,
-                    borderRadius: AppRadius.roundedSm,
+                    borderRadius: BorderRadius.circular(6),
                     border: Border.all(color: AppColors.brandNavyBorder, width: 1),
                   ),
                   child: Text(
-                    'TERMINAL FRONTDESK',
+                    'FRONTDESK PMS',
                     style: AppTextStyles.caption.copyWith(
                       color: AppColors.brandNavy,
                       fontWeight: FontWeight.w700,
@@ -255,6 +259,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               controller: _usernameController,
               focusNode: _usernameFocusNode,
               autofocus: true,
+              borderRadius: BorderRadius.circular(10),
               textInputAction: TextInputAction.next,
               autofillHints: const [AutofillHints.username],
               contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
@@ -271,6 +276,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               controller: _passwordController,
               focusNode: _passwordFocusNode,
               isPassword: true,
+              borderRadius: BorderRadius.circular(10),
               textInputAction: TextInputAction.done,
               autofillHints: const [AutofillHints.password],
               contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
@@ -280,12 +286,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             ),
             const SizedBox(height: 24),
 
-            // Tombol Utama Masuk (Tinggi >= 52px, teks navy900 kontras 5.65:1 pada oranye)
+            // Tombol Utama Masuk (Tinggi >= 52px, radius 10px, teks navy900 kontras 5.65:1 pada oranye)
             AppButton(
               label: 'Masuk ke Sistem',
               variant: AppButtonVariant.primary,
               icon: AppIcons.login,
               height: 52,
+              borderRadius: BorderRadius.circular(10),
               fontSize: 15.5,
               isLoading: authState.isLoading,
               onPressed: authState.isLoading ? null : _handleLogin,
@@ -311,28 +318,42 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               Row(
                 children: [
                   Expanded(
-                    child: AppButton(
-                      label: 'Resepsionis',
-                      variant: AppButtonVariant.outline,
-                      icon: Icons.person_outline,
-                      height: 38,
-                      fontSize: 13,
-                      onPressed: authState.isLoading
-                          ? null
-                          : () => _handleQuickLogin(UserRole.receptionist),
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(minHeight: 48),
+                      child: Center(
+                        child: AppButton(
+                          label: 'Resepsionis',
+                          variant: AppButtonVariant.outline,
+                          icon: Icons.person_outline,
+                          height: 38,
+                          borderRadius: BorderRadius.circular(8),
+                          fontSize: 12.5,
+                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                          onPressed: authState.isLoading
+                              ? null
+                              : () => _handleQuickLogin(UserRole.receptionist),
+                        ),
+                      ),
                     ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
-                    child: AppButton(
-                      label: 'Manajer Hotel',
-                      variant: AppButtonVariant.outline,
-                      icon: Icons.admin_panel_settings_outlined,
-                      height: 38,
-                      fontSize: 13,
-                      onPressed: authState.isLoading
-                          ? null
-                          : () => _handleQuickLogin(UserRole.manager),
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(minHeight: 48),
+                      child: Center(
+                        child: AppButton(
+                          label: 'Manajer Hotel',
+                          variant: AppButtonVariant.outline,
+                          icon: Icons.admin_panel_settings_outlined,
+                          height: 38,
+                          borderRadius: BorderRadius.circular(8),
+                          fontSize: 12.5,
+                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                          onPressed: authState.isLoading
+                              ? null
+                              : () => _handleQuickLogin(UserRole.manager),
+                        ),
+                      ),
                     ),
                   ),
                 ],
@@ -349,7 +370,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     return Container(
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: AppRadius.roundedMd,
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(color: AppColors.border, width: 1),
       ),
       child: Column(
@@ -361,8 +382,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             decoration: const BoxDecoration(
               color: AppColors.brandNavyDark,
               borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(AppRadius.radius),
-                topRight: Radius.circular(AppRadius.radius),
+                topLeft: Radius.circular(12),
+                topRight: Radius.circular(12),
               ),
             ),
             child: Row(
@@ -372,7 +393,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   height: 40,
                   decoration: BoxDecoration(
                     color: AppColors.brandOrange,
-                    borderRadius: AppRadius.roundedSm,
+                    borderRadius: BorderRadius.circular(8),
                   ),
                   child: Center(
                     child: Text(
@@ -399,21 +420,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         ),
                       ),
                       Text(
-                        'Frontdesk PMS · Terminal Resepsionis',
+                        'Frontdesk PMS v1.0',
                         style: AppTextStyles.caption.copyWith(
                           color: AppColors.brandNavyTint.withAlpha(200),
                           fontSize: 11.5,
                         ),
                       ),
                     ],
-                  ),
-                ),
-                Container(
-                  width: 8,
-                  height: 8,
-                  decoration: const BoxDecoration(
-                    color: AppColors.statusAvailable,
-                    shape: BoxShape.circle,
                   ),
                 ),
               ],
@@ -458,6 +471,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     hint: 'Contoh: resepsionis01',
                     controller: _usernameController,
                     focusNode: _usernameFocusNode,
+                    borderRadius: BorderRadius.circular(10),
                     textInputAction: TextInputAction.next,
                     autofillHints: const [AutofillHints.username],
                     contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
@@ -474,6 +488,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     controller: _passwordController,
                     focusNode: _passwordFocusNode,
                     isPassword: true,
+                    borderRadius: BorderRadius.circular(10),
                     textInputAction: TextInputAction.done,
                     autofillHints: const [AutofillHints.password],
                     contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
@@ -489,6 +504,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     variant: AppButtonVariant.primary,
                     icon: AppIcons.login,
                     height: 52,
+                    borderRadius: BorderRadius.circular(10),
                     fontSize: 15.5,
                     isLoading: authState.isLoading,
                     onPressed: authState.isLoading ? null : _handleLogin,
@@ -513,30 +529,42 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     Row(
                       children: [
                         Expanded(
-                          child: AppButton(
-                            label: 'Resepsionis',
-                            variant: AppButtonVariant.outline,
-                            icon: Icons.person_outline,
-                            height: 38,
-                            fontSize: 12,
-                            padding: const EdgeInsets.symmetric(horizontal: 6),
-                            onPressed: authState.isLoading
-                                ? null
-                                : () => _handleQuickLogin(UserRole.receptionist),
+                          child: ConstrainedBox(
+                            constraints: const BoxConstraints(minHeight: 48),
+                            child: Center(
+                              child: AppButton(
+                                label: 'Resepsionis',
+                                variant: AppButtonVariant.outline,
+                                icon: Icons.person_outline,
+                                height: 38,
+                                borderRadius: BorderRadius.circular(8),
+                                fontSize: 12,
+                                padding: const EdgeInsets.symmetric(horizontal: 6),
+                                onPressed: authState.isLoading
+                                    ? null
+                                    : () => _handleQuickLogin(UserRole.receptionist),
+                              ),
+                            ),
                           ),
                         ),
                         const SizedBox(width: 8),
                         Expanded(
-                          child: AppButton(
-                            label: 'Manajer Hotel',
-                            variant: AppButtonVariant.outline,
-                            icon: Icons.admin_panel_settings_outlined,
-                            height: 38,
-                            fontSize: 12,
-                            padding: const EdgeInsets.symmetric(horizontal: 6),
-                            onPressed: authState.isLoading
-                                ? null
-                                : () => _handleQuickLogin(UserRole.manager),
+                          child: ConstrainedBox(
+                            constraints: const BoxConstraints(minHeight: 48),
+                            child: Center(
+                              child: AppButton(
+                                label: 'Manajer Hotel',
+                                variant: AppButtonVariant.outline,
+                                icon: Icons.admin_panel_settings_outlined,
+                                height: 38,
+                                borderRadius: BorderRadius.circular(8),
+                                fontSize: 12,
+                                padding: const EdgeInsets.symmetric(horizontal: 6),
+                                onPressed: authState.isLoading
+                                    ? null
+                                    : () => _handleQuickLogin(UserRole.manager),
+                              ),
+                            ),
                           ),
                         ),
                       ],
@@ -603,6 +631,7 @@ class _LeftBrandPanelState extends State<_LeftBrandPanel> {
   @override
   void dispose() {
     _timer?.cancel();
+    _timer = null;
     super.dispose();
   }
 
@@ -625,7 +654,7 @@ class _LeftBrandPanelState extends State<_LeftBrandPanel> {
       color: AppColors.brandNavyDark,
       child: Stack(
         children: [
-          // Watermark SH Monogram Besar (Opasitas sangat rendah ~3%, anti-slop identitas khas)
+          // Watermark SH Monogram Besar (~8% opasitas, tampak halus & jelas di layar nyata)
           Positioned(
             right: -24,
             bottom: 40,
@@ -635,7 +664,7 @@ class _LeftBrandPanelState extends State<_LeftBrandPanel> {
                 style: TextStyle(
                   fontSize: 240,
                   fontWeight: FontWeight.w900,
-                  color: AppColors.white.withAlpha(9),
+                  color: AppColors.white.withAlpha(20),
                   letterSpacing: -12,
                   height: 1,
                 ),
@@ -659,7 +688,7 @@ class _LeftBrandPanelState extends State<_LeftBrandPanel> {
                       height: 48,
                       decoration: BoxDecoration(
                         color: AppColors.brandOrange,
-                        borderRadius: AppRadius.roundedMd,
+                        borderRadius: BorderRadius.circular(10),
                       ),
                       child: Center(
                         child: Text(
@@ -692,13 +721,13 @@ class _LeftBrandPanelState extends State<_LeftBrandPanel> {
                   ],
                 ),
 
-                // Blok Operasional Riil Tengah (Bukan marketing/fitur promo)
+                // Blok Operasional Riil Tengah (Waktu & Tanggal Live Sistem)
                 Container(
                   width: double.infinity,
                   padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(
                     color: AppColors.brandNavy.withAlpha(180),
-                    borderRadius: AppRadius.rounded,
+                    borderRadius: BorderRadius.circular(12),
                     border: Border.all(
                       color: AppColors.white.withAlpha(22),
                       width: 1,
@@ -716,7 +745,7 @@ class _LeftBrandPanelState extends State<_LeftBrandPanel> {
                           ),
                           const SizedBox(width: 8),
                           Text(
-                            'WAKTU OPERASIONAL FRONTDESK',
+                            'WAKTU OPERASIONAL SISTEM',
                             style: AppTextStyles.caption.copyWith(
                               color: AppColors.brandNavyTint.withAlpha(200),
                               fontWeight: FontWeight.w700,
@@ -752,14 +781,14 @@ class _LeftBrandPanelState extends State<_LeftBrandPanel> {
                       Row(
                         children: [
                           const Icon(
-                            Icons.desktop_windows_outlined,
+                            Icons.business_outlined,
                             size: 15,
                             color: AppColors.brandNavyTint,
                           ),
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text(
-                              'Terminal Resepsionis Utama · Lobby 1',
+                              'Operasional Resepsionis & Manajemen',
                               style: AppTextStyles.caption.copyWith(
                                 color: AppColors.brandNavyTint.withAlpha(200),
                                 fontSize: 12,
@@ -772,12 +801,12 @@ class _LeftBrandPanelState extends State<_LeftBrandPanel> {
                   ),
                 ),
 
-                // Blok Status Koneksi Bawah
+                // Blok Info Properti & Versi Bawah (Nyata, tanpa mock/hardcode status koneksi)
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   decoration: BoxDecoration(
                     color: AppColors.brandNavy,
-                    borderRadius: AppRadius.rounded,
+                    borderRadius: BorderRadius.circular(10),
                     border: Border.all(
                       color: AppColors.white.withAlpha(22),
                       width: 1,
@@ -785,31 +814,28 @@ class _LeftBrandPanelState extends State<_LeftBrandPanel> {
                   ),
                   child: Row(
                     children: [
-                      Container(
-                        width: 8,
-                        height: 8,
-                        decoration: const BoxDecoration(
-                          color: AppColors.statusAvailable,
-                          shape: BoxShape.circle,
-                        ),
+                      const Icon(
+                        Icons.hotel_outlined,
+                        size: 16,
+                        color: AppColors.brandOrange,
                       ),
                       const SizedBox(width: 10),
                       Expanded(
                         child: Text(
-                          'Sistem Lokal Aktif · Terhubung ke Server',
+                          'Hotel Sinar Harapan',
                           style: AppTextStyles.caption.copyWith(
                             color: AppColors.white,
                             fontSize: 12,
-                            fontWeight: FontWeight.w500,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
                       ),
                       Text(
-                        'v1.0',
+                        'Frontdesk PMS v1.0',
                         style: AppTextStyles.caption.copyWith(
-                          color: AppColors.brandNavyTint.withAlpha(180),
+                          color: AppColors.brandNavyTint.withAlpha(190),
                           fontSize: 12,
-                          fontWeight: FontWeight.w600,
+                          fontWeight: FontWeight.w500,
                         ),
                       ),
                     ],
@@ -835,7 +861,7 @@ class _ErrorBanner extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
         color: AppColors.errorBg,
-        borderRadius: AppRadius.roundedSm,
+        borderRadius: BorderRadius.circular(8),
         border: Border.all(color: AppColors.error.withAlpha(90), width: 1),
       ),
       child: Row(
