@@ -53,9 +53,9 @@ class _RoomCrudDialogState extends ConsumerState<RoomCrudDialog> {
       _selectedFacilities.addAll(r.facilities);
     } else {
       _roomNumberController = TextEditingController();
-      _basePriceController = TextEditingController(text: '300000');
-      _selectedType = 'Superior';
-      _selectedFloor = 2;
+      _basePriceController = TextEditingController(text: '170000');
+      _selectedType = 'AC';
+      _selectedFloor = 1;
     }
   }
 
@@ -235,7 +235,7 @@ class _RoomCrudDialogState extends ConsumerState<RoomCrudDialog> {
     if (!_formKey.currentState!.validate()) return;
 
     final rawPrice = _basePriceController.text.replaceAll(RegExp(r'[^0-9]'), '');
-    final price = double.tryParse(rawPrice) ?? 0;
+    final price = int.tryParse(rawPrice) ?? 0;
 
     if (price <= 0) {
       AppFeedback.showWarning(
@@ -377,7 +377,6 @@ class _RoomCrudDialogState extends ConsumerState<RoomCrudDialog> {
                                 items: const [
                                   DropdownMenuItem(value: 1, child: Text('Lantai 1')),
                                   DropdownMenuItem(value: 2, child: Text('Lantai 2')),
-                                  DropdownMenuItem(value: 3, child: Text('Lantai 3')),
                                 ],
                                 onChanged: (v) => setState(() => _selectedFloor = v ?? 1),
                               ),
@@ -398,12 +397,11 @@ class _RoomCrudDialogState extends ConsumerState<RoomCrudDialog> {
                                   contentPadding: EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                                 ),
                                 items: const [
-                                  DropdownMenuItem(value: 'Standard', child: Text('Standard')),
-                                  DropdownMenuItem(value: 'Superior', child: Text('Superior')),
-                                  DropdownMenuItem(value: 'Deluxe', child: Text('Deluxe')),
-                                  DropdownMenuItem(value: 'Family', child: Text('Family')),
+                                  DropdownMenuItem(value: 'Kipas', child: Text('Kipas')),
+                                  DropdownMenuItem(value: 'AC', child: Text('AC')),
+                                  DropdownMenuItem(value: 'AC Twin', child: Text('AC Twin')),
                                 ],
-                                onChanged: (v) => setState(() => _selectedType = v ?? 'Superior'),
+                                onChanged: (v) => setState(() => _selectedType = v ?? 'AC'),
                               ),
                             ],
                           ),
@@ -445,7 +443,6 @@ class _RoomCrudDialogState extends ConsumerState<RoomCrudDialog> {
                                       items: const [
                                         DropdownMenuItem(value: 1, child: Text('Lantai 1')),
                                         DropdownMenuItem(value: 2, child: Text('Lantai 2')),
-                                        DropdownMenuItem(value: 3, child: Text('Lantai 3')),
                                       ],
                                       onChanged: (v) => setState(() => _selectedFloor = v ?? 1),
                                     ),
@@ -474,12 +471,11 @@ class _RoomCrudDialogState extends ConsumerState<RoomCrudDialog> {
                                         contentPadding: EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                                       ),
                                       items: const [
-                                        DropdownMenuItem(value: 'Standard', child: Text('Standard')),
-                                        DropdownMenuItem(value: 'Superior', child: Text('Superior')),
-                                        DropdownMenuItem(value: 'Deluxe', child: Text('Deluxe')),
-                                        DropdownMenuItem(value: 'Family', child: Text('Family')),
+                                        DropdownMenuItem(value: 'Kipas', child: Text('Kipas')),
+                                        DropdownMenuItem(value: 'AC', child: Text('AC')),
+                                        DropdownMenuItem(value: 'AC Twin', child: Text('AC Twin')),
                                       ],
-                                      onChanged: (v) => setState(() => _selectedType = v ?? 'Superior'),
+                                      onChanged: (v) => setState(() => _selectedType = v ?? 'AC'),
                                     ),
                                   ],
                                 ),

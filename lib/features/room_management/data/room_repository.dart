@@ -1,5 +1,7 @@
+import '../../../core/config/app_config.dart';
 import '../../../core/network/api_client.dart';
 import '../domain/room_model.dart';
+import 'room_seed_data.dart';
 
 /// Model untuk respons GET /rooms/status — hanya id, roomNumber, status, updatedAt
 class RoomStatusSnapshot {
@@ -72,7 +74,7 @@ class RoomRepository {
   final ApiClient _api = ApiClient();
 
   // ---------------------------------------------------------------------------
-  // READ — fallback ke list kosong, bukan data mock, jika API gagal
+  // READ — fallback ke data seed riil jika AppConfig.useMock aktif atau API belum terhubung
   // ---------------------------------------------------------------------------
 
   Future<List<RoomModel>> getRooms({String? roomType, int? floor, String? status}) async {
@@ -81,58 +83,81 @@ class RoomRepository {
     if (floor != null && floor != 0) params['floor'] = floor.toString();
     if (status != null) params['status'] = status;
 
-    final res = await _api.get('/rooms', queryParams: params.isEmpty ? null : params);
-    if (res is List) {
-      final rooms = res
-          .map((item) => RoomModel.fromJson(item as Map<String, dynamic>))
-          .toList();
+    try {
+      final res = await _api.get('/rooms', queryParams: params.isEmpty ? null : params);
+      if (res is List && res.isNotEmpty) {
+        final rooms = res
+            .map((item) => RoomModel.fromJson(item as Map<String, dynamic>))
+            .toList()
+          ..sort(compareRooms);
 
-      // Backend GET /rooms tidak mengembalikan activeReservation (hanya di GET /rooms/:id).
-      // Sinkronkan data kamar OCCUPIED dengan memuat detailnya secara paralel agar activeReservationId
-      // tersedia saat proses check-out.
-      final occupiedIndices = <int>[];
-      for (int i = 0; i < rooms.length; i++) {
-        if (rooms[i].isOccupied && rooms[i].activeReservationId == null) {
-          occupiedIndices.add(i);
+        // Backend GET /rooms tidak mengembalikan activeReservation (hanya di GET /rooms/:id).
+        final occupiedIndices = <int>[];
+        for (int i = 0; i < rooms.length; i++) {
+          if (rooms[i].isOccupied && rooms[i].activeReservationId == null) {
+            occupiedIndices.add(i);
+          }
         }
-      }
 
-      if (occupiedIndices.isNotEmpty) {
-        await Future.wait(occupiedIndices.map((idx) async {
-          try {
-            final detail = await getRoomById(rooms[idx].id);
-            if (detail != null) {
-              rooms[idx] = detail;
-            }
-          } catch (_) {}
-        }));
-      }
+        if (occupiedIndices.isNotEmpty) {
+          await Future.wait(occupiedIndices.map((idx) async {
+            try {
+              final detail = await getRoomById(rooms[idx].id);
+              if (detail != null) {
+                rooms[idx] = detail;
+              }
+            } catch (_) {}
+          }));
+        }
 
-      return rooms;
+        return rooms;
+      }
+    } catch (_) {
+      if (AppConfig.useMock) {
+        return seedRooms();
+      }
+    }
+
+    if (AppConfig.useMock) {
+      return seedRooms();
     }
     return [];
   }
 
   /// GET /rooms/status — polling ringan tiap 15 detik (endpoint.md §3.2, PRD FR-ROOM-07)
   Future<List<RoomStatusSnapshot>> getRoomStatusOnly() async {
-    final res = await _api.get('/rooms/status');
-    if (res is List) {
-      return res
-          .map((item) => RoomStatusSnapshot.fromJson(item as Map<String, dynamic>))
+    try {
+      final res = await _api.get('/rooms/status');
+      if (res is List && res.isNotEmpty) {
+        return res
+            .map((item) => RoomStatusSnapshot.fromJson(item as Map<String, dynamic>))
+            .toList();
+      }
+    } catch (_) {}
+
+    if (AppConfig.useMock) {
+      return seedRooms()
+          .map((r) => RoomStatusSnapshot(id: r.id, roomNumber: r.roomNumber, status: r.status))
           .toList();
     }
     return [];
   }
 
   Future<RoomModel?> getRoomById(String id) async {
-    final res = await _api.get('/rooms/$id');
-    if (res is Map<String, dynamic>) return RoomModel.fromJson(res);
+    try {
+      final res = await _api.get('/rooms/$id');
+      if (res is Map<String, dynamic>) return RoomModel.fromJson(res);
+    } catch (_) {}
+
+    if (AppConfig.useMock) {
+      final all = seedRooms();
+      return all.firstWhere((r) => r.id == id || r.roomNumber == id, orElse: () => all.first);
+    }
     return null;
   }
 
   // ---------------------------------------------------------------------------
   // WRITE — tidak ada fallback lokal; gagal = lempar exception ke UI
-  // (Tahap 5: operasi tulis tidak boleh ada fallback)
   // ---------------------------------------------------------------------------
 
   /// POST /rooms — Manager only, hanya field whitelist DTO
@@ -140,7 +165,7 @@ class RoomRepository {
     required String roomNumber,
     required String roomType,
     required int floor,
-    required double basePricePerNight,
+    required int basePricePerNight,
     required List<String> facilities,
   }) async {
     final res = await _api.post('/rooms', body: {
@@ -148,7 +173,6 @@ class RoomRepository {
       'roomType': roomType,
       'floor': floor,
       'basePricePerNight': basePricePerNight,
-      // 'facilities' optional sesuai DTO; kirim hanya jika tidak kosong
       if (facilities.isNotEmpty) 'facilities': facilities,
     });
     if (res is Map<String, dynamic>) return RoomModel.fromJson(res);
@@ -161,9 +185,9 @@ class RoomRepository {
     String? roomNumber,
     String? roomType,
     int? floor,
-    double? basePricePerNight,
+    int? basePricePerNight,
     List<String>? facilities,
-    String? status, // 'AVAILABLE' | 'MAINTENANCE' | dll
+    String? status,
   }) async {
     final body = <String, dynamic>{};
     if (roomNumber != null) body['roomNumber'] = roomNumber;

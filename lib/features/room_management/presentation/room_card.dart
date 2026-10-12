@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import '../../../theme/app_colors.dart';
 import '../../../theme/app_icons.dart';
@@ -13,20 +14,26 @@ import '../domain/room_model.dart';
 class RoomCard extends StatefulWidget {
   final RoomModel room;
   final VoidCallback onTap;
+  final bool isHighlighted;
 
   const RoomCard({
     super.key,
     required this.room,
     required this.onTap,
+    this.isHighlighted = false,
   });
 
   @override
   State<RoomCard> createState() => _RoomCardState();
 }
 
-class _RoomCardState extends State<RoomCard> {
+class _RoomCardState extends State<RoomCard> with SingleTickerProviderStateMixin {
   bool _isHovered = false;
   bool _isPressed = false;
+  bool _isFocused = false;
+  late final FocusNode _focusNode;
+  late final AnimationController _highlightController;
+  late final Animation<double> _highlightAnimation;
 
   static final _currFmt = NumberFormat.currency(
     locale: 'id_ID',
@@ -44,201 +51,281 @@ class _RoomCardState extends State<RoomCard> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    _focusNode = FocusNode();
+    _highlightController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 400),
+    );
+    _highlightAnimation = TweenSequence<double>([
+      TweenSequenceItem(
+        tween: Tween<double>(begin: 0.0, end: 1.0)
+            .chain(CurveTween(curve: Curves.easeOut)),
+        weight: 40,
+      ),
+      TweenSequenceItem(
+        tween: Tween<double>(begin: 1.0, end: 0.0)
+            .chain(CurveTween(curve: Curves.easeIn)),
+        weight: 60,
+      ),
+    ]).animate(_highlightController);
+
+    if (widget.isHighlighted) {
+      _highlightController.forward(from: 0.0);
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant RoomCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.isHighlighted && !oldWidget.isHighlighted) {
+      final disableAnimations = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
+      if (!disableAnimations) {
+        _highlightController.forward(from: 0.0);
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _focusNode.dispose();
+    _highlightController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final room = widget.room;
     final disableAnimations = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
 
-    return MouseRegion(
-      onEnter: (_) => setState(() => _isHovered = true),
-      onExit: (_) => setState(() => _isHovered = false),
-      cursor: room.isMaintenance ? SystemMouseCursors.basic : SystemMouseCursors.click,
-      child: GestureDetector(
-        onTapDown: (_) => setState(() => _isPressed = true),
-        onTapUp: (_) => setState(() => _isPressed = false),
-        onTapCancel: () => setState(() => _isPressed = false),
-        onTap: widget.onTap,
-        child: AnimatedScale(
-          scale: disableAnimations ? 1.0 : (_isPressed ? 0.99 : 1.0),
-          duration: const Duration(milliseconds: 120),
-          curve: Curves.easeOutCubic,
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              final isCompact = constraints.maxWidth < 180 || constraints.maxHeight < 150;
+    return Focus(
+      focusNode: _focusNode,
+      onFocusChange: (hasF) => setState(() => _isFocused = hasF),
+      onKeyEvent: (node, event) {
+        if (event is KeyDownEvent &&
+            (event.logicalKey == LogicalKeyboardKey.enter ||
+                event.logicalKey == LogicalKeyboardKey.space)) {
+          widget.onTap();
+          return KeyEventResult.handled;
+        }
+        return KeyEventResult.ignored;
+      },
+      child: MouseRegion(
+        onEnter: (_) => setState(() => _isHovered = true),
+        onExit: (_) => setState(() => _isHovered = false),
+        cursor: room.isMaintenance ? SystemMouseCursors.basic : SystemMouseCursors.click,
+        child: GestureDetector(
+          onTapDown: (_) => setState(() => _isPressed = true),
+          onTapUp: (_) => setState(() => _isPressed = false),
+          onTapCancel: () => setState(() => _isPressed = false),
+          onTap: widget.onTap,
+          child: AnimatedBuilder(
+            animation: _highlightAnimation,
+            builder: (context, _) {
+              final highlightVal = _highlightAnimation.value;
+              final effectiveBorderColor = (_isHovered || _isFocused)
+                  ? AppColors.brandNavy
+                  : (highlightVal > 0.05
+                      ? _statusStripeColor
+                      : AppColors.border);
+              final effectiveBorderWidth = (_isHovered || _isFocused || highlightVal > 0.05) ? 1.5 : 1.0;
+              final effectiveBgColor = highlightVal > 0.01
+                  ? (Color.lerp(
+                        AppColors.surface,
+                        _statusStripeColor.withValues(alpha: 0.12),
+                        highlightVal,
+                      ) ??
+                      AppColors.surface)
+                  : AppColors.surface;
 
-              if (isCompact) {
-                return AnimatedContainer(
-                  duration: const Duration(milliseconds: 140),
-                  decoration: BoxDecoration(
-                    color: AppColors.surface,
-                    borderRadius: AppRadius.rounded,
-                    border: Border.all(
-                      color: _isHovered ? AppColors.brandNavy : AppColors.border,
-                      width: _isHovered ? 1.5 : 1,
-                    ),
-                    boxShadow: _isHovered ? AppElevation.subtle : AppElevation.none,
-                  ),
-                  clipBehavior: Clip.antiAlias,
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      AnimatedContainer(
-                        duration: const Duration(milliseconds: 180),
-                        curve: Curves.easeInOut,
-                        width: 4,
-                        color: _statusStripeColor,
-                      ),
-                    Expanded(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                Text(
-                                  'Kamar ${room.roomNumber}',
-                                  style: AppTextStyles.titleSmall.copyWith(
-                                    fontWeight: FontWeight.w700,
-                                    color: AppColors.brandNavyDark,
-                                    fontSize: 15,
-                                    fontFeatures: const [FontFeature.tabularFigures()],
-                                  ),
-                                  maxLines: 1,
-                                ),
-                                StatusBadge(status: room.status, compact: true),
-                              ],
-                            ),
-                            Text(
-                              '${room.roomType} · Lt. ${room.floor}',
-                              style: AppTextStyles.caption.copyWith(
-                                color: AppColors.textSecondary,
-                                fontSize: 11,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            Text(
-                              room.isAvailable
-                                  ? _currFmt.format(room.basePricePerNight)
-                                  : (room.activeGuestName ?? _getStatusName(room.status)),
-                              style: AppTextStyles.caption.copyWith(
-                                fontWeight: FontWeight.w700,
-                                color: room.isAvailable ? AppColors.brandNavy : AppColors.textPrimary,
-                                fontSize: 12,
-                                fontFeatures: const [FontFeature.tabularFigures()],
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            SizedBox(
-                              width: double.infinity,
-                              child: _buildCompactActionButton(room),
-                            ),
-                          ],
+              return AnimatedScale(
+                scale: disableAnimations ? 1.0 : (_isPressed ? 0.98 : 1.0),
+                duration: const Duration(milliseconds: 120),
+                curve: Curves.easeOutCubic,
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    final isCompact = constraints.maxWidth < 180 || constraints.maxHeight < 150;
+
+                    if (isCompact) {
+                      return AnimatedContainer(
+                        duration: disableAnimations ? Duration.zero : const Duration(milliseconds: 140),
+                        decoration: BoxDecoration(
+                          color: effectiveBgColor,
+                          borderRadius: AppRadius.rounded,
+                          border: Border.all(
+                            color: effectiveBorderColor,
+                            width: effectiveBorderWidth,
+                          ),
+                          boxShadow: (_isHovered || _isFocused) ? AppElevation.subtle : AppElevation.none,
                         ),
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            }
-
-            return AnimatedContainer(
-              duration: const Duration(milliseconds: 140),
-              decoration: BoxDecoration(
-                color: AppColors.surface,
-                borderRadius: AppRadius.rounded,
-                border: Border.all(
-                  color: _isHovered ? AppColors.brandNavy : AppColors.border,
-                  width: _isHovered ? 1.5 : 1,
-                ),
-                boxShadow: _isHovered ? AppElevation.subtle : AppElevation.none,
-              ),
-              clipBehavior: Clip.antiAlias,
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  // Garis Status 4px di Sisi Kiri
-                  AnimatedContainer(
-                    duration: const Duration(milliseconds: 180),
-                    curve: Curves.easeInOut,
-                    width: 4,
-                    color: _statusStripeColor,
-                  ),
-
-                  // Konten Kartu
-                  Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          // Header Kartu: Nomor Kamar & Status Badge
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Expanded(
+                        clipBehavior: Clip.antiAlias,
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            AnimatedContainer(
+                              duration: disableAnimations ? Duration.zero : const Duration(milliseconds: 180),
+                              curve: Curves.easeInOut,
+                              width: 4,
+                              color: _statusStripeColor,
+                            ),
+                            Expanded(
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                                 child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text(
-                                      'Kamar ${room.roomNumber}',
-                                      style: AppTextStyles.titleSmall.copyWith(
-                                        fontWeight: FontWeight.w700,
-                                        color: AppColors.brandNavyDark,
-                                        fontSize: 16,
-                                        fontFeatures: const [FontFeature.tabularFigures()],
-                                      ),
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      crossAxisAlignment: CrossAxisAlignment.center,
+                                      children: [
+                                        Text(
+                                          'Kamar ${room.roomNumber}',
+                                          style: AppTextStyles.titleSmall.copyWith(
+                                            fontWeight: FontWeight.w800,
+                                            color: AppColors.brandNavyDark,
+                                            fontSize: 16,
+                                            fontFeatures: const [FontFeature.tabularFigures()],
+                                          ),
+                                          maxLines: 1,
+                                        ),
+                                        StatusBadge(status: room.status, compact: true),
+                                      ],
                                     ),
-                                    const SizedBox(height: 2),
                                     Text(
-                                      '${room.roomType} · Lt. ${room.floor}',
+                                      room.facilities.isNotEmpty
+                                          ? room.facilities.join(', ')
+                                          : '${room.roomType} · Lt. ${room.floor}',
                                       style: AppTextStyles.caption.copyWith(
                                         color: AppColors.textSecondary,
+                                        fontSize: 11,
                                       ),
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
                                     ),
+                                    Text(
+                                      room.isAvailable
+                                          ? '${_currFmt.format(room.basePricePerNight)} / malam'
+                                          : (room.activeGuestName ?? _getStatusName(room.status)),
+                                      style: AppTextStyles.caption.copyWith(
+                                        fontWeight: FontWeight.w700,
+                                        color: room.isAvailable ? AppColors.brandNavy : AppColors.textPrimary,
+                                        fontSize: 12,
+                                        fontFeatures: const [FontFeature.tabularFigures()],
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    SizedBox(
+                                      width: double.infinity,
+                                      child: _buildCompactActionButton(room),
+                                    ),
                                   ],
                                 ),
                               ),
-                              const SizedBox(width: 6),
-                              StatusBadge(status: room.status),
-                            ],
+                            ),
+                          ],
+                        ),
+                      );
+                    }
+
+                    return AnimatedContainer(
+                      duration: disableAnimations ? Duration.zero : const Duration(milliseconds: 140),
+                      decoration: BoxDecoration(
+                        color: effectiveBgColor,
+                        borderRadius: AppRadius.rounded,
+                        border: Border.all(
+                          color: effectiveBorderColor,
+                          width: effectiveBorderWidth,
+                        ),
+                        boxShadow: (_isHovered || _isFocused) ? AppElevation.subtle : AppElevation.none,
+                      ),
+                      clipBehavior: Clip.antiAlias,
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          // Garis Status 4px di Sisi Kiri
+                          AnimatedContainer(
+                            duration: disableAnimations ? Duration.zero : const Duration(milliseconds: 180),
+                            curve: Curves.easeInOut,
+                            width: 4,
+                            color: _statusStripeColor,
                           ),
 
-                          const SizedBox(height: 10),
-
-                          // Konten Spesifik Status
+                          // Konten Kartu
                           Expanded(
-                            child: Align(
-                              alignment: Alignment.centerLeft,
-                              child: SingleChildScrollView(
-                                physics: const NeverScrollableScrollPhysics(),
-                                child: _buildStatusSpecificContent(room),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  // Header Kartu: Nomor Kamar & Status Badge
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              'Kamar ${room.roomNumber}',
+                                              style: AppTextStyles.titleSmall.copyWith(
+                                                fontWeight: FontWeight.w800,
+                                                color: AppColors.brandNavyDark,
+                                                fontSize: 18,
+                                                fontFeatures: const [FontFeature.tabularFigures()],
+                                              ),
+                                            ),
+                                            const SizedBox(height: 2),
+                                            Text(
+                                              '${room.roomType} · Lt. ${room.floor}',
+                                              style: AppTextStyles.caption.copyWith(
+                                                color: AppColors.textSecondary,
+                                              ),
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      const SizedBox(width: 6),
+                                      StatusBadge(status: room.status),
+                                    ],
+                                  ),
+
+                                  const SizedBox(height: 10),
+
+                                  // Konten Spesifik Status
+                                  Expanded(
+                                    child: Align(
+                                      alignment: Alignment.centerLeft,
+                                      child: SingleChildScrollView(
+                                        physics: const NeverScrollableScrollPhysics(),
+                                        child: _buildStatusSpecificContent(room),
+                                      ),
+                                    ),
+                                  ),
+
+                                  const SizedBox(height: 8),
+
+                                  // Tombol Aksi Cepat
+                                  _buildActionButton(room),
+                                ],
                               ),
                             ),
                           ),
-
-                          const SizedBox(height: 8),
-
-                          // Tombol Aksi Cepat
-                          _buildActionButton(room),
                         ],
                       ),
-                    ),
-                  ),
-                ],
-              ),
-            );
-          },
+                    );
+                  },
+                ),
+              );
+            },
+          ),
         ),
-      ),
       ),
     );
   }
@@ -323,22 +410,30 @@ class _RoomCardState extends State<RoomCard> {
     }
 
     if (room.isAvailable) {
+      final facilityText = room.facilities.isNotEmpty
+          ? room.facilities.join(', ')
+          : '${room.roomType} · Lt. ${room.floor}';
+
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Text(
-            'Tarif Per Malam',
+            facilityText,
             style: AppTextStyles.caption.copyWith(
-              color: AppColors.textMuted,
+              color: AppColors.textSecondary,
+              fontWeight: FontWeight.w500,
             ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
           const SizedBox(height: 2),
           Text(
-            _currFmt.format(room.basePricePerNight),
+            '${_currFmt.format(room.basePricePerNight)} / malam',
             style: AppTextStyles.numberLarge.copyWith(
               color: AppColors.brandNavy,
-              fontSize: 17,
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
             ),
           ),
         ],

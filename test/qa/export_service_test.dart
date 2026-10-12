@@ -13,21 +13,21 @@ void main() {
   group('ReportExportService Tests', () {
     final sampleRooms = [
       const RoomModel(
-        id: '101',
-        roomNumber: '101',
-        roomType: 'Standard',
+        id: '01',
+        roomNumber: '01',
+        roomType: 'AC',
         floor: 1,
         status: RoomStatusType.available,
-        basePricePerNight: 250000,
+        basePricePerNight: 170000,
         facilities: ['AC', 'WiFi'],
       ),
       const RoomModel(
-        id: '102',
-        roomNumber: '102',
-        roomType: 'Deluxe',
+        id: '02',
+        roomNumber: '02',
+        roomType: 'AC',
         floor: 1,
         status: RoomStatusType.occupied,
-        basePricePerNight: 500000,
+        basePricePerNight: 170000,
         facilities: ['AC', 'WiFi', 'TV'],
         activeGuestName: 'Agus Santoso',
         activeGuestPhone: '081234567890',
@@ -39,9 +39,9 @@ void main() {
     test('buildTransactionItems maps rooms properly', () {
       final items = ReportExportService.buildTransactionItems(sampleRooms);
       expect(items.length, 2);
-      expect(items[0].roomNumber, '101');
+      expect(items[0].roomNumber, '01');
       expect(items[0].status, 'Selesai');
-      expect(items[1].roomNumber, '102');
+      expect(items[1].roomNumber, '02');
       expect(items[1].guestName, 'Agus Santoso');
       expect(items[1].status, 'Menginap');
     });

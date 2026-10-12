@@ -84,7 +84,7 @@ class ReportExportService {
       final nights = (room.checkInTime != null && room.expectedCheckOutTime != null)
           ? room.expectedCheckOutTime!.difference(room.checkInTime!).inDays.clamp(1, 30)
           : 1;
-      final roomCost = room.basePricePerNight * nights;
+      final roomCost = (room.basePricePerNight * nights).toDouble();
       final extraCost = room.additionalCharges ?? 0.0;
       final total = roomCost + extraCost;
       final status = room.isOccupied ? 'Menginap' : 'Selesai';

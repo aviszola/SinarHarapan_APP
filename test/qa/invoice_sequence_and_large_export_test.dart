@@ -151,7 +151,7 @@ void main() {
           roomType: i % 2 == 0 ? 'Standard' : 'Deluxe',
           floor: (i ~/ 5) + 1,
           status: i % 3 == 0 ? RoomStatusType.occupied : RoomStatusType.dirty,
-          basePricePerNight: 250000.0 + (i * 25000),
+          basePricePerNight: 250000 + (i * 25000),
           facilities: const ['AC', 'WiFi'],
           activeGuestName: 'Tamu Uji $rNum',
           activeGuestPhone: '08129999${i.toString().padLeft(4, '0')}',

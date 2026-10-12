@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/config/app_config.dart';
 import '../../../core/network/api_client.dart';
 import '../data/room_repository.dart';
+import '../data/room_seed_data.dart';
 import '../domain/room_model.dart';
 
 /// Polling interval GET /rooms/status — endpoint.md §3.2 & PRD FR-ROOM-07: tiap 15 detik
@@ -24,6 +25,15 @@ class RoomFilterState {
     this.searchQuery = '',
   });
 
+  int get activeFilterCount {
+    int count = 0;
+    if (roomType != 'ALL') count++;
+    if (floor != 0) count++;
+    if (status != null) count++;
+    if (searchQuery.trim().isNotEmpty) count++;
+    return count;
+  }
+
   RoomFilterState copyWith({
     String? roomType,
     int? floor,
@@ -40,11 +50,14 @@ class RoomFilterState {
   }
 }
 
+final highlightedRoomIdProvider = StateProvider<String?>((ref) => null);
+
 class RoomListNotifier extends StateNotifier<AsyncValue<List<RoomModel>>> {
   final RoomRepository _repository;
+  final Ref? _ref;
   Timer? _pollingTimer;
 
-  RoomListNotifier(this._repository) : super(const AsyncValue.loading()) {
+  RoomListNotifier(this._repository, [this._ref]) : super(const AsyncValue.loading()) {
     loadRooms();
     _startPolling();
   }
@@ -80,20 +93,25 @@ class RoomListNotifier extends StateNotifier<AsyncValue<List<RoomModel>>> {
     super.dispose();
   }
 
-  Future<void> loadRooms() async {
-    state = const AsyncValue.loading();
+  Future<void> loadRooms({bool silent = false}) async {
+    if (!silent || state.value == null) {
+      state = const AsyncValue.loading();
+    }
     try {
       final rooms = await _repository.getRooms();
       state = AsyncValue.data(rooms);
     } catch (e, st) {
-      state = AsyncValue.error(e, st);
+      if (state.value == null) {
+        state = AsyncValue.error(e, st);
+      }
     }
   }
 
   Future<void> markRoomCleaned(String roomId) async {
     // Operasi tulis: tidak ada fallback lokal; lempar error jika gagal
     await _repository.markRoomClean(roomId);
-    await loadRooms();
+    _ref?.read(highlightedRoomIdProvider.notifier).state = roomId;
+    await loadRooms(silent: true);
   }
 
   Future<void> toggleMaintenance(String roomId) async {
@@ -107,7 +125,8 @@ class RoomListNotifier extends StateNotifier<AsyncValue<List<RoomModel>>> {
 
     final newStatus = room.isMaintenance ? 'AVAILABLE' : 'MAINTENANCE';
     await _repository.updateRoom(id: roomId, status: newStatus);
-    await loadRooms();
+    _ref?.read(highlightedRoomIdProvider.notifier).state = roomId;
+    await loadRooms(silent: true);
   }
 
   /// Check-in: kirim ke backend DULU, baru reload state dari server
@@ -153,8 +172,8 @@ class RoomListNotifier extends StateNotifier<AsyncValue<List<RoomModel>>> {
       paymentMethod: paymentMethod,
     );
 
-    // Reload dari server agar state sinkron dengan backend
-    await loadRooms();
+    // Reload tanpa flicker skeleton
+    await loadRooms(silent: true);
     return result;
   }
 
@@ -173,7 +192,7 @@ class RoomListNotifier extends StateNotifier<AsyncValue<List<RoomModel>>> {
       additionalCharges: additionalCharges,
     );
 
-    await loadRooms();
+    await loadRooms(silent: true);
     return result;
   }
 
@@ -181,7 +200,7 @@ class RoomListNotifier extends StateNotifier<AsyncValue<List<RoomModel>>> {
     required String roomNumber,
     required String roomType,
     required int floor,
-    required double basePrice,
+    required int basePrice,
     required List<String> facilities,
   }) async {
     await _repository.addRoom(
@@ -199,7 +218,7 @@ class RoomListNotifier extends StateNotifier<AsyncValue<List<RoomModel>>> {
     required String roomNumber,
     required String roomType,
     required int floor,
-    required double basePrice,
+    required int basePrice,
     required List<String> facilities,
   }) async {
     await _repository.updateRoom(
@@ -222,10 +241,19 @@ class RoomListNotifier extends StateNotifier<AsyncValue<List<RoomModel>>> {
 final roomListProvider =
     StateNotifierProvider<RoomListNotifier, AsyncValue<List<RoomModel>>>((ref) {
   final repo = ref.watch(roomRepositoryProvider);
-  return RoomListNotifier(repo);
+  return RoomListNotifier(repo, ref);
 });
 
 final roomFilterProvider = StateProvider<RoomFilterState>((ref) => const RoomFilterState());
+
+bool matchesRoomSearch(RoomModel room, String query) {
+  if (query.trim().isEmpty) return true;
+  final q = query.trim().toLowerCase();
+  return room.roomNumber.toLowerCase().contains(q) ||
+      (room.activeGuestName ?? '').toLowerCase().contains(q) ||
+      (room.activeGuestPhone ?? '').toLowerCase().contains(q) ||
+      (room.invoiceNumber ?? '').toLowerCase().contains(q);
+}
 
 final filteredRoomsProvider = Provider<List<RoomModel>>((ref) {
   final roomsAsync = ref.watch(roomListProvider);
@@ -233,19 +261,12 @@ final filteredRoomsProvider = Provider<List<RoomModel>>((ref) {
 
   return roomsAsync.when(
     data: (rooms) => rooms.where((room) {
-      if (filter.searchQuery.trim().isNotEmpty) {
-        final q = filter.searchQuery.trim().toLowerCase();
-        final match = room.roomNumber.toLowerCase().contains(q) ||
-            (room.activeGuestName ?? '').toLowerCase().contains(q) ||
-            (room.activeGuestPhone ?? '').toLowerCase().contains(q) ||
-            (room.invoiceNumber ?? '').toLowerCase().contains(q);
-        if (!match) return false;
-      }
+      if (!matchesRoomSearch(room, filter.searchQuery)) return false;
       if (filter.roomType != 'ALL' && room.roomType != filter.roomType) return false;
       if (filter.floor != 0 && room.floor != filter.floor) return false;
       if (filter.status != null && room.status != filter.status) return false;
       return true;
-    }).toList(),
+    }).toList()..sort(compareRooms),
     loading: () => [],
     error: (_, _) => [],
   );
@@ -265,6 +286,79 @@ final roomStatsProvider = Provider<Map<RoomStatusType, int>>((ref) {
     }
   });
   return map;
+});
+
+/// Jumlah kamar per tipe dengan filter lain (floor, status, search) yang sedang aktif
+final roomTypeCountsProvider = Provider<Map<String, int>>((ref) {
+  final rooms = ref.watch(roomListProvider).asData?.value ?? [];
+  final filter = ref.watch(roomFilterProvider);
+
+  final types = kRealRoomFilterTypes;
+  final result = <String, int>{for (final t in types) t: 0};
+
+  for (final room in rooms) {
+    if (!matchesRoomSearch(room, filter.searchQuery)) continue;
+    if (filter.floor != 0 && room.floor != filter.floor) continue;
+    if (filter.status != null && room.status != filter.status) continue;
+
+    result['ALL'] = (result['ALL'] ?? 0) + 1;
+    if (result.containsKey(room.roomType)) {
+      result[room.roomType] = (result[room.roomType] ?? 0) + 1;
+    } else {
+      result[room.roomType] = 1;
+    }
+  }
+
+  return result;
+});
+
+/// Jumlah kamar per lantai dengan filter lain (type, status, search) yang sedang aktif
+final floorCountsProvider = Provider<Map<int, int>>((ref) {
+  final rooms = ref.watch(roomListProvider).asData?.value ?? [];
+  final filter = ref.watch(roomFilterProvider);
+
+  final floors = kRealRoomFloors;
+  final result = <int, int>{for (final f in floors) f: 0};
+
+  for (final room in rooms) {
+    if (!matchesRoomSearch(room, filter.searchQuery)) continue;
+    if (filter.roomType != 'ALL' && room.roomType != filter.roomType) continue;
+    if (filter.status != null && room.status != filter.status) continue;
+
+    result[0] = (result[0] ?? 0) + 1;
+    if (result.containsKey(room.floor)) {
+      result[room.floor] = (result[room.floor] ?? 0) + 1;
+    } else {
+      result[room.floor] = 1;
+    }
+  }
+
+  return result;
+});
+
+/// Jumlah kamar per status untuk chip status dengan filter lain (type, floor, search) yang sedang aktif
+final statusCountsProvider = Provider<Map<RoomStatusType?, int>>((ref) {
+  final rooms = ref.watch(roomListProvider).asData?.value ?? [];
+  final filter = ref.watch(roomFilterProvider);
+
+  final result = <RoomStatusType?, int>{
+    null: 0,
+    RoomStatusType.available: 0,
+    RoomStatusType.occupied: 0,
+    RoomStatusType.dirty: 0,
+    RoomStatusType.maintenance: 0,
+  };
+
+  for (final room in rooms) {
+    if (!matchesRoomSearch(room, filter.searchQuery)) continue;
+    if (filter.roomType != 'ALL' && room.roomType != filter.roomType) continue;
+    if (filter.floor != 0 && room.floor != filter.floor) continue;
+
+    result[null] = (result[null] ?? 0) + 1;
+    result[room.status] = (result[room.status] ?? 0) + 1;
+  }
+
+  return result;
 });
 
 /// Banner "DATA CONTOH" — hanya tampil di debug build dengan USE_MOCK=true

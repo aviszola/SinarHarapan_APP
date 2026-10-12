@@ -11,7 +11,6 @@ import '../../../theme/app_icons.dart';
 import '../../../core/config/app_config.dart';
 import '../../../core/network/api_client.dart';
 import '../../auth/presentation/auth_controller.dart';
-import '../../checkout/domain/invoice_pdf_service.dart';
 import '../../checkout/domain/invoice_sequence_service.dart';
 import '../../checkout/presentation/invoice_preview_dialog.dart';
 import '../../reporting/data/reporting_repository.dart';
@@ -62,6 +61,7 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
   String? _idImageUrl;
   String? _nationality;
   String? _errorMessage;
+  bool _isSubmitting = false;
 
   @override
   void initState() {
@@ -121,7 +121,7 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
     if (parsed != null && parsed > 0) {
       return parsed;
     }
-    return widget.room.basePricePerNight * _totalNights;
+    return (widget.room.basePricePerNight * _totalNights).toDouble();
   }
 
   // Capture image dari kamera atau galeri untuk OCR
@@ -437,7 +437,7 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
     };
   }
 
-  void _handleReviewInvoice() {
+  void _handleReviewInvoice() async {
     if (!_formKey.currentState!.validate()) return;
 
     // Validasi format nomor WhatsApp sesuai regex backend
@@ -496,8 +496,13 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
       invoiceNumber: previewInvoiceNumber,
     );
 
+    setState(() {
+      _isSubmitting = true;
+      _errorMessage = null;
+    });
+
     // Tampilkan Dialog Pratinjau Invoice Check-In
-    showDialog(
+    final isConfirmed = await showDialog<bool>(
       context: context,
       barrierDismissible: false,
       builder: (_) => InvoicePreviewDialog(
@@ -510,9 +515,21 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
             _executeFinalCheckIn(previewInvoiceNumber, calculatedBasePrice),
       ),
     );
+
+    if (isConfirmed == true) {
+      if (mounted) {
+        Navigator.of(context).pop(true); // CheckInModal menutup dirinya sendiri
+      }
+    } else {
+      if (mounted) {
+        setState(() {
+          _isSubmitting = false;
+        });
+      }
+    }
   }
 
-  void _executeFinalCheckIn(
+  Future<void> _executeFinalCheckIn(
     String invoiceNumber,
     double calculatedBasePrice,
   ) async {
@@ -521,8 +538,7 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
 
     try {
       // Panggil checkIn yang mengirim ke POST /reservations di backend
-      // Backend akan menolak (409) jika kamar sudah occupied atau NIK aktif
-      final result = await ref
+      await ref
           .read(roomListProvider.notifier)
           .checkIn(
             roomId: widget.room.id,
@@ -541,68 +557,21 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
             roomRate: calculatedBasePrice,
             paymentMethod: _paymentMethod,
           );
-
-      final returnedInvoice =
-          result['invoiceNumber']?.toString() ?? invoiceNumber;
-
-      if (mounted) {
-        Navigator.of(context).pop(); // Tutup CheckInModal
-        final targetRoom = widget.room.copyWith(
-          activeGuestName: _nameController.text.trim(),
-          guestNik: cleanNik,
-          activeGuestPhone: _phoneController.text.trim(),
-          bookingSource: _bookingSource,
-          reddoorzBookingCode: _bookingSource == 'REDDOORZ'
-              ? _bookingCodeController.text.trim()
-              : null,
-          invoiceNumber: returnedInvoice,
-          checkInTime: DateTime.now(),
-        );
-        final authState = ref.read(authStateProvider);
-        final receptionistName = authState.user?.fullName ?? 'Siti Rahmawati';
-        final totalBayar = calculatedBasePrice * _totalNights;
-
-        AppFeedback.showSuccess(
-          context,
-          title: 'Check-in Berhasil & Lunas',
-          message:
-              'Kamar ${widget.room.roomNumber} berhasil check-in. Invoice $returnedInvoice telah diterbitkan.',
-          actionLabel: 'UNDUH PDF',
-          onAction: () {
-            InvoicePdfService.saveInvoicePdf(
-              room: targetRoom,
-              roomTotal: totalBayar,
-              grandTotal: totalBayar,
-              receptionistName: receptionistName,
-              invoiceNumber: returnedInvoice,
-            );
-          },
-        );
-      }
     } on ApiException catch (e) {
-      // Backend error (mis. 409 CONFLICT atau 400 VALIDATION) ditampilkan persis
-      setState(() {
-        _errorMessage = e.message;
-      });
       if (mounted) {
-        AppFeedback.showError(
-          context,
-          title: 'Gagal Check-in',
-          message: e.message,
-        );
+        setState(() {
+          _errorMessage = e.message;
+        });
       }
+      rethrow;
     } catch (e) {
       final err = e.toString().replaceAll('Exception: ', '');
-      setState(() {
-        _errorMessage = err;
-      });
       if (mounted) {
-        AppFeedback.showError(
-          context,
-          title: 'Terjadi Kesalahan',
-          message: err,
-        );
+        setState(() {
+          _errorMessage = err;
+        });
       }
+      rethrow;
     }
   }
 
@@ -701,7 +670,9 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
                         AppIcons.close,
                         color: AppColors.textSecondary,
                       ),
-                      onPressed: () => Navigator.of(context).pop(),
+                      onPressed: _isSubmitting
+                          ? null
+                          : () => Navigator.of(context).pop(false),
                     ),
                   ],
                 ),
@@ -1529,7 +1500,9 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
                     child: AppButton(
                       label: 'Batal',
                       variant: AppButtonVariant.outline,
-                      onPressed: () => Navigator.of(context).pop(),
+                      onPressed: _isSubmitting
+                          ? null
+                          : () => Navigator.of(context).pop(false),
                     ),
                   ),
                   const SizedBox(width: AppSpacing.sm),
@@ -1539,7 +1512,9 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
                       label: 'Pratinjau Invoice',
                       variant: AppButtonVariant.primary,
                       icon: AppIcons.checkIn,
-                      onPressed: _handleSubmit,
+                      isLoading: _isSubmitting,
+                      loadingLabel: 'Menyimpan…',
+                      onPressed: _isSubmitting ? null : _handleSubmit,
                     ),
                   ),
                 ],
@@ -1551,14 +1526,18 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
                   AppButton(
                     label: 'Batal',
                     variant: AppButtonVariant.outline,
-                    onPressed: () => Navigator.of(context).pop(),
+                    onPressed: _isSubmitting
+                        ? null
+                        : () => Navigator.of(context).pop(false),
                   ),
                   const SizedBox(width: AppSpacing.sm),
                   AppButton(
                     label: 'Pratinjau Invoice & Selesaikan',
                     variant: AppButtonVariant.primary,
                     icon: AppIcons.checkIn,
-                    onPressed: _handleSubmit,
+                    isLoading: _isSubmitting,
+                    loadingLabel: 'Menyimpan…',
+                    onPressed: _isSubmitting ? null : _handleSubmit,
                   ),
                 ],
               ),

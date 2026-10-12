@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -21,7 +22,7 @@ class InvoicePreviewDialog extends StatefulWidget {
   final bool autoOpenWhatsApp;
   final String? customTitle;
   final String? customSubtitle;
-  final VoidCallback? onConfirmCheckIn;
+  final FutureOr<void> Function()? onConfirmCheckIn;
 
   const InvoicePreviewDialog({
     super.key,
@@ -45,6 +46,46 @@ class InvoicePreviewDialog extends StatefulWidget {
 class _InvoicePreviewDialogState extends State<InvoicePreviewDialog> {
   bool _isDownloadingPdf = false;
   bool _isPrinting = false;
+  bool _isSubmittingCheckIn = false;
+  bool _isCheckInSuccess = false;
+  String? _checkInError;
+
+  Future<void> _handleConfirmCheckIn() async {
+    if (_isSubmittingCheckIn || _isCheckInSuccess) return;
+    setState(() {
+      _isSubmittingCheckIn = true;
+      _checkInError = null;
+    });
+
+    try {
+      if (widget.onConfirmCheckIn != null) {
+        await widget.onConfirmCheckIn!();
+      }
+      if (mounted) {
+        setState(() {
+          _isSubmittingCheckIn = false;
+          _isCheckInSuccess = true;
+        });
+
+        final disableAnimations = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
+        if (!disableAnimations) {
+          await Future.delayed(const Duration(milliseconds: 450));
+        }
+
+        if (mounted) {
+          Navigator.of(context).pop(true);
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isSubmittingCheckIn = false;
+          _isCheckInSuccess = false;
+          _checkInError = e.toString().replaceAll('Exception: ', '');
+        });
+      }
+    }
+  }
 
   Future<void> _handleDownloadPdf(String invoiceNumber) async {
     if (_isDownloadingPdf) return;
@@ -260,7 +301,7 @@ class _InvoicePreviewDialogState extends State<InvoicePreviewDialog> {
                   ),
                   IconButton(
                     icon: const AppIcon.medium(AppIcons.close, color: AppColors.textSecondary),
-                    onPressed: () => Navigator.of(context).pop(),
+                    onPressed: () => Navigator.of(context).pop(false),
                   ),
                 ],
               ),
@@ -686,16 +727,38 @@ class _InvoicePreviewDialogState extends State<InvoicePreviewDialog> {
                         onPressed: _isDownloadingPdf ? null : () => _handleDownloadPdf(invoiceNumber),
                       ),
 
+                      if (_checkInError != null) ...[
+                        Padding(
+                          padding: const EdgeInsets.only(top: 8),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              const AppIcon.small(AppIcons.alertTriangle, color: AppColors.error),
+                              const SizedBox(width: 6),
+                              Text(
+                                _checkInError!,
+                                style: const TextStyle(
+                                  color: AppColors.error,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+
                       // If check-in confirmation flow
                       if (widget.onConfirmCheckIn != null)
                         AppButton(
-                          label: 'Konfirmasi Lunas & Masuk Kamar',
+                          label: _isCheckInSuccess ? 'Berhasil Check-In' : 'Konfirmasi Lunas & Masuk Kamar',
                           variant: AppButtonVariant.primary,
-                          icon: AppIcons.check,
-                          onPressed: () {
-                            Navigator.of(context).pop();
-                            widget.onConfirmCheckIn!();
-                          },
+                          icon: _isCheckInSuccess ? AppIcons.check : AppIcons.check,
+                          isLoading: _isSubmittingCheckIn,
+                          loadingLabel: 'Memproses…',
+                          isSuccess: _isCheckInSuccess,
+                          successLabel: 'Berhasil Check-In',
+                          onPressed: (_isSubmittingCheckIn || _isCheckInSuccess) ? null : _handleConfirmCheckIn,
                         ),
                     ],
                   ),

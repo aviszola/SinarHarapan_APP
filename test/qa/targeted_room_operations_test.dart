@@ -136,14 +136,14 @@ void main() {
       final repo = _TargetedFakeRoomRepo(
         rooms: [
           RoomModel(
-            id: 'rm-102',
-            roomNumber: '102',
-            roomType: 'Standard',
+            id: 'rm-02',
+            roomNumber: '02',
+            roomType: 'AC',
             floor: 1,
-            basePricePerNight: 250000,
+            basePricePerNight: 170000,
             facilities: const ['AC', 'WiFi'],
             status: RoomStatusType.occupied,
-            activeReservationId: 'res-102',
+            activeReservationId: 'res-02',
             activeGuestName: 'Budi Santoso',
             activeGuestPhone: '081234567890',
             checkInTime: DateTime.now().subtract(const Duration(hours: 18)),
@@ -155,12 +155,12 @@ void main() {
       await tester.pumpWidget(buildTestApp(roomRepo: repo));
       await tester.pumpAndSettle();
 
-      // Pastikan kartu kamar 102 dengan nama tamu Budi Santoso muncul
-      expect(find.text('Kamar 102'), findsOneWidget);
+      // Pastikan kartu kamar 02 dengan nama tamu Budi Santoso muncul
+      expect(find.text('Kamar 02'), findsOneWidget);
       expect(find.text('Budi Santoso'), findsOneWidget);
 
-      // Ketuk kamar 102
-      await tester.tap(find.text('Kamar 102'));
+      // Ketuk kamar 02
+      await tester.tap(find.text('Kamar 02'));
       await tester.pumpAndSettle();
 
       // Verifikasi CheckOutDialog terbuka
@@ -183,7 +183,7 @@ void main() {
 
       // Status kamar pada repo dan UI beralih ke Dirty (Kotor)
       expect(repo.rooms.first.status, RoomStatusType.dirty);
-      expect(find.text('Kamar 102'), findsOneWidget);
+      expect(find.text('Kamar 02'), findsOneWidget);
       expect(find.text('Kotor'), findsWidgets);
     });
 
@@ -196,14 +196,14 @@ void main() {
       final repo = _TargetedFakeRoomRepo(
         rooms: [
           RoomModel(
-            id: 'rm-102',
-            roomNumber: '102',
-            roomType: 'Standard',
+            id: 'rm-02',
+            roomNumber: '02',
+            roomType: 'AC',
             floor: 1,
-            basePricePerNight: 250000,
+            basePricePerNight: 170000,
             facilities: const ['AC', 'WiFi'],
             status: RoomStatusType.occupied,
-            activeReservationId: 'res-102',
+            activeReservationId: 'res-02',
             activeGuestName: 'Budi Santoso',
             checkInTime: DateTime.now().subtract(const Duration(hours: 18)),
             expectedCheckOutTime: DateTime.now().add(const Duration(hours: 4)),
@@ -216,7 +216,7 @@ void main() {
       await tester.pumpWidget(buildTestApp(roomRepo: repo));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.text('Kamar 102'));
+      await tester.tap(find.text('Kamar 02'));
       await tester.pumpAndSettle();
 
       expect(find.byType(CheckOutDialog), findsOneWidget);

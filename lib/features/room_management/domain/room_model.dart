@@ -4,9 +4,9 @@ import '../../shared_widgets/status_badge.dart';
 class RoomModel {
   final String id;
   final String roomNumber;
-  final String roomType; // Standard, Superior, Deluxe, Family
+  final String roomType; // Kipas, AC, AC Twin
   final int floor;
-  final double basePricePerNight;
+  final int basePricePerNight; // Harga dalam Rupiah (int), harga final sudah termasuk +Rp 10.000
   final List<String> facilities;
   final RoomStatusType status;
   // Metadata for active occupancy (if any)
@@ -83,9 +83,9 @@ class RoomModel {
     final guestObj = activeRes?['guest'] as Map<String, dynamic>?;
 
     final rawPrice = json['basePricePerNight'] ?? json['base_price_per_night'] ?? 0;
-    final double parsedBasePrice = rawPrice is num
-        ? rawPrice.toDouble()
-        : double.tryParse(rawPrice.toString()) ?? 0.0;
+    final int parsedBasePrice = rawPrice is num
+        ? rawPrice.toInt()
+        : int.tryParse(rawPrice.toString()) ?? 0;
 
     final rawCharges = json['additionalCharges'] ?? activeRes?['additionalCharges'];
     final double? parsedCharges = rawCharges == null
@@ -95,7 +95,7 @@ class RoomModel {
     return RoomModel(
       id: json['id']?.toString() ?? '',
       roomNumber: json['roomNumber']?.toString() ?? json['room_number']?.toString() ?? '',
-      roomType: json['roomType']?.toString() ?? json['room_type']?.toString() ?? 'Standard',
+      roomType: json['roomType']?.toString() ?? json['room_type']?.toString() ?? 'AC',
       floor: json['floor'] is int ? json['floor'] : int.tryParse(json['floor']?.toString() ?? '1') ?? 1,
       basePricePerNight: parsedBasePrice,
       facilities: json['facilities'] is List
@@ -119,6 +119,8 @@ class RoomModel {
       waReminderStatus: json['waReminderStatus'] ?? json['wa_reminder_status'],
     );
   }
+
+  double get basePricePerNightDouble => basePricePerNight.toDouble();
 
   Map<String, dynamic> toJson() => {
     'id': id,
@@ -146,7 +148,7 @@ class RoomModel {
     String? roomNumber,
     String? roomType,
     int? floor,
-    double? basePricePerNight,
+    int? basePricePerNight,
     List<String>? facilities,
     RoomStatusType? status,
     String? activeReservationId,

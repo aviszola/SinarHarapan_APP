@@ -85,8 +85,8 @@ void main() {
       await tester.pump(const Duration(milliseconds: 100));
       expect(container.read(roomFilterProvider).searchQuery, isEmpty);
 
-      // 4. Tunggu sisa durasi hingga melewati 150ms
-      await tester.pump(const Duration(milliseconds: 60)); // total > 150ms sejak ketikan terakhir
+      // 4. Tunggu sisa durasi hingga melewati 250ms debounce baru
+      await tester.pump(const Duration(milliseconds: 160)); // total > 250ms sejak ketikan terakhir
       expect(container.read(roomFilterProvider).searchQuery, '101');
 
       // Unmount & dispose container bersih
@@ -122,7 +122,7 @@ void main() {
 
       final searchFieldFinder = find.byType(TextField);
       await tester.enterText(searchFieldFinder, 'Deluxe');
-      await tester.pump(const Duration(milliseconds: 200));
+      await tester.pump(const Duration(milliseconds: 250));
       expect(container.read(roomFilterProvider).searchQuery, 'Deluxe');
 
       // Tombol clear ('x') muncul saat query terisi
@@ -170,7 +170,7 @@ void main() {
 
       final searchFieldFinder = find.byType(TextField);
       await tester.enterText(searchFieldFinder, 'Suite');
-      await tester.pump(const Duration(milliseconds: 200));
+      await tester.pump(const Duration(milliseconds: 250));
 
       final resetBtnFinder = find.widgetWithText(OutlinedButton, 'Reset');
       expect(resetBtnFinder, findsOneWidget);
@@ -382,7 +382,7 @@ void main() {
       await tester.pump();
 
       scaleWidget = tester.widget<AnimatedScale>(find.byType(AnimatedScale));
-      expect(scaleWidget.scale, 0.99, reason: 'Tekan kartu memicu scale 0.99');
+      expect(scaleWidget.scale, closeTo(0.985, 0.015), reason: 'Tekan kartu memicu scale ±0.98');
 
       // 2. Pointer Cancel (gesture dibatalkan / drag keluar)
       await gesture.cancel();

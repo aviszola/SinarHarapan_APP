@@ -37,6 +37,9 @@ class _CheckOutDialogState extends ConsumerState<CheckOutDialog> {
   bool _isLate = false;
   int _lateHours = 0;
   bool _sendWaReceipt = true;
+  bool _isSubmitting = false;
+  bool _isSuccess = false;
+  String? _inlineError;
 
   @override
   void initState() {
@@ -67,7 +70,7 @@ class _CheckOutDialogState extends ConsumerState<CheckOutDialog> {
 
     final diffDays = expectedOut.difference(checkIn).inDays;
     final nights = diffDays > 0 ? diffDays : 1;
-    _roomSubtotal = nights * _currentRoom.basePricePerNight;
+    _roomSubtotal = (nights * _currentRoom.basePricePerNight).toDouble();
 
     // Check if late checkout (FR-OUT-05)
     final now = DateTime.now();
@@ -99,6 +102,12 @@ class _CheckOutDialogState extends ConsumerState<CheckOutDialog> {
   double get _grandTotal => _roomSubtotal + _additionalTotal;
 
   void _handleConfirmCheckOut() async {
+    if (_isSubmitting || _isSuccess) return; // In-flight UI guard prevents double-submit
+    setState(() {
+      _isSubmitting = true;
+      _inlineError = null;
+    });
+
     // Pastikan reservasi ID aktif tersedia dari backend
     String? resId = _currentRoom.activeReservationId;
     if (resId == null || resId.isEmpty) {
@@ -115,11 +124,10 @@ class _CheckOutDialogState extends ConsumerState<CheckOutDialog> {
 
     if (resId == null || resId.isEmpty) {
       if (mounted) {
-        AppFeedback.showError(
-          context,
-          title: 'Gagal Check-Out',
-          message: 'Data reservasi aktif tidak ditemukan untuk kamar ini.',
-        );
+        setState(() {
+          _isSubmitting = false;
+          _inlineError = 'Data reservasi aktif tidak ditemukan untuk kamar ini.';
+        });
       }
       return;
     }
@@ -137,21 +145,38 @@ class _CheckOutDialogState extends ConsumerState<CheckOutDialog> {
           );
 
       if (mounted) {
-        Navigator.of(context).pop();
+        setState(() {
+          _isSubmitting = false;
+          _isSuccess = true;
+        });
 
-        if (additional > 0) {
-          _showAdditionalChargesReceiptDialog(_currentRoom, additional);
-        } else {
-          AppFeedback.showSuccess(
-            context,
-            title: 'Check-Out Berhasil',
-            message:
-                'Kamar ${_currentRoom.roomNumber} telah check-out. Status kamar beralih ke Dirty untuk dibersihkan.',
-          );
+        final disableAnimations = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
+        if (!disableAnimations) {
+          await Future.delayed(const Duration(milliseconds: 450));
+        }
+
+        if (mounted) {
+          Navigator.of(context).pop(true);
+
+          if (additional > 0) {
+            _showAdditionalChargesReceiptDialog(_currentRoom, additional);
+          } else {
+            AppFeedback.showSuccess(
+              context,
+              title: 'Check-Out Berhasil',
+              message:
+                  'Kamar ${_currentRoom.roomNumber} telah check-out. Status kamar beralih ke Dirty untuk dibersihkan.',
+            );
+          }
         }
       }
     } on ApiException catch (e) {
       if (mounted) {
+        setState(() {
+          _isSubmitting = false;
+          _isSuccess = false;
+          _inlineError = e.message;
+        });
         AppFeedback.showError(
           context,
           title: 'Gagal Check-Out',
@@ -160,10 +185,16 @@ class _CheckOutDialogState extends ConsumerState<CheckOutDialog> {
       }
     } catch (e) {
       if (mounted) {
+        final errText = e.toString().replaceAll('Exception: ', '');
+        setState(() {
+          _isSubmitting = false;
+          _isSuccess = false;
+          _inlineError = errText;
+        });
         AppFeedback.showError(
           context,
-          title: 'Kesalahan Sistem',
-          message: e.toString().replaceAll('Exception: ', ''),
+          title: 'Gagal Check-Out',
+          message: errText,
         );
       }
     }
@@ -561,6 +592,27 @@ class _CheckOutDialogState extends ConsumerState<CheckOutDialog> {
 
               const Divider(height: 24),
 
+              if (_inlineError != null) ...[
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      const AppIcon.small(AppIcons.alertTriangle, color: AppColors.error),
+                      const SizedBox(width: 6),
+                      Text(
+                        'Gagal: $_inlineError',
+                        style: const TextStyle(
+                          color: AppColors.error,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+
               // Footer - Responsive Wrap
               Wrap(
                 alignment: WrapAlignment.end,
@@ -571,15 +623,21 @@ class _CheckOutDialogState extends ConsumerState<CheckOutDialog> {
                   AppButton(
                     label: 'Batal',
                     variant: AppButtonVariant.outline,
-                    onPressed: () => Navigator.of(context).pop(),
+                    onPressed: (_isSubmitting || _isSuccess) ? null : () => Navigator.of(context).pop(false),
                   ),
                   AppButton(
-                    label: _additionalTotal > 0
-                        ? 'Selesaikan Check-Out & Cetak Struk Tambahan'
-                        : 'Selesaikan Check-Out (Tanpa Biaya)',
+                    label: _isSuccess
+                        ? 'Berhasil Check-Out'
+                        : (_additionalTotal > 0
+                            ? 'Selesaikan Check-Out & Cetak Struk Tambahan'
+                            : 'Selesaikan Check-Out (Tanpa Biaya)'),
                     variant: AppButtonVariant.primary,
-                    icon: _additionalTotal > 0 ? AppIcons.receipt : AppIcons.check,
-                    onPressed: _handleConfirmCheckOut,
+                    icon: _isSuccess ? AppIcons.check : (_additionalTotal > 0 ? AppIcons.receipt : AppIcons.check),
+                    isLoading: _isSubmitting,
+                    loadingLabel: 'Memproses…',
+                    isSuccess: _isSuccess,
+                    successLabel: 'Berhasil Check-Out',
+                    onPressed: (_isSubmitting || _isSuccess) ? null : _handleConfirmCheckOut,
                   ),
                 ],
               ),

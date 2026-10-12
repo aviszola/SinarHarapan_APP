@@ -54,7 +54,7 @@ void main() {
         'nik': nik,
         'fullName': 'Budi Santoso',
         'phoneWhatsapp': '081234567890',
-        'roomId': 'rm-101',
+        'roomId': 'rm-01',
       };
 
       // Reservasi 1 selesai (check-out)
@@ -63,7 +63,7 @@ void main() {
         'nik': nik,
         'fullName': 'Budi Santoso',
         'phoneWhatsapp': '081234567890',
-        'roomId': 'rm-102',
+        'roomId': 'rm-02',
       };
 
       expect(guestData1['nik'], guestData2['nik']);
@@ -74,11 +74,11 @@ void main() {
   group('A5. BUG-BE-05 (Major) — Soft-Delete Kamar', () {
     test('Kamar dengan riwayat reservasi tidak boleh dihapus secara hard-delete', () {
       final activeRoom = RoomModel(
-        id: 'rm-101',
-        roomNumber: '101',
-        roomType: 'Standard',
+        id: 'rm-01',
+        roomNumber: '01',
+        roomType: 'AC',
         floor: 1,
-        basePricePerNight: 250000,
+        basePricePerNight: 170000,
         facilities: const ['AC'],
         status: RoomStatusType.available,
       );
