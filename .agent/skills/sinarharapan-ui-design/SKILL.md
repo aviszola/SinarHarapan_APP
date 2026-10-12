@@ -76,3 +76,20 @@ Skill ini menetapkan panduan desain, token visual, dan standar anti-slop untuk a
 - Exactly one decorative-looking motion is permitted: the split-door reveal on successful login (≤ 700 ms, easeInOutCubic, existing theme colors only).
 - Must be skipped when reduced motion is on, never run on failed login, and never block or double-trigger navigation.
 - No other entrance or decorative animations are allowed without an explicit request.
+
+## Filter Toolbar Pattern
+- Data summary and filter must not be duplicated: summary counts that map to a filter are clickable chips sharing the same state.
+- Active filters must be visible on the control itself (value label + stronger border) and resettable in one action ("Reset (n)").
+- Dropdown menus: anchored directly under the trigger (MenuAnchor), selected item shows a checkmark, options show real counts, keyboard navigable, no default grey Material highlight.
+- Refresh controls show loading, success, and error states and a real "last updated" time; never stuck loading.
+- Search: clear button, debounced (Timer cancelled on clear/reset/dispose), shortcut only if it does not conflict with dialogs.
+- Empty results always show an empty state with a reset action.
+- Layout is planned per breakpoint (≥1400 one row, 900–1399 two rows, <900 stacked); no overflow at any listed width.
+
+
+## Motion Catalog
+- Priority 1 (transactional feedback): action button loading→success state with in-flight guard; room card one-time highlight on successful transaction; status badge cross-fade with fixed size; transactional dialogs fade+scale.
+- Priority 2: staggered/skeleton list load, filter list fade, animated summary numbers, refresh success/error indicator, tab fade.
+- Durations: interactions 120–200 ms; card highlight ≤ 400 ms; login split-door ≤ 700 ms (only exception).
+- Forbidden: infinite/looping animations, motion on OCR/ID verification screens, anything > 300 ms for repeated actions, multiple large animations at once.
+- All motion honors `MediaQuery.maybeDisableAnimationsOf`; controllers and timers are disposed; evidence = frame extraction from a screen recording.

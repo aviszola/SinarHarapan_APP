@@ -56,41 +56,68 @@ class StatusBadge extends StatelessWidget {
       child: AnimatedContainer(
         duration: animDuration,
         curve: Curves.easeInOut,
+        width: compact ? 16 : 90,
+        height: compact ? 16 : 24,
         padding: compact
-            ? const EdgeInsets.all(5)
-            : const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            ? EdgeInsets.zero
+            : const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
         decoration: BoxDecoration(
           color: s.bg,
           borderRadius: AppRadius.roundedSm,
           border: Border.all(color: s.fg.withAlpha(40), width: 1),
         ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            AnimatedContainer(
-              duration: animDuration,
-              curve: Curves.easeInOut,
-              width: 6,
-              height: 6,
-              decoration: BoxDecoration(
-                color: s.fg,
-                shape: BoxShape.circle,
-              ),
-            ),
-            if (!compact) ...[
-              const SizedBox(width: 6),
-              AnimatedDefaultTextStyle(
-                duration: animDuration,
-                curve: Curves.easeInOut,
-                style: AppTextStyles.badge.copyWith(
-                  color: s.fg,
-                  fontSize: 12,
+        child: compact
+            ? Center(
+                child: AnimatedContainer(
+                  duration: animDuration,
+                  curve: Curves.easeInOut,
+                  width: 6,
+                  height: 6,
+                  decoration: BoxDecoration(
+                    color: s.fg,
+                    shape: BoxShape.circle,
+                  ),
                 ),
-                child: Text(label),
+              )
+            : Row(
+                mainAxisSize: MainAxisSize.max,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  AnimatedContainer(
+                    duration: animDuration,
+                    curve: Curves.easeInOut,
+                    width: 6,
+                    height: 6,
+                    decoration: BoxDecoration(
+                      color: s.fg,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                  const SizedBox(width: 5),
+                  Expanded(
+                    child: AnimatedSwitcher(
+                      duration: animDuration,
+                      switchInCurve: Curves.easeIn,
+                      switchOutCurve: Curves.easeOut,
+                      transitionBuilder: (child, animation) => FadeTransition(
+                        opacity: animation,
+                        child: child,
+                      ),
+                      child: Text(
+                        label,
+                        key: ValueKey('status_badge_${status.name}_$label'),
+                        style: AppTextStyles.badge.copyWith(
+                          color: s.fg,
+                          fontSize: 12,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ),
+                ],
               ),
-            ],
-          ],
-        ),
       ),
     );
   }

@@ -27,37 +27,8 @@ class RoomGridScreen extends ConsumerStatefulWidget {
   ConsumerState<RoomGridScreen> createState() => _RoomGridScreenState();
 }
 
-class _RoomGridScreenState extends ConsumerState<RoomGridScreen>
-    with SingleTickerProviderStateMixin {
+class _RoomGridScreenState extends ConsumerState<RoomGridScreen> {
   bool _isRefreshing = false;
-  bool _hasInitialAnimated = false;
-
-  late final AnimationController _entranceController;
-  late final Animation<double> _fadeAnim;
-  late final Animation<Offset> _slideAnim;
-
-  @override
-  void initState() {
-    super.initState();
-    _entranceController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 200),
-    );
-    _fadeAnim = CurvedAnimation(
-      parent: _entranceController,
-      curve: Curves.easeOutCubic,
-    );
-    _slideAnim = Tween<Offset>(
-      begin: const Offset(0, 0.02), // Geser vertikal sangat halus ~4-6px
-      end: Offset.zero,
-    ).animate(_fadeAnim);
-  }
-
-  @override
-  void dispose() {
-    _entranceController.dispose();
-    super.dispose();
-  }
 
   Future<void> _handleRefresh() async {
     if (_isRefreshing) return;
@@ -88,11 +59,11 @@ class _RoomGridScreenState extends ConsumerState<RoomGridScreen>
       barrierDismissible: barrierDismissible,
       barrierLabel: 'Tutup Dialog',
       barrierColor: Colors.black54,
-      transitionDuration: const Duration(milliseconds: 180),
+      transitionDuration: const Duration(milliseconds: 150),
       pageBuilder: (ctx, _, _) => builder(ctx),
       transitionBuilder: (ctx, anim1, _, child) {
         final curveValue = Curves.easeOutCubic.transform(anim1.value);
-        final scale = 0.985 + (0.015 * curveValue);
+        final scale = 0.96 + (0.04 * curveValue);
         return Opacity(
           opacity: anim1.value,
           child: Transform.scale(
@@ -104,19 +75,59 @@ class _RoomGridScreenState extends ConsumerState<RoomGridScreen>
     );
   }
 
-  void _handleRoomTap(RoomModel room) {
+  void _handleRoomTap(RoomModel room) async {
+    final highlightNotifier = ref.read(highlightedRoomIdProvider.notifier);
+
     if (room.isAvailable) {
-      _showRoomDialog(
+      final isSuccess = await _showRoomDialog<bool>(
         context: context,
         barrierDismissible: false,
         builder: (_) => CheckInModal(room: room),
       );
+
+      if (isSuccess == true && mounted) {
+        final disableAnimations = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
+        if (!disableAnimations) {
+          // Tunggu transisi exit dialog 150ms selesai
+          await Future.delayed(const Duration(milliseconds: 150));
+        }
+
+        if (mounted) {
+          highlightNotifier.state = room.id;
+          Future.delayed(const Duration(milliseconds: 500), () {
+            if (highlightNotifier.state == room.id) {
+              highlightNotifier.state = null;
+            }
+          });
+          AppFeedback.showSuccess(
+            context,
+            title: 'Check-in Berhasil & Lunas',
+            message: 'Kamar ${room.roomNumber} berhasil check-in.',
+          );
+        }
+      }
     } else if (room.isOccupied) {
-      _showRoomDialog(
+      final isSuccess = await _showRoomDialog<bool>(
         context: context,
         barrierDismissible: false,
         builder: (_) => CheckOutDialog(room: room),
       );
+
+      if (isSuccess == true && mounted) {
+        final disableAnimations = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
+        if (!disableAnimations) {
+          await Future.delayed(const Duration(milliseconds: 150));
+        }
+
+        if (mounted) {
+          highlightNotifier.state = room.id;
+          Future.delayed(const Duration(milliseconds: 500), () {
+            if (highlightNotifier.state == room.id) {
+              highlightNotifier.state = null;
+            }
+          });
+        }
+      }
     } else if (room.isDirty) {
       _showDirtyDialog(room);
     } else if (room.isMaintenance) {
@@ -257,44 +268,70 @@ class _RoomGridScreenState extends ConsumerState<RoomGridScreen>
                 ),
               ),
               data: (_) {
-                if (!_hasInitialAnimated) {
-                  _hasInitialAnimated = true;
-                  WidgetsBinding.instance.addPostFrameCallback((_) {
-                    if (!mounted) return;
-                    if (MediaQuery.maybeDisableAnimationsOf(context) ?? false) {
-                      _entranceController.value = 1.0;
-                    } else {
-                      _entranceController.forward();
-                    }
-                  });
-                }
+                final disableAnimations = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
+                final filter = ref.watch(roomFilterProvider);
 
-                if (filteredRooms.isEmpty) {
-                  return Center(
-                    child: EmptyStateWidget(
-                      icon: AppIcons.room,
-                      title: 'Tidak Ada Kamar yang Sesuai',
-                      message: 'Tidak ada unit kamar yang cocok dengan kriteria pencarian atau filter yang dipilih.',
-                      action: OutlinedButton(
-                        onPressed: () {
-                          ref.read(roomFilterProvider.notifier).state = const RoomFilterState();
-                        },
-                        child: const Text('Reset Filter'),
-                      ),
-                    ),
-                  );
-                }
-
-                return FadeTransition(
-                  opacity: _fadeAnim,
-                  child: SlideTransition(
-                    position: _slideAnim,
-                    child: _RoomGrid(
-                      rooms: filteredRooms,
-                      onTap: _handleRoomTap,
-                      onRefresh: _handleRefresh,
-                    ),
+                return AnimatedSwitcher(
+                  duration: disableAnimations
+                      ? Duration.zero
+                      : const Duration(milliseconds: 150),
+                  switchInCurve: Curves.easeIn,
+                  switchOutCurve: Curves.easeOut,
+                  layoutBuilder: (currentChild, previousChildren) => Stack(
+                    fit: StackFit.expand,
+                    alignment: Alignment.center,
+                    children: [
+                      ...previousChildren,
+                      ?currentChild,
+                    ],
                   ),
+                  transitionBuilder: (child, animation) => FadeTransition(
+                    opacity: animation,
+                    child: child,
+                  ),
+                  child: filteredRooms.isEmpty
+                      ? Center(
+                          key: const ValueKey('empty_room_state'),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 48),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  'Tidak ada kamar yang cocok.',
+                                  style: AppTextStyles.bodyMedium.copyWith(
+                                    color: AppColors.textSecondary,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                                const SizedBox(height: 16),
+                                OutlinedButton(
+                                  style: OutlinedButton.styleFrom(
+                                    side: const BorderSide(color: AppColors.brandNavy, width: 1),
+                                    foregroundColor: AppColors.brandNavy,
+                                    shape: const RoundedRectangleBorder(
+                                      borderRadius: AppRadius.roundedSm,
+                                    ),
+                                  ),
+                                  onPressed: () {
+                                    ref.read(roomFilterProvider.notifier).state =
+                                        const RoomFilterState();
+                                  },
+                                  child: const Text('Reset filter'),
+                                ),
+                              ],
+                            ),
+                          ),
+                        )
+                      : _RoomGrid(
+                          key: ValueKey(
+                            'room_grid_${filter.searchQuery}_${filter.roomType}_${filter.floor}_${filter.status}_${filteredRooms.length}',
+                          ),
+                          rooms: filteredRooms,
+                          onTap: _handleRoomTap,
+                          onRefresh: _handleRefresh,
+                        ),
                 );
               },
             ),
@@ -306,19 +343,22 @@ class _RoomGridScreenState extends ConsumerState<RoomGridScreen>
 }
 
 // ── Room Grid Berdasarkan Lantai dengan MaxCrossAxisExtent ───────────
-class _RoomGrid extends StatelessWidget {
+class _RoomGrid extends ConsumerWidget {
   final List<RoomModel> rooms;
   final void Function(RoomModel) onTap;
   final Future<void> Function() onRefresh;
 
   const _RoomGrid({
+    super.key,
     required this.rooms,
     required this.onTap,
     required this.onRefresh,
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final highlightedId = ref.watch(highlightedRoomIdProvider);
+
     // Kelompokkan kamar berdasarkan lantai
     final Map<int, List<RoomModel>> roomsByFloor = {};
     for (final r in rooms) {
@@ -385,9 +425,12 @@ class _RoomGrid extends StatelessWidget {
                   ),
                   itemCount: floorRooms.length,
                   itemBuilder: (context, index) {
+                    final room = floorRooms[index];
                     return RoomCard(
-                      room: floorRooms[index],
-                      onTap: () => onTap(floorRooms[index]),
+                      key: ValueKey('room_card_${room.id}'),
+                      room: room,
+                      isHighlighted: highlightedId == room.id,
+                      onTap: () => onTap(room),
                     );
                   },
                 ),
