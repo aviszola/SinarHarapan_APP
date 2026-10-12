@@ -15,39 +15,39 @@ class _FakeRoomRepo extends RoomRepository {
   _FakeRoomRepo([this.mockRooms = const [
     RoomModel(
       id: '1',
-      roomNumber: '101',
-      roomType: 'Standard',
+      roomNumber: '01',
+      roomType: 'AC',
       floor: 1,
-      basePricePerNight: 250000,
+      basePricePerNight: 170000,
       facilities: ['AC', 'WiFi'],
       status: RoomStatusType.available,
     ),
     RoomModel(
       id: '2',
-      roomNumber: '102',
-      roomType: 'Deluxe',
+      roomNumber: '02',
+      roomType: 'AC Twin',
       floor: 1,
-      basePricePerNight: 350000,
+      basePricePerNight: 200000,
       facilities: ['AC', 'WiFi', 'TV'],
       status: RoomStatusType.occupied,
       activeGuestName: 'Budi Santoso',
     ),
     RoomModel(
       id: '3',
-      roomNumber: '201',
-      roomType: 'Deluxe',
+      roomNumber: '06',
+      roomType: 'AC',
       floor: 2,
-      basePricePerNight: 350000,
+      basePricePerNight: 170000,
       facilities: ['AC', 'WiFi', 'TV'],
       status: RoomStatusType.dirty,
     ),
     RoomModel(
       id: '4',
-      roomNumber: '202',
-      roomType: 'Family',
+      roomNumber: '07',
+      roomType: 'AC Twin',
       floor: 2,
-      basePricePerNight: 500000,
-      facilities: ['AC', 'WiFi', 'TV', 'Bathtub'],
+      basePricePerNight: 200000,
+      facilities: ['AC', 'WiFi', 'TV'],
       status: RoomStatusType.maintenance,
     ),
   ]]);
@@ -153,10 +153,10 @@ void main() {
       final singleStatusRepo = _FakeRoomRepo([
         const RoomModel(
           id: '1',
-          roomNumber: '101',
-          roomType: 'Standard',
+          roomNumber: '01',
+          roomType: 'AC',
           floor: 1,
-          basePricePerNight: 250000,
+          basePricePerNight: 170000,
           facilities: ['WiFi'],
           status: RoomStatusType.available,
         ),
@@ -219,17 +219,17 @@ void main() {
       await tester.tap(typeBtnFinder);
       await tester.pumpAndSettle();
 
-      // Opsi Deluxe tampil di dalam menu
-      final deluxeFinder = find.widgetWithText(MenuItemButton, 'Deluxe');
-      expect(deluxeFinder, findsOneWidget);
+      // Opsi AC Twin tampil di dalam menu
+      final acTwinFinder = find.widgetWithText(MenuItemButton, 'AC Twin');
+      expect(acTwinFinder, findsOneWidget);
 
-      // Pilih Deluxe
-      await tester.tap(deluxeFinder);
+      // Pilih AC Twin
+      await tester.tap(acTwinFinder);
       await tester.pumpAndSettle();
 
-      // Label tombol trigger berubah menjadi "Tipe: Deluxe"
-      expect(find.text('Tipe: Deluxe'), findsOneWidget);
-      expect(container.read(roomFilterProvider).roomType, 'Deluxe');
+      // Label tombol trigger berubah menjadi "Tipe: AC Twin"
+      expect(find.text('Tipe: AC Twin'), findsOneWidget);
+      expect(container.read(roomFilterProvider).roomType, 'AC Twin');
 
       container.dispose();
     });
@@ -300,10 +300,10 @@ void main() {
       // Awalnya tidak ada filter aktif -> tombol Reset tidak muncul
       expect(find.widgetWithText(OutlinedButton, 'Reset'), findsNothing);
 
-      // Aktifkan filter tipe Deluxe (1 filter)
+      // Aktifkan filter tipe AC Twin (1 filter)
       await tester.tap(find.text('Semua Tipe'));
       await tester.pumpAndSettle();
-      await tester.tap(find.widgetWithText(MenuItemButton, 'Deluxe'));
+      await tester.tap(find.widgetWithText(MenuItemButton, 'AC Twin'));
       await tester.pumpAndSettle();
 
       // Tombol Reset (1) muncul
@@ -511,7 +511,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Tidak ada kamar yang cocok.'), findsNothing);
-      expect(find.text('Lantai 1'), findsOneWidget);
+      expect(find.text('Lantai 1 · 2 kamar'), findsOneWidget);
 
       container.dispose();
     });

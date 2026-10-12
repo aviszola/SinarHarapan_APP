@@ -183,9 +183,9 @@ class _RoomCardState extends State<RoomCard> with SingleTickerProviderStateMixin
                                         Text(
                                           'Kamar ${room.roomNumber}',
                                           style: AppTextStyles.titleSmall.copyWith(
-                                            fontWeight: FontWeight.w700,
+                                            fontWeight: FontWeight.w800,
                                             color: AppColors.brandNavyDark,
-                                            fontSize: 15,
+                                            fontSize: 16,
                                             fontFeatures: const [FontFeature.tabularFigures()],
                                           ),
                                           maxLines: 1,
@@ -194,7 +194,9 @@ class _RoomCardState extends State<RoomCard> with SingleTickerProviderStateMixin
                                       ],
                                     ),
                                     Text(
-                                      '${room.roomType} · Lt. ${room.floor}',
+                                      room.facilities.isNotEmpty
+                                          ? room.facilities.join(', ')
+                                          : '${room.roomType} · Lt. ${room.floor}',
                                       style: AppTextStyles.caption.copyWith(
                                         color: AppColors.textSecondary,
                                         fontSize: 11,
@@ -204,7 +206,7 @@ class _RoomCardState extends State<RoomCard> with SingleTickerProviderStateMixin
                                     ),
                                     Text(
                                       room.isAvailable
-                                          ? _currFmt.format(room.basePricePerNight)
+                                          ? '${_currFmt.format(room.basePricePerNight)} / malam'
                                           : (room.activeGuestName ?? _getStatusName(room.status)),
                                       style: AppTextStyles.caption.copyWith(
                                         fontWeight: FontWeight.w700,
@@ -271,9 +273,9 @@ class _RoomCardState extends State<RoomCard> with SingleTickerProviderStateMixin
                                             Text(
                                               'Kamar ${room.roomNumber}',
                                               style: AppTextStyles.titleSmall.copyWith(
-                                                fontWeight: FontWeight.w700,
+                                                fontWeight: FontWeight.w800,
                                                 color: AppColors.brandNavyDark,
-                                                fontSize: 16,
+                                                fontSize: 18,
                                                 fontFeatures: const [FontFeature.tabularFigures()],
                                               ),
                                             ),
@@ -408,22 +410,30 @@ class _RoomCardState extends State<RoomCard> with SingleTickerProviderStateMixin
     }
 
     if (room.isAvailable) {
+      final facilityText = room.facilities.isNotEmpty
+          ? room.facilities.join(', ')
+          : '${room.roomType} · Lt. ${room.floor}';
+
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Text(
-            'Tarif Per Malam',
+            facilityText,
             style: AppTextStyles.caption.copyWith(
-              color: AppColors.textMuted,
+              color: AppColors.textSecondary,
+              fontWeight: FontWeight.w500,
             ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
           const SizedBox(height: 2),
           Text(
-            _currFmt.format(room.basePricePerNight),
+            '${_currFmt.format(room.basePricePerNight)} / malam',
             style: AppTextStyles.numberLarge.copyWith(
               color: AppColors.brandNavy,
-              fontSize: 17,
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
             ),
           ),
         ],

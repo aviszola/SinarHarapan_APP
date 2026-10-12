@@ -70,7 +70,7 @@ class _CheckOutDialogState extends ConsumerState<CheckOutDialog> {
 
     final diffDays = expectedOut.difference(checkIn).inDays;
     final nights = diffDays > 0 ? diffDays : 1;
-    _roomSubtotal = nights * _currentRoom.basePricePerNight;
+    _roomSubtotal = (nights * _currentRoom.basePricePerNight).toDouble();
 
     // Check if late checkout (FR-OUT-05)
     final now = DateTime.now();

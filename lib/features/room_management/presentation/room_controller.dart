@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/config/app_config.dart';
 import '../../../core/network/api_client.dart';
 import '../data/room_repository.dart';
+import '../data/room_seed_data.dart';
 import '../domain/room_model.dart';
 
 /// Polling interval GET /rooms/status — endpoint.md §3.2 & PRD FR-ROOM-07: tiap 15 detik
@@ -199,7 +200,7 @@ class RoomListNotifier extends StateNotifier<AsyncValue<List<RoomModel>>> {
     required String roomNumber,
     required String roomType,
     required int floor,
-    required double basePrice,
+    required int basePrice,
     required List<String> facilities,
   }) async {
     await _repository.addRoom(
@@ -217,7 +218,7 @@ class RoomListNotifier extends StateNotifier<AsyncValue<List<RoomModel>>> {
     required String roomNumber,
     required String roomType,
     required int floor,
-    required double basePrice,
+    required int basePrice,
     required List<String> facilities,
   }) async {
     await _repository.updateRoom(
@@ -265,7 +266,7 @@ final filteredRoomsProvider = Provider<List<RoomModel>>((ref) {
       if (filter.floor != 0 && room.floor != filter.floor) return false;
       if (filter.status != null && room.status != filter.status) return false;
       return true;
-    }).toList(),
+    }).toList()..sort(compareRooms),
     loading: () => [],
     error: (_, _) => [],
   );
@@ -292,7 +293,7 @@ final roomTypeCountsProvider = Provider<Map<String, int>>((ref) {
   final rooms = ref.watch(roomListProvider).asData?.value ?? [];
   final filter = ref.watch(roomFilterProvider);
 
-  final types = ['ALL', 'Standard', 'Superior', 'Deluxe', 'Family'];
+  final types = kRealRoomFilterTypes;
   final result = <String, int>{for (final t in types) t: 0};
 
   for (final room in rooms) {
@@ -316,7 +317,7 @@ final floorCountsProvider = Provider<Map<int, int>>((ref) {
   final rooms = ref.watch(roomListProvider).asData?.value ?? [];
   final filter = ref.watch(roomFilterProvider);
 
-  final floors = [0, 1, 2, 3];
+  final floors = kRealRoomFloors;
   final result = <int, int>{for (final f in floors) f: 0};
 
   for (final room in rooms) {

@@ -5,22 +5,22 @@ import 'package:sinarharapan_app/features/room_management/presentation/room_cont
 
 class TestRoomRepository extends RoomRepository {
   final List<RoomModel> _rooms = [
-    RoomModel(
-      id: 'rm-101',
-      roomNumber: '101',
-      roomType: 'Standard',
+    const RoomModel(
+      id: 'rm-01',
+      roomNumber: '01',
+      roomType: 'AC',
       floor: 1,
-      basePricePerNight: 250000,
-      facilities: ['AC', 'TV', 'WiFi'],
+      basePricePerNight: 170000,
+      facilities: ['AC', 'WiFi', 'TV', 'Kamar Mandi Dalam'],
       status: RoomStatusType.available,
     ),
-    RoomModel(
-      id: 'rm-102',
-      roomNumber: '102',
-      roomType: 'Standard',
+    const RoomModel(
+      id: 'rm-02',
+      roomNumber: '02',
+      roomType: 'AC',
       floor: 1,
-      basePricePerNight: 250000,
-      facilities: ['AC', 'TV', 'WiFi'],
+      basePricePerNight: 170000,
+      facilities: ['AC', 'WiFi', 'TV', 'Kamar Mandi Dalam'],
       status: RoomStatusType.occupied,
       activeGuestName: 'Agus Santoso',
       activeGuestPhone: '081234567890',
@@ -37,7 +37,7 @@ class TestRoomRepository extends RoomRepository {
     required String roomNumber,
     required String roomType,
     required int floor,
-    required double basePricePerNight,
+    required int basePricePerNight,
     required List<String> facilities,
   }) async {
     if (_rooms.any((r) => r.roomNumber == roomNumber)) {
@@ -62,7 +62,7 @@ class TestRoomRepository extends RoomRepository {
     String? roomNumber,
     String? roomType,
     int? floor,
-    double? basePricePerNight,
+    int? basePricePerNight,
     List<String>? facilities,
     String? status,
   }) async {
@@ -108,7 +108,7 @@ void main() {
       expect(notifier.state.hasValue, true);
       final rooms = notifier.state.value!;
       expect(rooms.isNotEmpty, true);
-      expect(rooms.any((r) => r.roomNumber == '101'), true);
+      expect(rooms.any((r) => r.roomNumber == '01'), true);
     });
 
     test('Add room successfully adds new room to inventory', () async {
@@ -116,17 +116,17 @@ void main() {
 
       await notifier.addRoom(
         roomNumber: uniqueRoomNumber,
-        roomType: 'Deluxe',
-        floor: 3,
-        basePrice: 480000,
+        roomType: 'AC Twin',
+        floor: 2,
+        basePrice: 200000,
         facilities: ['AC', 'WiFi Cepat', 'Smart TV 50"'],
       );
 
       final rooms = notifier.state.value!;
       final addedRoom = rooms.firstWhere((r) => r.roomNumber == uniqueRoomNumber);
-      expect(addedRoom.roomType, 'Deluxe');
-      expect(addedRoom.floor, 3);
-      expect(addedRoom.basePricePerNight, 480000);
+      expect(addedRoom.roomType, 'AC Twin');
+      expect(addedRoom.floor, 2);
+      expect(addedRoom.basePricePerNight, 200000);
       expect(addedRoom.status, RoomStatusType.available);
       expect(addedRoom.facilities, contains('Smart TV 50"'));
     });
@@ -134,10 +134,10 @@ void main() {
     test('Add room with duplicate number throws Exception', () async {
       expect(
         () => notifier.addRoom(
-          roomNumber: '101', // Already exists
-          roomType: 'Standard',
+          roomNumber: '01', // Already exists
+          roomType: 'AC',
           floor: 1,
-          basePrice: 250000,
+          basePrice: 170000,
           facilities: ['AC'],
         ),
         throwsA(isA<Exception>()),
@@ -146,21 +146,21 @@ void main() {
 
     test('Edit room successfully updates room details', () async {
       await notifier.loadRooms();
-      final targetRoom = notifier.state.value!.firstWhere((r) => r.roomNumber == '101');
+      final targetRoom = notifier.state.value!.firstWhere((r) => r.roomNumber == '01');
 
       await notifier.editRoom(
         roomId: targetRoom.id,
-        roomNumber: '101',
-        roomType: 'Superior',
+        roomNumber: '01',
+        roomType: 'AC Twin',
         floor: 1,
-        basePrice: 350000,
-        facilities: ['AC', 'Bathtub', 'WiFi Cepat'],
+        basePrice: 200000,
+        facilities: ['AC', 'WiFi Cepat'],
       );
 
       final updatedRoom = notifier.state.value!.firstWhere((r) => r.id == targetRoom.id);
-      expect(updatedRoom.roomType, 'Superior');
-      expect(updatedRoom.basePricePerNight, 350000);
-      expect(updatedRoom.facilities, contains('Bathtub'));
+      expect(updatedRoom.roomType, 'AC Twin');
+      expect(updatedRoom.basePricePerNight, 200000);
+      expect(updatedRoom.facilities, contains('WiFi Cepat'));
     });
 
     test('Toggle maintenance sets available room to maintenance and back', () async {

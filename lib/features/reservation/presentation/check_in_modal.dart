@@ -121,7 +121,7 @@ class _CheckInModalState extends ConsumerState<CheckInModal> {
     if (parsed != null && parsed > 0) {
       return parsed;
     }
-    return widget.room.basePricePerNight * _totalNights;
+    return (widget.room.basePricePerNight * _totalNights).toDouble();
   }
 
   // Capture image dari kamera atau galeri untuk OCR

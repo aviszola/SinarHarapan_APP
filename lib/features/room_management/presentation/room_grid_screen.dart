@@ -14,6 +14,7 @@ import '../../reservation/presentation/check_in_modal.dart';
 import '../../shared_widgets/app_feedback.dart';
 import '../../shared_widgets/app_header.dart';
 import '../../shared_widgets/empty_state.dart';
+import '../data/room_seed_data.dart';
 import '../domain/room_model.dart';
 import 'room_card.dart';
 import 'room_controller.dart';
@@ -374,7 +375,7 @@ class _RoomGrid extends ConsumerWidget {
         itemCount: sortedFloors.length,
         itemBuilder: (context, floorIndex) {
           final floor = sortedFloors[floorIndex];
-          final floorRooms = roomsByFloor[floor]!;
+          final floorRooms = roomsByFloor[floor]!..sort(compareRooms);
 
           return Padding(
             padding: const EdgeInsets.only(bottom: 24),
@@ -384,32 +385,12 @@ class _RoomGrid extends ConsumerWidget {
                 // Header Lantai
                 Padding(
                   padding: const EdgeInsets.only(bottom: 12),
-                  child: Row(
-                    children: [
-                      Text(
-                        'Lantai $floor',
-                        style: AppTextStyles.titleSmall.copyWith(
-                          color: AppColors.brandNavyDark,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: AppColors.bgSubtle,
-                          borderRadius: AppRadius.roundedSm,
-                          border: Border.all(color: AppColors.border, width: 1),
-                        ),
-                        child: Text(
-                          '${floorRooms.length} Kamar',
-                          style: AppTextStyles.caption.copyWith(
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
-                      ),
-                    ],
+                  child: Text(
+                    'Lantai $floor · ${floorRooms.length} kamar',
+                    style: AppTextStyles.titleSmall.copyWith(
+                      color: AppColors.brandNavyDark,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                 ),
 

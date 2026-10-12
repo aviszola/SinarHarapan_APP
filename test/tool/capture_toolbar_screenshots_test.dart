@@ -36,41 +36,41 @@ class _FakeAuthRepo extends AuthRepository {
 class _FakeRoomRepo extends RoomRepository {
   final List<RoomModel> _rooms = [
     const RoomModel(
-      id: 'rm-101',
-      roomNumber: '101',
-      roomType: 'Deluxe',
+      id: 'rm-01',
+      roomNumber: '01',
+      roomType: 'AC',
       floor: 1,
-      basePricePerNight: 350000,
+      basePricePerNight: 170000,
       facilities: ['AC', 'WiFi', 'TV'],
       status: RoomStatusType.available,
     ),
     const RoomModel(
-      id: 'rm-102',
-      roomNumber: '102',
-      roomType: 'Standard',
+      id: 'rm-02',
+      roomNumber: '02',
+      roomType: 'AC',
       floor: 1,
-      basePricePerNight: 250000,
+      basePricePerNight: 170000,
       facilities: ['AC', 'WiFi'],
       status: RoomStatusType.occupied,
       activeGuestName: 'Budi Santoso',
       activeGuestPhone: '081234567890',
     ),
     const RoomModel(
-      id: 'rm-201',
-      roomNumber: '201',
-      roomType: 'Deluxe',
+      id: 'rm-06',
+      roomNumber: '06',
+      roomType: 'AC',
       floor: 2,
-      basePricePerNight: 350000,
+      basePricePerNight: 170000,
       facilities: ['AC', 'WiFi', 'TV'],
       status: RoomStatusType.dirty,
     ),
     const RoomModel(
-      id: 'rm-202',
-      roomNumber: '202',
-      roomType: 'Family Suite',
+      id: 'rm-07',
+      roomNumber: '07',
+      roomType: 'AC Twin',
       floor: 2,
-      basePricePerNight: 500000,
-      facilities: ['AC', 'WiFi', 'TV', 'Kulkas'],
+      basePricePerNight: 200000,
+      facilities: ['AC', 'WiFi', 'TV'],
       status: RoomStatusType.maintenance,
     ),
   ];
@@ -219,9 +219,9 @@ void main() {
         ],
       );
       container.read(roomFilterProvider.notifier).state = const RoomFilterState(
-        roomType: 'Deluxe',
+        roomType: 'AC',
         status: RoomStatusType.available,
-        searchQuery: '10',
+        searchQuery: '0',
       );
 
       await captureScreen(

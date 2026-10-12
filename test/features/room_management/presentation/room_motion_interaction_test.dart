@@ -30,20 +30,20 @@ class _MotionTestRoomRepo extends RoomRepository {
 
   final List<RoomModel> _rooms = [
     const RoomModel(
-      id: 'rm-101',
-      roomNumber: '101',
-      roomType: 'Standard',
+      id: 'rm-01',
+      roomNumber: '01',
+      roomType: 'AC',
       floor: 1,
-      basePricePerNight: 250000,
+      basePricePerNight: 170000,
       facilities: ['AC', 'WiFi'],
       status: RoomStatusType.available,
     ),
     const RoomModel(
-      id: 'rm-102',
-      roomNumber: '102',
-      roomType: 'Deluxe',
+      id: 'rm-02',
+      roomNumber: '02',
+      roomType: 'AC',
       floor: 1,
-      basePricePerNight: 350000,
+      basePricePerNight: 170000,
       facilities: ['AC', 'WiFi', 'TV'],
       status: RoomStatusType.occupied,
       activeReservationId: 'res-999',
@@ -252,11 +252,11 @@ void main() {
 
       final dialog = InvoicePreviewDialog(
         room: const RoomModel(
-          id: 'rm-101',
-          roomNumber: '101',
-          roomType: 'Standard',
+          id: 'rm-01',
+          roomNumber: '01',
+          roomType: 'AC',
           floor: 1,
-          basePricePerNight: 250000,
+          basePricePerNight: 170000,
           facilities: ['AC'],
           status: RoomStatusType.available,
           activeGuestName: 'Dewi Lestari',
@@ -344,8 +344,8 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      // 1. Klik kartu kamar 101 (Tersedia)
-      final roomCardFinder = find.byKey(const ValueKey('room_card_rm-101'));
+      // 1. Klik kartu kamar 01 (Tersedia)
+      final roomCardFinder = find.byKey(const ValueKey('room_card_rm-01'));
       expect(roomCardFinder, findsOneWidget);
       await tester.tap(roomCardFinder);
       await tester.pumpAndSettle();
@@ -440,7 +440,7 @@ void main() {
       await tester.pump(const Duration(milliseconds: 300));
 
       // Buka check in modal
-      await tester.tap(find.byKey(const ValueKey('room_card_rm-101')));
+      await tester.tap(find.byKey(const ValueKey('room_card_rm-01')));
       await tester.pump(const Duration(milliseconds: 300));
 
       // Isi data form di CheckInModal
@@ -512,7 +512,7 @@ void main() {
       );
       await tester.pump(const Duration(milliseconds: 300));
 
-      await tester.tap(find.byKey(const ValueKey('room_card_rm-101')));
+      await tester.tap(find.byKey(const ValueKey('room_card_rm-01')));
       await tester.pump(const Duration(milliseconds: 300));
 
       final modalFields3 = find.descendant(of: find.byType(CheckInModal), matching: find.byType(TextField));
@@ -629,9 +629,9 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      // Kartu kamar 101 dan 102 harus ada dengan ValueKey stabil
-      expect(find.byKey(const ValueKey('room_card_rm-101')), findsOneWidget);
-      expect(find.byKey(const ValueKey('room_card_rm-102')), findsOneWidget);
+      // Kartu kamar 01 dan 02 harus ada dengan ValueKey stabil
+      expect(find.byKey(const ValueKey('room_card_rm-01')), findsOneWidget);
+      expect(find.byKey(const ValueKey('room_card_rm-02')), findsOneWidget);
 
       // Trigger silent refresh
       await container.read(roomListProvider.notifier).loadRooms(silent: true);
@@ -639,7 +639,7 @@ void main() {
 
       // Skeleton loader TIDAK boleh muncul karena silent: true
       expect(find.byType(CircularProgressIndicator), findsNothing);
-      expect(find.byKey(const ValueKey('room_card_rm-101')), findsOneWidget);
+      expect(find.byKey(const ValueKey('room_card_rm-01')), findsOneWidget);
 
       container.dispose();
     });
@@ -728,8 +728,8 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      // Tap kamar 101 (Available) untuk membuka CheckInModal
-      await tester.tap(find.text('Kamar 101'));
+      // Tap kamar 01 (Available) untuk membuka CheckInModal
+      await tester.tap(find.text('Kamar 01'));
       await tester.pumpAndSettle();
 
       expect(find.byType(CheckInModal), findsOneWidget);

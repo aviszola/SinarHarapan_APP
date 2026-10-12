@@ -35,20 +35,20 @@ class _FakeAuthRepo extends AuthRepository {
 class _FakeRoomRepo extends RoomRepository {
   final List<RoomModel> _rooms = [
     const RoomModel(
-      id: 'rm-101',
-      roomNumber: '101',
-      roomType: 'Deluxe',
+      id: 'rm-01',
+      roomNumber: '01',
+      roomType: 'AC',
       floor: 1,
-      basePricePerNight: 350000,
+      basePricePerNight: 170000,
       facilities: ['AC', 'WiFi', 'TV'],
       status: RoomStatusType.available,
     ),
     const RoomModel(
-      id: 'rm-102',
-      roomNumber: '102',
-      roomType: 'Standard',
+      id: 'rm-02',
+      roomNumber: '02',
+      roomType: 'AC',
       floor: 1,
-      basePricePerNight: 250000,
+      basePricePerNight: 170000,
       facilities: ['AC', 'WiFi'],
       status: RoomStatusType.occupied,
       activeGuestName: 'Budi Santoso',

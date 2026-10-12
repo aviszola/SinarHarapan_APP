@@ -706,10 +706,9 @@ class _RoomFilterBarState extends ConsumerState<RoomFilterBar>
 
     final items = [
       (value: 'ALL', label: 'Semua Tipe'),
-      (value: 'Standard', label: 'Standard'),
-      (value: 'Superior', label: 'Superior'),
-      (value: 'Deluxe', label: 'Deluxe'),
-      (value: 'Family', label: 'Family'),
+      (value: 'Kipas', label: 'Kipas'),
+      (value: 'AC', label: 'AC'),
+      (value: 'AC Twin', label: 'AC Twin'),
     ];
 
     return MenuAnchor(
@@ -771,7 +770,6 @@ class _RoomFilterBarState extends ConsumerState<RoomFilterBar>
       (value: 0, label: 'Semua Lantai'),
       (value: 1, label: 'Lantai 1'),
       (value: 2, label: 'Lantai 2'),
-      (value: 3, label: 'Lantai 3'),
     ];
 
     return MenuAnchor(
