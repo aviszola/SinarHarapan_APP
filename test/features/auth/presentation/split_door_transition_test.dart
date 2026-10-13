@@ -22,10 +22,10 @@ class _FakeAuthRepo extends AuthRepository {
   @override
   Future<UserModel> login({required String username, required String password}) async {
     loginCalls++;
-    if (shouldSucceed && username == 'resepsionis01' && password == 'password123') {
+    if (shouldSucceed && username == 'test_receptionist' && password == 'password123') {
       return const UserModel(
         id: 'usr-1',
-        username: 'resepsionis01',
+        username: 'test_receptionist',
         fullName: 'Siti Rahmawati',
         role: UserRole.receptionist,
         token: 'token-mock',
@@ -40,7 +40,7 @@ class _FakeAuthRepo extends AuthRepository {
     if (shouldSucceed) {
       return UserModel(
         id: 'usr-1',
-        username: role == UserRole.manager ? 'manager01' : 'resepsionis01',
+        username: role == UserRole.manager ? 'test_manager' : 'test_receptionist',
         fullName: role == UserRole.manager ? 'Budi Santoso' : 'Siti Rahmawati',
         role: role,
         token: 'token-mock',
@@ -219,7 +219,7 @@ void main() {
       await tester.pumpAndSettle();
 
       final textFields = find.byType(TextField);
-      await tester.enterText(textFields.first, 'resepsionis01');
+      await tester.enterText(textFields.first, 'test_receptionist');
       await tester.enterText(textFields.last, 'password123');
       await tester.pump();
 
@@ -256,7 +256,7 @@ void main() {
       await tester.pumpAndSettle();
 
       final textFields = find.byType(TextField);
-      await tester.enterText(textFields.first, 'resepsionis01');
+      await tester.enterText(textFields.first, 'test_receptionist');
       await tester.enterText(textFields.last, 'password123');
       await tester.pump();
 

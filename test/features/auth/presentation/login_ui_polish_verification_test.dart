@@ -24,10 +24,10 @@ class _FakeAuthRepo extends AuthRepository {
     loginCalled = true;
     lastUsername = username;
     lastPassword = password;
-    if (username == 'resepsionis01' && password == 'password123') {
+    if (username == 'test_receptionist' && password == 'password123') {
       return const UserModel(
         id: 'usr-1',
-        username: 'resepsionis01',
+        username: 'test_receptionist',
         fullName: 'Siti Rahmawati',
         role: UserRole.receptionist,
         token: 'token-mock',
@@ -38,7 +38,7 @@ class _FakeAuthRepo extends AuthRepository {
 
   @override
   Future<UserModel> quickLogin(UserRole role) async {
-    return login(username: 'resepsionis01', password: 'password123');
+    return login(username: 'test_receptionist', password: 'password123');
   }
 }
 
@@ -258,13 +258,13 @@ void main() {
       await tester.pumpAndSettle();
 
       final textFields = find.byType(TextField);
-      await tester.enterText(textFields.first, 'resepsionis01');
+      await tester.enterText(textFields.first, 'test_receptionist');
       await tester.enterText(textFields.last, 'password123');
       await tester.testTextInput.receiveAction(TextInputAction.done);
       await tester.pumpAndSettle();
 
       expect(fakeRepo.loginCalled, isTrue);
-      expect(fakeRepo.lastUsername, 'resepsionis01');
+      expect(fakeRepo.lastUsername, 'test_receptionist');
       expect(fakeRepo.lastPassword, 'password123');
     });
 

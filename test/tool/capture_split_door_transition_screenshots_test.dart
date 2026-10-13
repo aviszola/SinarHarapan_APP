@@ -21,7 +21,7 @@ class _MockAuthRepo extends AuthRepository {
   Future<UserModel> login({required String username, required String password}) async {
     return const UserModel(
       id: 'usr-r1',
-      username: 'resepsionis01',
+      username: 'demo_receptionist',
       fullName: 'Siti Rahmawati',
       role: UserRole.receptionist,
       token: 'jwt-mock',
@@ -132,7 +132,7 @@ void main() {
               ..state = const AuthState(
                 user: UserModel(
                   id: 'usr-r1',
-                  username: 'resepsionis01',
+                  username: 'demo_receptionist',
                   fullName: 'Siti Rahmawati',
                   role: UserRole.receptionist,
                   token: 'jwt-mock',

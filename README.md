@@ -232,6 +232,23 @@ sinarharapan_app/
    flutter build web --release
    ```
 
+#### Konfigurasi Kredensial Pengembangan (Debug Only)
+Untuk mengaktifkan tombol quick login pada mode pengembangan (debug), konfigurasikan kredensial melalui salah satu cara berikut:
+- **Opsi A (Berkas Lokal - Otomatis diabaikan oleh Git):** Buat berkas `dev_credentials.json` di root `sinarharapan_app/` (berkas ini terdaftar di `.gitignore`):
+  ```json
+  {
+    "DEV_RECEPTIONIST_USER": "<username_resepsionis>",
+    "DEV_RECEPTIONIST_PASS": "<password_resepsionis>",
+    "DEV_MANAGER_USER": "<username_manajer>",
+    "DEV_MANAGER_PASS": "<password_manajer>"
+  }
+  ```
+- **Opsi B (Parameter CLI `--dart-define`):** Jalankan Flutter dengan menyuplai environment define:
+  ```bash
+  flutter run --dart-define=DEV_RECEPTIONIST_USER=<user> --dart-define=DEV_RECEPTIONIST_PASS=<pass> --dart-define=DEV_MANAGER_USER=<user> --dart-define=DEV_MANAGER_PASS=<pass>
+  ```
+*Catatan Keamanan: Pada mode release (`flutter build apk --release`), seluruh mekanisme dan pembacaan kredensial pengembangan dinonaktifkan secara total.*
+
 ---
 
 ### 2. Menjalankan Backend (Next.js & Prisma)

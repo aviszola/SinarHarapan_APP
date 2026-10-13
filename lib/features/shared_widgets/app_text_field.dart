@@ -27,6 +27,7 @@ class AppTextField extends StatefulWidget {
   final Iterable<String>? autofillHints;
   final EdgeInsetsGeometry? contentPadding;
   final BorderRadius? borderRadius;
+  final String? semanticIdentifier;
 
   const AppTextField({
     super.key,
@@ -51,6 +52,7 @@ class AppTextField extends StatefulWidget {
     this.autofillHints,
     this.contentPadding,
     this.borderRadius,
+    this.semanticIdentifier,
   });
 
   @override
@@ -143,17 +145,19 @@ class _AppTextFieldState extends State<AppTextField> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Expanded(
-              child: AnimatedDefaultTextStyle(
-                duration: const Duration(milliseconds: 180),
-                curve: Curves.easeOut,
-                style: AppTypography.bodySm.copyWith(
-                  fontWeight: FontWeight.w600,
-                  color: _focused ? AppColors.navy700 : AppColors.textPrimary,
-                ),
-                child: Text(
-                  widget.label,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+              child: ExcludeSemantics(
+                child: AnimatedDefaultTextStyle(
+                  duration: const Duration(milliseconds: 180),
+                  curve: Curves.easeOut,
+                  style: AppTypography.bodySm.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: _focused ? AppColors.navy700 : AppColors.textPrimary,
+                  ),
+                  child: Text(
+                    widget.label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
               ),
             ),
@@ -179,8 +183,12 @@ class _AppTextFieldState extends State<AppTextField> {
 
         const SizedBox(height: AppSpacing.xs),
 
-        TextFormField(
-          controller: widget.controller,
+        Semantics(
+          identifier: widget.semanticIdentifier,
+          label: widget.label,
+          textField: true,
+          child: TextFormField(
+            controller: widget.controller,
           focusNode: _effectiveFocusNode,
           scrollPadding: widget.scrollPadding ??
               const EdgeInsets.only(
@@ -263,6 +271,7 @@ class _AppTextFieldState extends State<AppTextField> {
                 : widget.suffix,
           ),
         ),
+      ),
 
         if (widget.isPassword && _capsLockOn && _focused) ...[
           const SizedBox(height: 6),

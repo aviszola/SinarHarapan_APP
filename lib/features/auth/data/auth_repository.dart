@@ -1,8 +1,40 @@
+import 'dart:convert';
+import 'dart:io';
+import 'package:flutter/foundation.dart';
 import '../../../core/network/api_client.dart';
 import '../domain/user_model.dart';
 
 class AuthRepository {
   final ApiClient _api = ApiClient();
+
+  // Kredensial pengembangan disuplai via --dart-define atau file lokal dev_credentials.json (gitignored).
+  // Di mode rilis (kReleaseMode), seluruh jalur kredensial dev dinonaktifkan secara total.
+  static const String _envRecUser = String.fromEnvironment('DEV_RECEPTIONIST_USER');
+  static const String _envRecPass = String.fromEnvironment('DEV_RECEPTIONIST_PASS');
+  static const String _envMgrUser = String.fromEnvironment('DEV_MANAGER_USER');
+  static const String _envMgrPass = String.fromEnvironment('DEV_MANAGER_PASS');
+
+  static Map<String, String>? _cachedLocalDevCreds;
+
+  static String _getDevCred(String key, String envValue) {
+    if (kReleaseMode) return '';
+    if (envValue.isNotEmpty) return envValue;
+    if (_cachedLocalDevCreds == null) {
+      try {
+        final f = File('dev_credentials.json');
+        if (f.existsSync()) {
+          final data = jsonDecode(f.readAsStringSync());
+          if (data is Map) {
+            _cachedLocalDevCreds = data.map((k, v) => MapEntry(k.toString(), v.toString()));
+          }
+        }
+      } catch (_) {
+        _cachedLocalDevCreds = {};
+      }
+      _cachedLocalDevCreds ??= {};
+    }
+    return _cachedLocalDevCreds![key] ?? '';
+  }
 
   Future<UserModel> login({
     required String username,
@@ -11,21 +43,29 @@ class AuthRepository {
     var cleanUsername = username.trim();
     var cleanPassword = password;
 
-    final lowerUser = cleanUsername.toLowerCase();
-    if (lowerUser == 'manager' || lowerUser == 'admin') {
-      cleanUsername = 'manager01';
-      if (cleanPassword == 'password123' ||
-          cleanPassword == 'manager' ||
-          cleanPassword == 'admin' ||
-          cleanPassword == 'manager123') {
-        cleanPassword = 'Manager123!';
-      }
-    } else if (lowerUser == 'resepsionis' || lowerUser == 'receptionist') {
-      cleanUsername = 'resepsionis01';
-      if (cleanPassword == 'password123' ||
-          cleanPassword == 'resepsionis' ||
-          cleanPassword == 'resepsionis123') {
-        cleanPassword = 'Resepsionis123!';
+    if (!kReleaseMode) {
+      final devRecUser = _getDevCred('DEV_RECEPTIONIST_USER', _envRecUser);
+      final devRecPass = _getDevCred('DEV_RECEPTIONIST_PASS', _envRecPass);
+      final devMgrUser = _getDevCred('DEV_MANAGER_USER', _envMgrUser);
+      final devMgrPass = _getDevCred('DEV_MANAGER_PASS', _envMgrPass);
+
+      final lowerUser = cleanUsername.toLowerCase();
+      if ((lowerUser == 'manager' || lowerUser == 'admin') && devMgrUser.isNotEmpty) {
+        cleanUsername = devMgrUser;
+        if ((cleanPassword == 'password123' ||
+                cleanPassword == 'manager' ||
+                cleanPassword == 'admin') &&
+            devMgrPass.isNotEmpty) {
+          cleanPassword = devMgrPass;
+        }
+      } else if ((lowerUser == 'resepsionis' || lowerUser == 'receptionist') &&
+          devRecUser.isNotEmpty) {
+        cleanUsername = devRecUser;
+        if ((cleanPassword == 'password123' ||
+                cleanPassword == 'resepsionis') &&
+            devRecPass.isNotEmpty) {
+          cleanPassword = devRecPass;
+        }
       }
     }
 
@@ -53,8 +93,21 @@ class AuthRepository {
   }
 
   Future<UserModel> quickLogin(UserRole role) async {
-    final username = role == UserRole.receptionist ? 'resepsionis01' : 'manager01';
-    final password = role == UserRole.receptionist ? 'Resepsionis123!' : 'Manager123!';
+    if (kReleaseMode) {
+      throw UnsupportedError('Quick login tidak diizinkan pada build release');
+    }
+
+    final isRec = role == UserRole.receptionist;
+    final username = isRec
+        ? _getDevCred('DEV_RECEPTIONIST_USER', _envRecUser)
+        : _getDevCred('DEV_MANAGER_USER', _envMgrUser);
+    final password = isRec
+        ? _getDevCred('DEV_RECEPTIONIST_PASS', _envRecPass)
+        : _getDevCred('DEV_MANAGER_PASS', _envMgrPass);
+
+    if (username.isEmpty || password.isEmpty) {
+      throw UnsupportedError('Kredensial dev belum dikonfigurasi');
+    }
     return login(username: username, password: password);
   }
 
@@ -71,11 +124,5 @@ class AuthRepository {
     } finally {
       await _api.setToken(null);
     }
-  }
-
-  /// Cek apakah ada token tersimpan di secure storage saat inisialisasi aplikasi
-  Future<String?> getSavedToken() async {
-    await _api.init();
-    return _api.token;
   }
 }

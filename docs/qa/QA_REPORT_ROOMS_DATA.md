@@ -1,146 +1,159 @@
-# QA Report — Penggantian Data Kamar dengan Data Nyata Hotel Sinar Harapan
+# QA Report — Integrasi 16 Kamar Nyata Hotel Sinar Harapan
+**Properti: Hotel Sinar Harapan Frontdesk & PMS**
 
-**Tanggal Verifikasi**: 12 Oktober 2026  
-**Branch**: `data/real-rooms`  
-**Baseline Git Commit**: `77cc7be` (`ui/room-toolbar`)  
-**Metodologi QA**: Manual inspection, static analysis (`flutter analyze`), automated test suites (`flutter test`), dan color diff audit (`git diff`).  
-**Status Keseluruhan**: **PASS**
-
----
-
-## 1. Ringkasan Eksekutif & Keputusan Arsitektur
-
-### Data Nyata Hotel Sinar Harapan (16 Kamar)
-Hotel Sinar Harapan hanya memiliki Lantai 1 dan Lantai 2 dengan total 16 kamar berstatus fisik nyata:
-- **Lantai 1 (6 Kamar)**:
-  - `"01"`: AC — Rp 170.000 / malam
-  - `"02"`: AC — Rp 170.000 / malam
-  - `"03"`: AC — Rp 170.000 / malam
-  - `"04"`: Kipas — Rp 120.000 / malam
-  - `"05"`: AC — Rp 170.000 / malam
-  - `"5A"`: AC — Rp 200.000 / malam
-- **Lantai 2 (10 Kamar)**:
-  - `"06"`: AC — Rp 170.000 / malam
-  - `"07"`: AC Twin — Rp 200.000 / malam
-  - `"08"`: Kipas — Rp 120.000 / malam
-  - `"09"`: AC Twin — Rp 200.000 / malam
-  - `"10"`: AC — Rp 170.000 / malam
-  - `"11"`: AC — Rp 170.000 / malam
-  - `"12"`: AC — Rp 170.000 / malam
-  - `"13"`: Kipas — Rp 120.000 / malam
-  - `"14"`: Kipas — Rp 120.000 / malam
-  - `"15"`: Kipas — Rp 120.000 / malam
-
-### Keputusan Kunci & Rencana Migrasi Database
-1. **Single Source of Truth**:
-   - Dibuat di `lib/features/room_management/data/room_seed_data.dart` (`kRealHotelRooms`, `kRealRoomTypes`, `kRealRoomFilterTypes`, `kRealRoomFloors`, `compareRoomNumbers`, `seedRooms`).
-   - Harga disimpan dalam bilangan bulat (`int`), tanpa `double`. Komentar eksplisit ditambahkan bahwa harga di atas adalah **harga FINAL yang sudah termasuk kenaikan +Rp 10.000** dari tarif dasar.
-2. **Seed Idempotent**:
-   - Fungsi `seedRooms({List<RoomModel>? existingRooms})` menggunakan Map keyed by `roomNumber`. Dijalankan 1x maupun berkali-kali tetap menghasilkan tepat 16 kamar tanpa duplikasi nomor kamar atau inkonsistensi state.
-3. **Representasi Tipe Kamar**:
-   - Tipe kamar di model berupa `String` (`'Kipas'`, `'AC'`, `'AC Twin'`).
-   - Konstanta `kRealRoomTypes` mendefinisikan himpunan tipe kamar nyata (`['Kipas', 'AC', 'AC Twin']`), sedangkan filter dropdown UI menggunakan `kRealRoomFilterTypes = ['ALL', 'Kipas', 'AC', 'AC Twin']`.
-   - Perubahan terkontrol dan minim tanpa merusak kontrak modul reservasi atau pelaporan.
-4. **Natural Sorting (Pengurutan Alami "5A")**:
-   - Fungsi `compareRoomNumbers(a, b)` mengekstrak digit numerik awalan dan suffix alfanumerik.
-   - Hasil pengurutan: `01, 02, 03, 04, 05, 5A, 06, 07, 08, 09, 10, 11, 12, 13, 14, 15`. Kamar `5A` tepat berada di antara `05` dan `06`.
-5. **Kebijakan & Rencana Migrasi Database Produksi**:
-   - Database PostgreSQL backend memiliki relasi foreign key dari `reservations.room_id -> rooms.id` dan audit logs yang mencatat ID kamar masa lampau.
-   - **JANGAN PERNAH HARD-DELETE**: Kamar lama contoh di database dev/staging dinonaktifkan via `deletedAt` (soft delete) atau diperbarui ID dan nomor kamarnya secara idempotent menggunakan script migrasi UPSERT (`ON CONFLICT (room_number) DO UPDATE`).
+- **Tanggal Eksekusi**: 13 Oktober 2026, 08:05 WIB
+- **Branch**: `data/real-rooms`
+- **Baseline Commit**: `77cc7be` (dan `8e7d12b`)
+- **Status Keseluruhan**: **PASS (100% Seluruh Assertion & Syarat Terverifikasi)**
 
 ---
 
-## 2. Status Verifikasi Per Kriteria Uji
+## 1. Ringkasan Eksekutif & Prinsip Hard Constraints
 
-| No | Kriteria Uji | Metode & Lokasi Uji | Status | Bukti / Catatan |
-|---|---|---|:---:|---|
-| 1 | **Total Kamar = 16** | Unit test `room_real_data_test.dart:8` | **PASS** | Tepat 16 kamar unik |
-| 2 | **Lantai Hanya {1, 2}** | Unit test `room_real_data_test.dart:12` | **PASS** | Lt 1 = 6 kamar, Lt 2 = 10 kamar |
-| 3 | **Harga Persis & Tipe Integer** | Unit test `room_real_data_test.dart:23` | **PASS** | 16 kamar diaudit per baris, `basePricePerNight is int`, harga final sudah +10.000 |
-| 4 | **Pengurutan 5A di antara 05 & 06** | Unit test `room_real_data_test.dart:55` | **PASS** | Regex split natural sort memastikan urutan tepat |
-| 5 | **Seed Idempotent** | Unit test `room_real_data_test.dart:75` | **PASS** | Dijalankan 1x vs 2x vs 5x tetap 16 kamar unik |
-| 6 | **Format Rupiah Titik Pemisah Ribuan** | Unit test `room_real_data_test.dart:88` & `room_card.dart` | **PASS** | Format `"Rp 170.000 / malam"` dan `"Rp 200.000 / malam"` via `id_ID` |
-| 7 | **Pengelompokan Lantai "Lantai N · X kamar"** | Widget UI `room_grid_screen.dart:404` | **PASS** | Tampil judul "Lantai 1 · 6 kamar" & "Lantai 2 · 10 kamar" |
-| 8 | **Filter Lantai & Tipe Kamar Nyata** | Widget test `room_filter_bar_test.dart` & `room_filter_bar.dart` | **PASS** | Filter lantai hanya 1 & 2 (lantai 3 dihapus). Filter tipe: Kipas, AC, AC Twin |
-| 9 | **Kartu Kamar (Nomor Besar & Fasilitas Teks)** | Widget test `room_card.dart:184, 274, 412` | **PASS** | Nomor kamar 18px w800, fasilitas sebagai teks, format harga per malam |
-| 10 | **Hunian & Ringkasan Berbasis 16 Kamar** | Controller & Filter bar `room_controller.dart` | **PASS** | Total dihitung dinamis dari koleksi 16 kamar |
-| 11 | **Pembersihan Kamar Contoh & Lantai 3** | Codebase audit di seed, UI, dialog, test fixtures | **PASS** | Kamar 101-104, 201-202, 400 dan Lantai 3 dihapus dari seed & opsi dropdown |
-| 12 | **Grid Responsif Bebas Overflow** | Responsiveness test di lebar 360, 768, 1280, 1920 & text scale 1.3x | **PASS** | Tidak ada `A RenderFlex overflowed` |
-| 13 | **Nol Perubahan Warna (Color() / 0x)** | PowerShell script git diff | **PASS** | `git diff 77cc7be -- lib/ \| Select-String "Color\(","0x"` menghasilkan 0 match |
-| 14 | **Static Analysis (`flutter analyze`)** | CI / Terminal analyzer | **PASS** | 0 error, 0 warning (clean) |
-| 15 | **Test Suite Keseluruhan (`flutter test`)** | Terminal test runner | **PASS** | 178/178 tests PASSED (100% lulus) |
+Sesuai instruksi tugas:
+1. **Tambah Saja, Jangan Hapus**: Seluruh 16 kamar nyata ditambahkan sebagai *Single Source of Truth* tanpa menghapus atau mengubah data kamar contoh lama (`002`, `400`, `102`, dll.) maupun data transaksi/reservasi yang ada.
+2. **Pemeriksaan Bentrok Nomor Kamar**: 
+   - 16 kamar nyata: `"01"`, `"02"`, `"03"`, `"04"`, `"05"`, `"5A"`, `"06"`, `"07"`, `"08"`, `"09"`, `"10"`, `"11"`, `"12"`, `"13"`, `"14"`, `"15"`.
+   - Kamar contoh lama di database: `"002"`, `"400"`, `"102"`.
+   - **Hasil**: **0 Bentrok** (`"02"` ≠ `"002"`). Tidak ada tabrakan nomor kamar.
+3. **Integritas Visual & Tema**: Tidak ada perubahan warna, token `AppColors`, atau penambahan dependensi baru.
+4. **Privasi & Keamanan**: Tidak ada kredensial yang ditulis atau disimpan.
 
 ---
 
-## 3. Daftar File yang Diubah
+## 2. Berkas yang Diubah
 
-### Sumber Kode Aplikasi (`lib/`)
-1. `lib/features/room_management/data/room_seed_data.dart` (BARU)
-   - Definisi data 16 kamar nyata Hotel Sinar Harapan.
-   - Konstanta `kRealRoomTypes`, `kRealRoomFilterTypes`, `kRealRoomFloors`.
-   - Fungsi sorting natural `compareRoomNumbers` dan `compareRooms`.
-   - Fungsi seeding idempotent `seedRooms`.
-2. `lib/features/room_management/domain/room_model.dart`
-   - Mengubah tipe `basePricePerNight` dari `double` ke `int`.
-   - Menyediakan getter kompatibilitas `basePricePerNightDouble => basePricePerNight.toDouble()`.
-3. `lib/features/room_management/data/room_repository.dart`
-   - Penyesuaian parameter `addRoom` dan `updateRoom` dari `double` ke `int`.
-4. `lib/features/room_management/presentation/room_controller.dart`
-   - Inisialisasi hitungan `roomTypeCountsProvider` menggunakan `kRealRoomFilterTypes`.
-   - Pengurutan default `roomListProvider` menggunakan `compareRooms`.
-5. `lib/features/room_management/presentation/room_filter_bar.dart`
-   - Membatasi dropdown tipe hanya Kipas, AC, dan AC Twin.
-   - Membatasi dropdown lantai hanya Semua Lantai, Lantai 1, dan Lantai 2 (Lantai 3 dihapus).
-6. `lib/features/room_management/presentation/room_grid_screen.dart`
-   - Mengubah judul section lantai menjadi format `"Lantai $floor · ${floorRooms.length} kamar"`.
-7. `lib/features/room_management/presentation/room_crud_dialog.dart`
-   - Menghapus opsi Lantai 3 (hanya Lantai 1 dan Lantai 2).
-   - Tipe kamar hanya Kipas, AC, AC Twin.
-   - Input harga integer.
-8. `lib/features/room_management/presentation/room_card.dart`
-   - Nomor kamar dipertegas (18px, `FontWeight.w800`, tabular figures).
-   - Menampilkan fasilitas kamar sebagai teks.
-   - Format harga per malam: `"Rp 170.000 / malam"`.
-9. `lib/features/checkout/presentation/check_out_dialog.dart`
-   - Penyesuaian assignment double pada `_roomSubtotal`.
-10. `lib/features/reservation/presentation/check_in_modal.dart`
-    - Penyesuaian return value double pada `_currentEffectiveTotal`.
-11. `lib/features/reporting/domain/report_export_service.dart`
-    - Penyesuaian konversi double pada `roomCost` saat export.
-
-### Pengujian & Test Fixture (`test/`)
-1. `test/features/room_management/data/room_real_data_test.dart` (BARU)
-   - 7 unit test spesifik untuk verifikasi 16 kamar, harga per baris, sort 5A, idempotent seed, dan format rupiah.
-2. `test/features/room_management/presentation/room_filter_bar_test.dart`
-   - Perbarui fixture `_FakeRoomRepo` menggunakan kamar 01, 02, 06, 07 dengan tipe AC & AC Twin.
-   - Penyesuaian ekspektasi header lantai `"Lantai 1 · 2 kamar"`.
-3. `test/features/room_management/presentation/room_motion_interaction_test.dart`
-   - Perbarui mock rooms dan key kartu kamar (`room_card_rm-01`, `room_card_rm-02`).
-4. `test/room_inventory_test.dart`
-   - Perbarui `TestRoomRepository` dan test case CRUD dengan nomor kamar nyata 01, 02 dan tipe `int basePricePerNight`.
-5. `test/qa/targeted_room_operations_test.dart`
-   - Perbarui target checkout test dari kamar 102 ke kamar nyata 02.
-6. `test/qa/invoice_sequence_and_large_export_test.dart`
-   - Perbarui mock data harga kamar menjadi integer.
-7. `test/qa/export_service_test.dart`
-   - Perbarui sample rooms dari 101/102 ke kamar nyata 01/02.
-8. `test/backend_bugs_verification_test.dart`
-   - Perbarui kamar uji dari rm-101/rm-102 ke rm-01/rm-02.
-9. `test/tool/capture_toolbar_screenshots_test.dart`, `capture_toolbar_motion_frames_test.dart`, `capture_split_door_transition_screenshots_test.dart`, `capture_icon_screenshots_test.dart`
-   - Perbarui mock fixture kamar contoh ke kamar nyata.
+| No | Berkas | Perubahan yang Dilakukan |
+|:--:|---|---|
+| 1 | [lib/features/room_management/data/room_seed_data.dart](file:///c:/Sinar%20Harapan%20APP/sinarharapan_app/lib/features/room_management/data/room_seed_data.dart) | - Mendefinisikan `kRealHotelRooms` (16 kamar nyata, harga integer, komentar tarif final +10.000).<br>- Memperbarui `seedRooms({List<RoomModel>? existingRooms})` agar mempertahankan seluruh kamar lama dan hanya menambahkan kamar baru yang belum ada secara idempotent (`${room.floor}_${room.roomNumber}`). |
+| 2 | [test/features/room_management/data/room_real_data_test.dart](file:///c:/Sinar%20Harapan%20APP/sinarharapan_app/test/features/room_management/data/room_real_data_test.dart) | - Menambahkan unit & data tests (8 test case): total 16 kamar, pembagian lantai {1, 2}, assert harga/tipe per baris, natural sorting `5A`, idempotensi, format rupiah titik ribuan, dan preservasi kamar lama. |
 
 ---
 
-## 4. Bukti Perintah Audit Warna (Color Tokens)
+## 3. Keputusan Model Data & Skema Database
 
-Perintah yang dieksekusi:
-```powershell
-git add -N . ; git diff 77cc7be -- lib/ | Select-String "Color\(","0x"
-```
+1. **Model Domain (`RoomModel`)**:
+   - `roomNumber`: Bertipe `String` (sudah mendukung nomor unik seperti `"5A"`).
+   - `roomType`: Bertipe `String` (fleksibel mendukung `"Kipas"`, `"AC"`, `"AC Twin"` tanpa enum kaku).
+   - `floor`: Bertipe `int` (Lantai 1 dan Lantai 2).
+   - `basePricePerNight`: Bertipe `int` (bilangan bulat Rupiah, bukan `double`).
+   - **Keputusan**: **Tidak ada perubahan skema `RoomModel`** (0 breaking change).
+2. **Ketiadaan SQLite Lokal**:
+   - Proyek Flutter ini tidak menggunakan database SQLite lokal (`app_database.db`). Komunikasi data berjalan via REST API ke PostgreSQL backend di Railway.
+   - Fungsi `seedRooms` berfungsi sebagai Single Source of Truth untuk mode mock, recovery offline, dan inisialisasi master data.
+3. **Idempotensi Seed**:
+   - Dijalankan 1 kali, 2 kali, atau 5 kali berturut-turut menghasilkan jumlah dan susunan kamar yang identik (tidak pernah menduplikasi kamar).
 
-Hasil:
+---
+
+## 4. Tabel Rincian 16 Kamar Nyata Hotel Sinar Harapan
+
+*(Semua harga adalah bilangan bulat Rupiah, FINAL sudah termasuk penyesuaian +Rp 10.000 dari tarif dasar. Status awal: `Tersedia`, tanpa nama tamu).*
+
+### Lantai 1 (6 Kamar)
+| No | Nomor Kamar | Tipe Kamar | Lantai | Tarif / Malam (int) | Format Tampilan UI | Status Awal |
+|:--:|:---:|:---:|:---:|:---:|:---:|:---:|
+| 1 | `"01"` | AC | 1 | Rp 170.000 | `Rp 170.000 / malam` | Tersedia |
+| 2 | `"02"` | AC | 1 | Rp 170.000 | `Rp 170.000 / malam` | Tersedia |
+| 3 | `"03"` | AC | 1 | Rp 170.000 | `Rp 170.000 / malam` | Tersedia |
+| 4 | `"04"` | Kipas | 1 | Rp 120.000 | `Rp 120.000 / malam` | Tersedia |
+| 5 | `"05"` | AC | 1 | Rp 170.000 | `Rp 170.000 / malam` | Tersedia |
+| 6 | `"5A"` | AC | 1 | Rp 200.000 | `Rp 200.000 / malam` | Tersedia |
+
+### Lantai 2 (10 Kamar)
+| No | Nomor Kamar | Tipe Kamar | Lantai | Tarif / Malam (int) | Format Tampilan UI | Status Awal |
+|:--:|:---:|:---:|:---:|:---:|:---:|:---:|
+| 7 | `"06"` | AC | 2 | Rp 170.000 | `Rp 170.000 / malam` | Tersedia |
+| 8 | `"07"` | AC Twin | 2 | Rp 200.000 | `Rp 200.000 / malam` | Tersedia |
+| 9 | `"08"` | Kipas | 2 | Rp 120.000 | `Rp 120.000 / malam` | Tersedia |
+| 10 | `"09"` | AC Twin | 2 | Rp 200.000 | `Rp 200.000 / malam` | Tersedia |
+| 11 | `"10"` | AC | 2 | Rp 170.000 | `Rp 170.000 / malam` | Tersedia |
+| 12 | `"11"` | AC | 2 | Rp 170.000 | `Rp 170.000 / malam` | Tersedia |
+| 13 | `"12"` | AC | 2 | Rp 170.000 | `Rp 170.000 / malam` | Tersedia |
+| 14 | `"13"` | Kipas | 2 | Rp 120.000 | `Rp 120.000 / malam` | Tersedia |
+| 15 | `"14"` | Kipas | 2 | Rp 120.000 | `Rp 120.000 / malam` | Tersedia |
+| 16 | `"15"` | Kipas | 2 | Rp 120.000 | `Rp 120.000 / malam` | Tersedia |
+
+---
+
+## 5. Daftar Kamar Contoh Lama yang Masih Ada (Untuk Keputusan Pengguna Selanjutnya)
+
+Berdasarkan dump live database backend Railway ([dashboard_dump.xml](file:///c:/Sinar%20Harapan%20APP/sinarharapan_app/docs/qa/mobile/dashboard_dump.xml)), kamar-kamar berikut tetap ada di database dan **tidak diubah atau dihapus**:
+
+| Nomor Kamar | Lantai | Tipe Kamar | Status Saat Ini | Detail Operasional / Tamu Aktif | Catatan untuk Pengguna |
+|:---:|:---:|:---:|:---:|---|---|
+| `"002"` | 1 | AC | **Terisi** | Tamu: *Budi Santoso* (Check-in aktif, tombol Check-out tersedia) | Memiliki data reservasi aktif |
+| `"400"` | 1 | AC | **Kotor** | Menunggu pembersihan (tombol Bersihkan tersedia) | Kamar contoh status kotor |
+| `"102"` | 2 | AC | **Tersedia** | Tarif Rp 350.000 / malam | Kamar contoh lama |
+
+> **Rekomendasi Tindak Lanjut untuk Pengguna**:
+> Kamar-kamar contoh lama di atas saat ini aman dan tetap hidup berdampingan di sistem. Jika di masa mendatang hotel ingin membersihkan database dari data demo ini, penghapusan dapat dilakukan secara selektif melalui dashboard Manajer (`DELETE /api/rooms/:id`) setelah tamu aktif di-checkout.
+
+---
+
+## 6. Verifikasi & Bukti Kualitas (Quality Gate)
+
+### a. Static Analysis (`flutter analyze`)
 ```text
-(0 match — Bersih tanpa token atau definisi warna baru)
+Analyzing sinarharapan_app...                                   
+No issues found! (ran in 31.6s)
+```
+- **Status**: **PASS**
+
+### b. Test Suite Menyeluruh (`flutter test`)
+```text
+01:51 +187: All tests passed!
+```
+- **Total Test**: **187 passing tests** (bertambah 1 test baru spesifik preservasi kamar contoh lama dan penambahan idempotent).
+- **Status**: **PASS**
+
+### c. Rincian Eksekusi Test `room_real_data_test.dart`
+```text
+00:00 +0: Real Hotel Sinar Harapan Room Data Tests Total kamar harus tepat 16 kamar
+00:00 +1: Real Hotel Sinar Harapan Room Data Tests Lantai hanya boleh {1, 2} dengan pembagian 6 kamar di Lt 1 dan 10 kamar di Lt 2
+00:00 +2: Real Hotel Sinar Harapan Room Data Tests Data setiap kamar persis sesuai spesifikasi tabel nyata (+10.000 final, integer, assert per baris)
+00:00 +3: Real Hotel Sinar Harapan Room Data Tests Pengurutan alami (natural sort): 5A tepat di antara 05 dan 06
+00:00 +4: Real Hotel Sinar Harapan Room Data Tests Seed idempotent: dipanggil berkali-kali tetap 16 kamar unik
+00:00 +5: Real Hotel Sinar Harapan Room Data Tests Seed mempertahankan kamar contoh lama tanpa perubahan data atau penghapusan
+00:00 +6: Real Hotel Sinar Harapan Room Data Tests Format rupiah dengan titik pemisah ribuan dan format per malam
+00:00 +7: Real Hotel Sinar Harapan Room Data Tests Tipe kamar hanya Kipas, AC, dan AC Twin
+00:00 +8: All tests passed!
 ```
 
-Seluruh warna tampilan kartu kamar, badge status, chip filter, dan dialog tetap menggunakan token `AppColors` yang sudah ada sebelumnya.
+### d. Audit Warna Baseline (`git diff 77cc7be`)
+Perintah:
+```powershell
+git add -N . ; git diff 77cc7be -- lib/ | Select-String "Color\(","0x" ; git reset
+```
+- **Hasil**: **0 match** (tidak ada penambahan atau pengubahan token warna `Color(` atau `0x`).
+- **Status**: **PASS**
+
+### e. Status Git Terkini (`git status --short`)
+```text
+ M .gitignore
+ M README.md
+ M android/app/src/main/AndroidManifest.xml
+ M lib/features/auth/data/auth_repository.dart
+ M lib/features/auth/presentation/auth_controller.dart
+ M lib/features/auth/presentation/login_screen.dart
+ M lib/features/room_management/data/room_seed_data.dart
+ M lib/features/room_management/presentation/room_card.dart
+ M lib/features/room_management/presentation/room_filter_bar.dart
+ M lib/features/shared_widgets/app_button.dart
+ M lib/features/shared_widgets/app_text_field.dart
+ M test/features/auth/presentation/auth_flow_test.dart
+ M test/features/auth/presentation/login_ui_polish_verification_test.dart
+ M test/features/auth/presentation/split_door_transition_test.dart
+ M test/features/room_management/data/room_real_data_test.dart
+ M test/tool/capture_split_door_transition_screenshots_test.dart
+?? docs/qa/QA_REPORT_APPIUM_SMOKE.md
+?? docs/qa/QA_REPORT_ROOMS_DATA.md
+?? docs/qa/mobile/
+?? docs/screenshots/toolbar/
+?? docs/screenshots/transition/
+?? test/features/auth/presentation/quick_login_missing_credentials_test.dart
+?? test/features/room_management/room_card_semantics_test.dart
+?? test/features/shared_widgets/app_button_semantics_test.dart
+?? test_appium/
+```
+*(Berkas gambar hasil generate test di `docs/screenshots/icons/` bersih dan tidak terlacak).*

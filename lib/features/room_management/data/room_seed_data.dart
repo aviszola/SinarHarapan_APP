@@ -215,33 +215,24 @@ int compareRooms(RoomModel a, RoomModel b) {
 /// Seed idempotent data kamar Hotel Sinar Harapan.
 ///
 /// Dijalankan berkali-kali tidak akan menggandakan kamar.
-/// Selalu menghasilkan tepat 16 kamar nyata terurut secara alami.
+/// Menambah 16 kamar nyata Hotel Sinar Harapan tanpa menghapus atau
+/// mengubah kamar contoh lama (mis. 002, 400, 102, 103) maupun data reservasi/transaksi yang ada.
 List<RoomModel> seedRooms({List<RoomModel>? existingRooms}) {
   final Map<String, RoomModel> roomMap = {};
 
-  for (final seed in kRealHotelRooms) {
-    roomMap[seed.roomNumber] = seed;
-  }
-
+  // 1. Pertahankan semua kamar lama/existing yang sudah ada (beserta status & reservasinya)
   if (existingRooms != null) {
     for (final room in existingRooms) {
-      if (roomMap.containsKey(room.roomNumber)) {
-        final master = roomMap[room.roomNumber]!;
-        roomMap[room.roomNumber] = master.copyWith(
-          status: room.status,
-          activeReservationId: room.activeReservationId,
-          activeGuestName: room.activeGuestName,
-          guestNik: room.guestNik,
-          activeGuestPhone: room.activeGuestPhone,
-          bookingSource: room.bookingSource,
-          reddoorzBookingCode: room.reddoorzBookingCode,
-          checkInTime: room.checkInTime,
-          expectedCheckOutTime: room.expectedCheckOutTime,
-          invoiceNumber: room.invoiceNumber,
-          additionalCharges: room.additionalCharges,
-          waReminderStatus: room.waReminderStatus,
-        );
-      }
+      final key = '${room.floor}_${room.roomNumber}';
+      roomMap[key] = room;
+    }
+  }
+
+  // 2. Tambahkan 16 kamar nyata yang belum ada berdasarkan nomor kamar + lantai (idempotent)
+  for (final seed in kRealHotelRooms) {
+    final key = '${seed.floor}_${seed.roomNumber}';
+    if (!roomMap.containsKey(key)) {
+      roomMap[key] = seed;
     }
   }
 

@@ -22,26 +22,26 @@ class FakeAuthRepository extends AuthRepository {
 
     final lowerUser = cleanUsername.toLowerCase();
     if (lowerUser == 'manager' || lowerUser == 'admin') {
-      cleanUsername = 'manager01';
+      cleanUsername = 'dummy_mgr_user';
       if (cleanPassword == 'password123' ||
           cleanPassword == 'manager' ||
           cleanPassword == 'admin' ||
-          cleanPassword == 'manager123') {
-        cleanPassword = 'Manager123!';
+          cleanPassword == 'manager_alias') {
+        cleanPassword = 'DummyMgrPass999!';
       }
     } else if (lowerUser == 'resepsionis' || lowerUser == 'receptionist') {
-      cleanUsername = 'resepsionis01';
+      cleanUsername = 'dummy_rec_user';
       if (cleanPassword == 'password123' ||
           cleanPassword == 'resepsionis' ||
-          cleanPassword == 'resepsionis123') {
-        cleanPassword = 'Resepsionis123!';
+          cleanPassword == 'receptionist_alias') {
+        cleanPassword = 'DummyRecPass999!';
       }
     }
 
-    if (cleanUsername == 'resepsionis01' && cleanPassword == 'Resepsionis123!') {
+    if (cleanUsername == 'dummy_rec_user' && cleanPassword == 'DummyRecPass999!') {
       final user = const UserModel(
         id: 'user-rec-1',
-        username: 'resepsionis01',
+        username: 'dummy_rec_user',
         fullName: 'Resepsionis Satu',
         role: UserRole.receptionist,
         token: 'token-rec-123',
@@ -50,10 +50,10 @@ class FakeAuthRepository extends AuthRepository {
       return user;
     }
 
-    if (cleanUsername == 'manager01' && cleanPassword == 'Manager123!') {
+    if (cleanUsername == 'dummy_mgr_user' && cleanPassword == 'DummyMgrPass999!') {
       final user = const UserModel(
         id: 'user-mgr-1',
-        username: 'manager01',
+        username: 'dummy_mgr_user',
         fullName: 'Manager Utama',
         role: UserRole.manager,
         token: 'token-mgr-123',
@@ -67,8 +67,8 @@ class FakeAuthRepository extends AuthRepository {
 
   @override
   Future<UserModel> quickLogin(UserRole role) async {
-    final username = role == UserRole.receptionist ? 'resepsionis01' : 'manager01';
-    final password = role == UserRole.receptionist ? 'Resepsionis123!' : 'Manager123!';
+    final username = role == UserRole.receptionist ? 'dummy_rec_user' : 'dummy_mgr_user';
+    final password = role == UserRole.receptionist ? 'DummyRecPass999!' : 'DummyMgrPass999!';
     return login(username: username, password: password);
   }
 
@@ -127,8 +127,8 @@ void main() {
     expect(container.read(authStateProvider).errorMessage, isNull);
     expect(fakeRepo.logoutCalled, isTrue);
 
-    // 3. Manager login with tolerance alias 'manager' & 'Manager123!'
-    success = await container.read(authStateProvider.notifier).login('manager', 'Manager123!');
+    // 3. Manager login with tolerance alias 'manager' & 'DummyMgrPass999!'
+    success = await container.read(authStateProvider.notifier).login('manager', 'DummyMgrPass999!');
     expect(success, isTrue);
     expect(container.read(authStateProvider).user?.isManager, isTrue);
     expect(container.read(authStateProvider).user?.role, equals(UserRole.manager));

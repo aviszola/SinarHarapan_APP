@@ -22,6 +22,7 @@ class AppButton extends StatelessWidget {
   final FontWeight? fontWeight;
   final BorderRadius? borderRadius;
   final EdgeInsetsGeometry? padding;
+  final String? semanticIdentifier;
 
   const AppButton({
     super.key,
@@ -40,11 +41,17 @@ class AppButton extends StatelessWidget {
     this.fontWeight,
     this.borderRadius,
     this.padding,
+    this.semanticIdentifier,
   });
 
   @override
   Widget build(BuildContext context) {
     final isEnabled = onPressed != null && !isLoading && !isSuccess;
+    final effectiveLabel = isLoading
+        ? (loadingLabel ?? 'Memuat')
+        : (isSuccess
+            ? (successLabel ?? 'Berhasil')
+            : label);
 
     final (Color bg, Color fg, BorderSide border, Color splash) = switch (variant) {
       AppButtonVariant.primary     => (
@@ -81,17 +88,21 @@ class AppButton extends StatelessWidget {
 
     final effectiveRadius = borderRadius ?? AppRadius.roundedMd;
 
-    return ConstrainedBox(
-      constraints: BoxConstraints(
-        minWidth: minWidth ?? 0,
-      ),
-      child: SizedBox(
-        height: height ?? 50,
-        width: width,
-        child: Semantics(
-          button: true,
-          enabled: isEnabled,
-          label: label,
+    return Semantics(
+      container: true,
+      button: true,
+      enabled: isEnabled,
+      onTap: isEnabled ? onPressed : null,
+      label: effectiveLabel,
+      identifier: semanticIdentifier,
+      excludeSemantics: true,
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          minWidth: minWidth ?? 0,
+        ),
+        child: SizedBox(
+          height: height ?? 50,
+          width: width,
           child: Material(
             color: isEnabled
                 ? bg
@@ -198,3 +209,4 @@ class AppButton extends StatelessWidget {
     );
   }
 }
+

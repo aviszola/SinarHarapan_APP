@@ -99,8 +99,11 @@ class _RoomCardState extends State<RoomCard> with SingleTickerProviderStateMixin
     final room = widget.room;
     final disableAnimations = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
 
-    return Focus(
-      focusNode: _focusNode,
+    return Semantics(
+      container: true,
+      identifier: 'room_card_${room.roomNumber}',
+      child: Focus(
+        focusNode: _focusNode,
       onFocusChange: (hasF) => setState(() => _isFocused = hasF),
       onKeyEvent: (node, event) {
         if (event is KeyDownEvent &&
@@ -327,8 +330,9 @@ class _RoomCardState extends State<RoomCard> with SingleTickerProviderStateMixin
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
   Widget _buildStatusSpecificContent(RoomModel room) {
     if (room.isOccupied) {
@@ -506,62 +510,77 @@ class _RoomCardState extends State<RoomCard> with SingleTickerProviderStateMixin
 
   Widget _buildActionButton(RoomModel room) {
     if (room.isAvailable) {
-      return SizedBox(
-        width: double.infinity,
-        height: 34,
-        child: ElevatedButton.icon(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.brandOrange,
-            foregroundColor: AppColors.white,
-            padding: EdgeInsets.zero,
-            shape: const RoundedRectangleBorder(
-              borderRadius: AppRadius.roundedSm,
+      return Semantics(
+        container: true,
+        button: true,
+        identifier: 'room_action_checkin_button',
+        child: SizedBox(
+          width: double.infinity,
+          height: 34,
+          child: ElevatedButton.icon(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.brandOrange,
+              foregroundColor: AppColors.white,
+              padding: EdgeInsets.zero,
+              shape: const RoundedRectangleBorder(
+                borderRadius: AppRadius.roundedSm,
+              ),
             ),
+            onPressed: widget.onTap,
+            icon: const AppIcon.small(AppIcons.checkIn),
+            label: const Text('Check-in', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
           ),
-          onPressed: widget.onTap,
-          icon: const AppIcon.small(AppIcons.checkIn),
-          label: const Text('Check-in', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
         ),
       );
     }
 
     if (room.isOccupied) {
-      return SizedBox(
-        width: double.infinity,
-        height: 34,
-        child: OutlinedButton.icon(
-          style: OutlinedButton.styleFrom(
-            foregroundColor: AppColors.statusOccupiedText,
-            side: const BorderSide(color: AppColors.statusOccupied),
-            backgroundColor: AppColors.statusOccupiedBg.withAlpha(80),
-            padding: EdgeInsets.zero,
-            shape: const RoundedRectangleBorder(
-              borderRadius: AppRadius.roundedSm,
+      return Semantics(
+        container: true,
+        button: true,
+        identifier: 'room_action_checkout_button',
+        child: SizedBox(
+          width: double.infinity,
+          height: 34,
+          child: OutlinedButton.icon(
+            style: OutlinedButton.styleFrom(
+              foregroundColor: AppColors.statusOccupiedText,
+              side: const BorderSide(color: AppColors.statusOccupied),
+              backgroundColor: AppColors.statusOccupiedBg.withAlpha(80),
+              padding: EdgeInsets.zero,
+              shape: const RoundedRectangleBorder(
+                borderRadius: AppRadius.roundedSm,
+              ),
             ),
+            onPressed: widget.onTap,
+            icon: const AppIcon.small(AppIcons.checkOut),
+            label: const Text('Check-out', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
           ),
-          onPressed: widget.onTap,
-          icon: const AppIcon.small(AppIcons.checkOut),
-          label: const Text('Check-out', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
         ),
       );
     }
 
     if (room.isDirty) {
-      return SizedBox(
-        width: double.infinity,
-        height: 34,
-        child: OutlinedButton.icon(
-          style: OutlinedButton.styleFrom(
-            foregroundColor: AppColors.statusDirtyText,
-            side: const BorderSide(color: AppColors.statusDirty),
-            padding: EdgeInsets.zero,
-            shape: const RoundedRectangleBorder(
-              borderRadius: AppRadius.roundedSm,
+      return Semantics(
+        container: true,
+        button: true,
+        identifier: 'room_action_clean_button',
+        child: SizedBox(
+          width: double.infinity,
+          height: 34,
+          child: OutlinedButton.icon(
+            style: OutlinedButton.styleFrom(
+              foregroundColor: AppColors.statusDirtyText,
+              side: const BorderSide(color: AppColors.statusDirty),
+              padding: EdgeInsets.zero,
+              shape: const RoundedRectangleBorder(
+                borderRadius: AppRadius.roundedSm,
+              ),
             ),
+            onPressed: widget.onTap,
+            icon: const AppIcon.small(AppIcons.check),
+            label: const Text('Tandai Siap', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
           ),
-          onPressed: widget.onTap,
-          icon: const AppIcon.small(AppIcons.check),
-          label: const Text('Tandai Siap', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
         ),
       );
     }
@@ -586,48 +605,63 @@ class _RoomCardState extends State<RoomCard> with SingleTickerProviderStateMixin
 
   Widget _buildCompactActionButton(RoomModel room) {
     if (room.isAvailable) {
-      return SizedBox(
-        height: 30,
-        child: ElevatedButton(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.brandOrange,
-            foregroundColor: AppColors.white,
-            padding: const EdgeInsets.symmetric(horizontal: 8),
-            shape: const RoundedRectangleBorder(borderRadius: AppRadius.roundedSm),
+      return Semantics(
+        container: true,
+        button: true,
+        identifier: 'room_action_checkin_button',
+        child: SizedBox(
+          height: 30,
+          child: ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.brandOrange,
+              foregroundColor: AppColors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              shape: const RoundedRectangleBorder(borderRadius: AppRadius.roundedSm),
+            ),
+            onPressed: widget.onTap,
+            child: const Text('Check-in', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600)),
           ),
-          onPressed: widget.onTap,
-          child: const Text('Check-in', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600)),
         ),
       );
     }
     if (room.isOccupied) {
-      return SizedBox(
-        height: 30,
-        child: OutlinedButton(
-          style: OutlinedButton.styleFrom(
-            foregroundColor: AppColors.statusOccupiedText,
-            side: const BorderSide(color: AppColors.statusOccupied),
-            backgroundColor: AppColors.statusOccupiedBg,
-            padding: const EdgeInsets.symmetric(horizontal: 8),
-            shape: const RoundedRectangleBorder(borderRadius: AppRadius.roundedSm),
+      return Semantics(
+        container: true,
+        button: true,
+        identifier: 'room_action_checkout_button',
+        child: SizedBox(
+          height: 30,
+          child: OutlinedButton(
+            style: OutlinedButton.styleFrom(
+              foregroundColor: AppColors.statusOccupiedText,
+              side: const BorderSide(color: AppColors.statusOccupied),
+              backgroundColor: AppColors.statusOccupiedBg,
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              shape: const RoundedRectangleBorder(borderRadius: AppRadius.roundedSm),
+            ),
+            onPressed: widget.onTap,
+            child: const Text('Check-out', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600)),
           ),
-          onPressed: widget.onTap,
-          child: const Text('Check-out', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600)),
         ),
       );
     }
     if (room.isDirty) {
-      return SizedBox(
-        height: 30,
-        child: OutlinedButton(
-          style: OutlinedButton.styleFrom(
-            foregroundColor: AppColors.statusDirtyText,
-            side: const BorderSide(color: AppColors.statusDirty),
-            padding: const EdgeInsets.symmetric(horizontal: 8),
-            shape: const RoundedRectangleBorder(borderRadius: AppRadius.roundedSm),
+      return Semantics(
+        container: true,
+        button: true,
+        identifier: 'room_action_clean_button',
+        child: SizedBox(
+          height: 30,
+          child: OutlinedButton(
+            style: OutlinedButton.styleFrom(
+              foregroundColor: AppColors.statusDirtyText,
+              side: const BorderSide(color: AppColors.statusDirty),
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              shape: const RoundedRectangleBorder(borderRadius: AppRadius.roundedSm),
+            ),
+            onPressed: widget.onTap,
+            child: const Text('Bersihkan', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600)),
           ),
-          onPressed: widget.onTap,
-          child: const Text('Bersihkan', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600)),
         ),
       );
     }

@@ -43,3 +43,15 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Appium and QA test artifacts
+test_appium/node_modules/
+docs/qa/*.png
+docs/qa/**/*.png
+docs/qa/*.xml
+docs/qa/**/*.xml
+docs/screenshots/
+dev_credentials.json
+*.local.dart
+
+
