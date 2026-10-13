@@ -8,7 +8,7 @@ import 'package:sinarharapan_app/features/room_management/data/room_repository.d
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  group('TAHAP 3 — Validasi Input Mirroring Backend (backend.md §8.1)', () {
+  group('TAHAP 3 — Validasi Input Mirroring Backend (docs/specs/backend.md §8.1)', () {
     test('Validasi nomor WhatsApp: wajib diawali +62 atau 08 dan 10-15 karakter', () {
       expect(FlutterValidation.validateWa('081234567890'), null);
       expect(FlutterValidation.validateWa('+6281234567890'), null);

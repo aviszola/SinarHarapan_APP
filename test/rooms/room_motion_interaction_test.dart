@@ -833,19 +833,28 @@ void main() {
       AnimatedScale scaleWidget = tester.widget<AnimatedScale>(find.byType(AnimatedScale));
       expect(scaleWidget.scale, 1.0);
 
-      // Pointer down: scale turun ke 0.98
+      // 1. Pointer down: scale turun ke 0.98
       final gesture = await tester.startGesture(tester.getCenter(find.byType(RoomCard)));
       await tester.pump();
 
       scaleWidget = tester.widget<AnimatedScale>(find.byType(AnimatedScale));
       expect(scaleWidget.scale, closeTo(0.98, 0.005), reason: 'Tekan kartu memicu scale 0.98');
 
-      // Pointer up: kembali ke scale 1.0
-      await gesture.up();
+      // 2. Pointer cancel: kembali ke scale 1.0
+      await gesture.cancel();
       await tester.pump();
 
       scaleWidget = tester.widget<AnimatedScale>(find.byType(AnimatedScale));
-      expect(scaleWidget.scale, 1.0);
+      expect(scaleWidget.scale, 1.0, reason: 'Membatalkan gesture mengembalikan scale ke 1.0');
+
+      // 3. Pointer down & up normal: kembali ke scale 1.0
+      final gesture2 = await tester.startGesture(tester.getCenter(find.byType(RoomCard)));
+      await tester.pump();
+      await gesture2.up();
+      await tester.pump();
+
+      scaleWidget = tester.widget<AnimatedScale>(find.byType(AnimatedScale));
+      expect(scaleWidget.scale, 1.0, reason: 'Pointer up mengembalikan scale ke 1.0');
     });
 
     testWidgets('RoomCard: Keyboard navigation (Focus + Enter) triggers onTap callback', (tester) async {

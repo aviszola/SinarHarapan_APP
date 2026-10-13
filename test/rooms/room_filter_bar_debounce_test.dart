@@ -5,7 +5,6 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:sinarharapan_app/app/theme.dart';
 import 'package:sinarharapan_app/features/room_management/data/room_repository.dart';
 import 'package:sinarharapan_app/features/room_management/domain/room_model.dart';
-import 'package:sinarharapan_app/features/room_management/presentation/room_card.dart';
 import 'package:sinarharapan_app/features/room_management/presentation/room_controller.dart';
 import 'package:sinarharapan_app/features/room_management/presentation/room_filter_bar.dart';
 import 'package:sinarharapan_app/features/shared_widgets/status_badge.dart';
@@ -299,100 +298,9 @@ void main() {
       expect(reducedAnimatedContainer.duration, Duration.zero);
     });
 
-    testWidgets('RoomCard preserves scale 1.0 even when pressed if disableAnimations is true', (tester) async {
-      const room = RoomModel(
-        id: 'rm-101',
-        roomNumber: '101',
-        roomType: 'Standard',
-        floor: 1,
-        basePricePerNight: 250000,
-        facilities: ['AC', 'WiFi'],
-        status: RoomStatusType.available,
-      );
-
-      // Render dengan reduced motion aktif
-      await tester.pumpWidget(
-        MaterialApp(
-          theme: AppTheme.lightTheme,
-          home: Scaffold(
-            body: MediaQuery(
-              data: const MediaQueryData(disableAnimations: true),
-              child: RoomCard(
-                room: room,
-                onTap: () {},
-              ),
-            ),
-          ),
-        ),
-      );
-      await tester.pumpAndSettle();
-
-      final cardFinder = find.byType(RoomCard);
-      final gesture = await tester.startGesture(tester.getCenter(cardFinder));
-      await tester.pump();
-
-      // Pada reduced motion, AnimatedScale harus tetap 1.0 (tidak mengecil ke 0.99)
-      final scaleWidget = tester.widget<AnimatedScale>(find.byType(AnimatedScale));
-      expect(scaleWidget.scale, 1.0);
-
-      await gesture.up();
-      await tester.pumpAndSettle();
-    });
   });
 
   group('Target F: Animation Lifecycle & Pointer Cleanup Tests', () {
-    testWidgets('RoomCard pointer down sets scale 0.99 and pointer cancel restores scale 1.0', (tester) async {
-      const room = RoomModel(
-        id: 'rm-101',
-        roomNumber: '101',
-        roomType: 'Standard',
-        floor: 1,
-        basePricePerNight: 250000,
-        facilities: ['AC', 'WiFi'],
-        status: RoomStatusType.available,
-      );
-
-      await tester.pumpWidget(
-        MaterialApp(
-          theme: AppTheme.lightTheme,
-          home: Scaffold(
-            body: MediaQuery(
-              data: const MediaQueryData(disableAnimations: false),
-              child: Center(
-                child: SizedBox(
-                  width: 300,
-                  height: 200,
-                  child: RoomCard(
-                    room: room,
-                    onTap: () {},
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
-      );
-      await tester.pumpAndSettle();
-
-      AnimatedScale scaleWidget = tester.widget<AnimatedScale>(find.byType(AnimatedScale));
-      expect(scaleWidget.scale, 1.0);
-
-      // 1. Pointer Down
-      final gesture = await tester.startGesture(tester.getCenter(find.byType(RoomCard)));
-      await tester.pump();
-
-      scaleWidget = tester.widget<AnimatedScale>(find.byType(AnimatedScale));
-      expect(scaleWidget.scale, closeTo(0.985, 0.015), reason: 'Tekan kartu memicu scale ±0.98');
-
-      // 2. Pointer Cancel (gesture dibatalkan / drag keluar)
-      await gesture.cancel();
-      await tester.pump();
-
-      scaleWidget = tester.widget<AnimatedScale>(find.byType(AnimatedScale));
-      expect(scaleWidget.scale, 1.0, reason: 'Membatalkan gesture mengembalikan scale ke 1.0');
-
-      await tester.pumpAndSettle();
-    });
 
     testWidgets('Unmounting RoomFilterBar with active in-flight debounce timer disposes cleanly without timer leaks', (tester) async {
       final container = ProviderContainer(
