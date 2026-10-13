@@ -290,10 +290,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             // Input Nama Pengguna (tanpa ikon prefix dekoratif)
             AppTextField(
               label: 'Nama Pengguna',
-              hint: 'Contoh: resepsionis01',
+              hint: 'Contoh: nama_pengguna',
               controller: _usernameController,
               focusNode: _usernameFocusNode,
               autofocus: true,
+              semanticIdentifier: 'login_username_input',
               borderRadius: BorderRadius.circular(10),
               textInputAction: TextInputAction.next,
               autofillHints: const [AutofillHints.username],
@@ -311,6 +312,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               controller: _passwordController,
               focusNode: _passwordFocusNode,
               isPassword: true,
+              semanticIdentifier: 'login_password_input',
               borderRadius: BorderRadius.circular(10),
               textInputAction: TextInputAction.done,
               autofillHints: const [AutofillHints.password],
@@ -324,6 +326,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             // Tombol Utama Masuk (Tinggi >= 52px, radius 10px, teks navy900 kontras 5.65:1 pada oranye)
             AppButton(
               label: 'Masuk ke Sistem',
+              semanticIdentifier: 'login_submit_button',
               variant: AppButtonVariant.primary,
               icon: AppIcons.login,
               height: 52,
@@ -505,9 +508,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   // Input Nama Pengguna
                   AppTextField(
                     label: 'Nama Pengguna',
-                    hint: 'Contoh: resepsionis01',
+                    hint: 'Contoh: nama_pengguna',
                     controller: _usernameController,
                     focusNode: _usernameFocusNode,
+                    semanticIdentifier: 'login_username_input',
                     borderRadius: BorderRadius.circular(10),
                     textInputAction: TextInputAction.next,
                     autofillHints: const [AutofillHints.username],
@@ -525,6 +529,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     controller: _passwordController,
                     focusNode: _passwordFocusNode,
                     isPassword: true,
+                    semanticIdentifier: 'login_password_input',
                     borderRadius: BorderRadius.circular(10),
                     textInputAction: TextInputAction.done,
                     autofillHints: const [AutofillHints.password],
@@ -538,6 +543,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   // Tombol Utama Masuk
                   AppButton(
                     label: 'Masuk ke Sistem',
+                    semanticIdentifier: 'login_submit_button',
                     variant: AppButtonVariant.primary,
                     icon: AppIcons.login,
                     height: 52,

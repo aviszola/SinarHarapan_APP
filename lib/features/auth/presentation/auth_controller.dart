@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/network/api_client.dart';
 import '../data/auth_repository.dart';
@@ -72,6 +73,9 @@ class AuthNotifier extends StateNotifier<AuthState> {
     UserRole role, {
     Future<void> Function(UserModel user)? beforeStateChange,
   }) async {
+    if (kReleaseMode) {
+      throw UnsupportedError('Quick login tidak diizinkan pada build release');
+    }
     state = state.copyWith(isLoading: true, errorMessage: null);
     try {
       final user = await _repo.quickLogin(role);
@@ -85,7 +89,11 @@ class AuthNotifier extends StateNotifier<AuthState> {
     } catch (e) {
       state = state.copyWith(
         isLoading: false,
-        errorMessage: e.toString().replaceAll('Exception: ', ''),
+        errorMessage: e
+            .toString()
+            .replaceAll('Exception: ', '')
+            .replaceAll('Unsupported operation: ', '')
+            .replaceAll('UnsupportedError: ', ''),
       );
       return false;
     }

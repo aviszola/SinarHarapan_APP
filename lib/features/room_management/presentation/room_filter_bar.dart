@@ -1026,6 +1026,7 @@ class _RoomFilterBarState extends ConsumerState<RoomFilterBar>
     if (compact) {
       return Semantics(
         button: true,
+        identifier: 'room_toolbar_refresh_button',
         label: isLoading ? 'Sedang menyegarkan data' : 'Segarkan data kamar',
         child: SizedBox(
           height: 40,
@@ -1058,6 +1059,7 @@ class _RoomFilterBarState extends ConsumerState<RoomFilterBar>
 
     return Semantics(
       button: true,
+      identifier: 'room_toolbar_refresh_button',
       label: isLoading ? 'Sedang menyegarkan data' : 'Segarkan data kamar',
       child: OutlinedButton.icon(
         style: OutlinedButton.styleFrom(

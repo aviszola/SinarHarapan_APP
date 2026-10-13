@@ -1,0 +1,13 @@
+{
+  "name": "sinarharapan-appium-tests",
+  "version": "1.0.0",
+  "description": "Appium Mobile UI Automation Tests for Sinar Harapan PMS",
+  "main": "smoke_test.js",
+  "type": "module",
+  "scripts": {
+    "test:smoke": "node smoke_test.js"
+  },
+  "dependencies": {
+    "webdriverio": "^9.6.0"
+  }
+}
