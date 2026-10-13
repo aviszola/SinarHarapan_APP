@@ -74,10 +74,54 @@ class RoomRepository {
   final ApiClient _api = ApiClient();
 
   // ---------------------------------------------------------------------------
+  // IN-MEMORY MOCK STORE (Digunakan jika AppConfig.useMock aktif)
+  // ---------------------------------------------------------------------------
+  static List<RoomModel>? _inMemoryMockRooms;
+
+  static List<RoomModel> get _mockRooms {
+    _inMemoryMockRooms ??= List<RoomModel>.from(kRealHotelRooms);
+    return _inMemoryMockRooms!;
+  }
+
+  static void resetMockRooms() {
+    _inMemoryMockRooms = List<RoomModel>.from(kRealHotelRooms);
+  }
+
+  static String _toBackendRoomType(String localType) {
+    switch (localType.toUpperCase()) {
+      case 'KIPAS':
+        return 'Standard';
+      case 'AC':
+        return 'Superior';
+      case 'AC TWIN':
+      case 'TWIN':
+        return 'Deluxe';
+      default:
+        return const ['Standard', 'Superior', 'Deluxe', 'Family'].contains(localType)
+            ? localType
+            : 'Superior';
+    }
+  }
+
+  // ---------------------------------------------------------------------------
   // READ — fallback ke data seed riil jika AppConfig.useMock aktif atau API belum terhubung
   // ---------------------------------------------------------------------------
 
   Future<List<RoomModel>> getRooms({String? roomType, int? floor, String? status}) async {
+    if (AppConfig.useMock) {
+      var list = List<RoomModel>.from(_mockRooms);
+      if (roomType != null && roomType != 'ALL') {
+        list = list.where((r) => r.roomType == roomType).toList();
+      }
+      if (floor != null && floor != 0) {
+        list = list.where((r) => r.floor == floor).toList();
+      }
+      if (status != null) {
+        list = list.where((r) => r.status.name.toUpperCase() == status.toUpperCase()).toList();
+      }
+      return list..sort(compareRooms);
+    }
+
     final params = <String, dynamic>{};
     if (roomType != null && roomType != 'ALL') params['roomType'] = roomType;
     if (floor != null && floor != 0) params['floor'] = floor.toString();
@@ -86,10 +130,26 @@ class RoomRepository {
     try {
       final res = await _api.get('/rooms', queryParams: params.isEmpty ? null : params);
       if (res is List && res.isNotEmpty) {
-        final rooms = res
+        var rooms = res
             .map((item) => RoomModel.fromJson(item as Map<String, dynamic>))
-            .toList()
-          ..sort(compareRooms);
+            .toList();
+
+        // Jangan sertakan kamar contoh lama (002, 102, 103, 400)
+        const legacyNumbers = {'002', '102', '103', '400'};
+        final realRoomsOnly = rooms.where((r) => !legacyNumbers.contains(r.roomNumber)).toList();
+        if (realRoomsOnly.isNotEmpty) {
+          rooms = realRoomsOnly;
+        }
+
+        // Pastikan seluruh 16 kamar riil Sinar Harapan selalu lengkap
+        final existingNumbers = rooms.map((r) => r.roomNumber).toSet();
+        for (final seed in kRealHotelRooms) {
+          if (!existingNumbers.contains(seed.roomNumber)) {
+            rooms.add(seed);
+          }
+        }
+
+        rooms.sort(compareRooms);
 
         // Backend GET /rooms tidak mengembalikan activeReservation (hanya di GET /rooms/:id).
         final occupiedIndices = <int>[];
@@ -112,20 +172,19 @@ class RoomRepository {
 
         return rooms;
       }
-    } catch (_) {
-      if (AppConfig.useMock) {
-        return seedRooms();
-      }
-    }
+    } catch (_) {}
 
-    if (AppConfig.useMock) {
-      return seedRooms();
-    }
     return [];
   }
 
   /// GET /rooms/status — polling ringan tiap 15 detik (endpoint.md §3.2, PRD FR-ROOM-07)
   Future<List<RoomStatusSnapshot>> getRoomStatusOnly() async {
+    if (AppConfig.useMock) {
+      return _mockRooms
+          .map((r) => RoomStatusSnapshot(id: r.id, roomNumber: r.roomNumber, status: r.status))
+          .toList();
+    }
+
     try {
       final res = await _api.get('/rooms/status');
       if (res is List && res.isNotEmpty) {
@@ -135,29 +194,27 @@ class RoomRepository {
       }
     } catch (_) {}
 
-    if (AppConfig.useMock) {
-      return seedRooms()
-          .map((r) => RoomStatusSnapshot(id: r.id, roomNumber: r.roomNumber, status: r.status))
-          .toList();
-    }
     return [];
   }
 
   Future<RoomModel?> getRoomById(String id) async {
+    if (AppConfig.useMock) {
+      return _mockRooms.cast<RoomModel?>().firstWhere(
+        (r) => r?.id == id || r?.roomNumber == id,
+        orElse: () => null,
+      );
+    }
+
     try {
       final res = await _api.get('/rooms/$id');
       if (res is Map<String, dynamic>) return RoomModel.fromJson(res);
     } catch (_) {}
 
-    if (AppConfig.useMock) {
-      final all = seedRooms();
-      return all.firstWhere((r) => r.id == id || r.roomNumber == id, orElse: () => all.first);
-    }
     return null;
   }
 
   // ---------------------------------------------------------------------------
-  // WRITE — tidak ada fallback lokal; gagal = lempar exception ke UI
+  // WRITE
   // ---------------------------------------------------------------------------
 
   /// POST /rooms — Manager only, hanya field whitelist DTO
@@ -168,9 +225,29 @@ class RoomRepository {
     required int basePricePerNight,
     required List<String> facilities,
   }) async {
+    if (AppConfig.useMock) {
+      final exists = _mockRooms.any((r) => r.roomNumber == roomNumber && r.floor == floor);
+      if (exists) {
+        throw ApiException('Kamar dengan nomor $roomNumber di lantai $floor sudah ada',
+            code: ApiErrorCode.conflict);
+      }
+      final newRoom = RoomModel(
+        id: 'rm-mock-${roomNumber.toLowerCase()}',
+        roomNumber: roomNumber,
+        roomType: roomType,
+        floor: floor,
+        basePricePerNight: basePricePerNight,
+        facilities: facilities,
+        status: RoomStatusType.available,
+      );
+      _mockRooms.add(newRoom);
+      _mockRooms.sort(compareRooms);
+      return newRoom;
+    }
+
     final res = await _api.post('/rooms', body: {
       'roomNumber': roomNumber,
-      'roomType': roomType,
+      'roomType': _toBackendRoomType(roomType),
       'floor': floor,
       'basePricePerNight': basePricePerNight,
       if (facilities.isNotEmpty) 'facilities': facilities,
@@ -189,9 +266,54 @@ class RoomRepository {
     List<String>? facilities,
     String? status,
   }) async {
+    if (AppConfig.useMock) {
+      final idx = _mockRooms.indexWhere((r) => r.id == id || r.roomNumber == id);
+      if (idx == -1) throw ApiException('Kamar tidak ditemukan', code: ApiErrorCode.notFound);
+      final c = _mockRooms[idx];
+      RoomStatusType newStatus = c.status;
+      if (status != null) {
+        switch (status.toUpperCase()) {
+          case 'AVAILABLE':
+            newStatus = RoomStatusType.available;
+            break;
+          case 'OCCUPIED':
+            newStatus = RoomStatusType.occupied;
+            break;
+          case 'DIRTY':
+            newStatus = RoomStatusType.dirty;
+            break;
+          case 'MAINTENANCE':
+            newStatus = RoomStatusType.maintenance;
+            break;
+        }
+      }
+      final updated = RoomModel(
+        id: c.id,
+        roomNumber: roomNumber ?? c.roomNumber,
+        roomType: roomType ?? c.roomType,
+        floor: floor ?? c.floor,
+        basePricePerNight: basePricePerNight ?? c.basePricePerNight,
+        facilities: facilities ?? c.facilities,
+        status: newStatus,
+        activeReservationId: c.activeReservationId,
+        activeGuestName: c.activeGuestName,
+        guestNik: c.guestNik,
+        activeGuestPhone: c.activeGuestPhone,
+        bookingSource: c.bookingSource,
+        reddoorzBookingCode: c.reddoorzBookingCode,
+        checkInTime: c.checkInTime,
+        expectedCheckOutTime: c.expectedCheckOutTime,
+        invoiceNumber: c.invoiceNumber,
+        additionalCharges: c.additionalCharges,
+        waReminderStatus: c.waReminderStatus,
+      );
+      _mockRooms[idx] = updated;
+      return updated;
+    }
+
     final body = <String, dynamic>{};
     if (roomNumber != null) body['roomNumber'] = roomNumber;
-    if (roomType != null) body['roomType'] = roomType;
+    if (roomType != null) body['roomType'] = _toBackendRoomType(roomType);
     if (floor != null) body['floor'] = floor;
     if (basePricePerNight != null) body['basePricePerNight'] = basePricePerNight;
     if (facilities != null) body['facilities'] = facilities;
@@ -203,18 +325,36 @@ class RoomRepository {
 
   /// DELETE /rooms/:id — Manager only
   Future<void> deleteRoom(String id) async {
+    if (AppConfig.useMock) {
+      _mockRooms.removeWhere((r) => r.id == id || r.roomNumber == id);
+      return;
+    }
     await _api.delete('/rooms/$id');
   }
 
   /// PATCH /rooms/:id/mark-clean — Receptionist (FR-OUT-04)
   Future<void> markRoomClean(String id) async {
+    if (AppConfig.useMock) {
+      final idx = _mockRooms.indexWhere((r) => r.id == id || r.roomNumber == id);
+      if (idx != -1) {
+        final c = _mockRooms[idx];
+        _mockRooms[idx] = RoomModel(
+          id: c.id,
+          roomNumber: c.roomNumber,
+          roomType: c.roomType,
+          floor: c.floor,
+          basePricePerNight: c.basePricePerNight,
+          facilities: c.facilities,
+          status: RoomStatusType.available,
+        );
+      }
+      return;
+    }
     await _api.patch('/rooms/$id/mark-clean');
   }
 
   // ---------------------------------------------------------------------------
   // POST /reservations — check-in
-  // Field disesuaikan PERSIS dengan CreateReservationDto (backend.md §8.1)
-  // forbidNonWhitelisted=true: tidak ada field ekstra yang dikirim
   // ---------------------------------------------------------------------------
 
   Future<Map<String, dynamic>> createReservation({
@@ -247,6 +387,43 @@ class RoomRepository {
           code: ApiErrorCode.validationError);
     }
 
+    if (AppConfig.useMock) {
+      final idx = _mockRooms.indexWhere((r) => r.id == roomId || r.roomNumber == roomId);
+      if (idx == -1) throw ApiException('Kamar tidak ditemukan', code: ApiErrorCode.notFound);
+      final c = _mockRooms[idx];
+      if (c.isOccupied) {
+        throw ApiException('Kamar ${c.roomNumber} sudah ditempati', code: ApiErrorCode.conflict);
+      }
+      final invNumber =
+          'INV-${DateTime.now().year}${DateTime.now().month.toString().padLeft(2, '0')}${DateTime.now().day.toString().padLeft(2, '0')}-${c.roomNumber}';
+      final resId = 'res-mock-${DateTime.now().millisecondsSinceEpoch}';
+      final updated = RoomModel(
+        id: c.id,
+        roomNumber: c.roomNumber,
+        roomType: c.roomType,
+        floor: c.floor,
+        basePricePerNight: roomRate.toInt(),
+        facilities: c.facilities,
+        status: RoomStatusType.occupied,
+        activeReservationId: resId,
+        activeGuestName: guestFullName,
+        guestNik: idNumber,
+        activeGuestPhone: guestPhone,
+        bookingSource: bookingSource,
+        reddoorzBookingCode: reddoorzBookingCode,
+        checkInTime: checkInTime.isNotEmpty ? DateTime.tryParse(checkInTime) ?? DateTime.now() : DateTime.now(),
+        expectedCheckOutTime: expectedCheckOutTime.isNotEmpty ? DateTime.tryParse(expectedCheckOutTime) : null,
+        invoiceNumber: invNumber,
+      );
+      _mockRooms[idx] = updated;
+      return {
+        'id': resId,
+        'invoiceNumber': invNumber,
+        'status': 'ACTIVE',
+        'roomId': c.id,
+      };
+    }
+
     // Bangun payload — hanya field dari DTO, tidak ada yang ekstra
     final guest = <String, dynamic>{
       'idType': idType,
@@ -270,11 +447,9 @@ class RoomRepository {
       'roomRate': roomRate,
       'paymentMethod': paymentMethod,
     };
-    // reddoorzBookingCode — omit key jika null (bukan kirim null)
     if (reddoorzBookingCode != null && reddoorzBookingCode.isNotEmpty) {
       body['reddoorzBookingCode'] = reddoorzBookingCode;
     }
-    // invoiceNumber TIDAK dikirim — backend yang generate (InvoiceService §8.4)
 
     final res = await _api.post('/reservations', body: body);
     if (res is Map<String, dynamic>) return res;
@@ -282,7 +457,7 @@ class RoomRepository {
   }
 
   // ---------------------------------------------------------------------------
-  // POST /reservations/:id/checkout — path diperbaiki dari /checkout
+  // POST /reservations/:id/checkout
   // ---------------------------------------------------------------------------
 
   Future<Map<String, dynamic>> processCheckout({
@@ -290,6 +465,30 @@ class RoomRepository {
     required String actualCheckOutTime, // ISO8601
     required List<Map<String, dynamic>> additionalCharges, // [{label, amount}]
   }) async {
+    if (AppConfig.useMock) {
+      final idx = _mockRooms.indexWhere((r) =>
+          r.activeReservationId == reservationId ||
+          r.id == reservationId ||
+          r.roomNumber == reservationId);
+      if (idx != -1) {
+        final c = _mockRooms[idx];
+        _mockRooms[idx] = RoomModel(
+          id: c.id,
+          roomNumber: c.roomNumber,
+          roomType: c.roomType,
+          floor: c.floor,
+          basePricePerNight: c.basePricePerNight,
+          facilities: c.facilities,
+          status: RoomStatusType.dirty, // Aturan domain: kamar beralih ke DIRTY
+        );
+      }
+      return {
+        'success': true,
+        'message': 'Checkout berhasil (mock in-memory)',
+        'reservationId': reservationId,
+      };
+    }
+
     final res = await _api.post(
       '/reservations/$reservationId/checkout',
       body: {
@@ -309,6 +508,16 @@ class RoomRepository {
     int page = 1,
     int limit = 20,
   }) async {
+    if (AppConfig.useMock) {
+      return _mockRooms.where((r) => r.isOccupied).map((r) => {
+            'id': r.activeReservationId ?? 'res-mock-${r.id}',
+            'roomNumber': r.roomNumber,
+            'guestName': r.activeGuestName ?? 'Tamu Demo',
+            'status': 'ACTIVE',
+            'checkInTime': r.checkInTime?.toIso8601String() ?? DateTime.now().toIso8601String(),
+          }).toList();
+    }
+
     final res = await _api.get('/reservations',
         queryParams: {'page': page.toString(), 'limit': limit.toString()});
     if (res is List) return List<Map<String, dynamic>>.from(res);
@@ -319,12 +528,26 @@ class RoomRepository {
   }
 
   Future<Map<String, dynamic>?> getReservationById(String id) async {
+    if (AppConfig.useMock) {
+      final room = _mockRooms.firstWhere(
+        (r) => r.activeReservationId == id || r.id == id,
+        orElse: () => _mockRooms.first,
+      );
+      return {
+        'id': room.activeReservationId ?? 'res-mock-${room.id}',
+        'roomNumber': room.roomNumber,
+        'guestName': room.activeGuestName ?? 'Tamu Demo',
+        'status': 'ACTIVE',
+      };
+    }
+
     final res = await _api.get('/reservations/$id');
     if (res is Map<String, dynamic>) return res;
     return null;
   }
 
   Future<String?> getInvoiceUrl(String reservationId) async {
+    if (AppConfig.useMock) return null;
     final res = await _api.get('/reservations/$reservationId/invoice');
     if (res is Map<String, dynamic>) {
       return res['invoicePdfUrl']?.toString() ??

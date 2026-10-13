@@ -5,8 +5,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../../app/theme.dart';
+import '../../../core/config/app_config.dart';
 import '../../../theme/app_icons.dart';
 import '../../auth/presentation/auth_controller.dart';
+import '../../room_management/data/room_seed_data.dart';
 import '../../room_management/domain/room_model.dart';
 import '../../room_management/presentation/room_controller.dart';
 import '../../room_management/presentation/room_crud_dialog.dart';
@@ -51,6 +53,8 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
   List<Map<String, dynamic>> _transactions = [];
   bool _isLoadingTransactions = false;
   DateTime _lastUpdated = DateTime.now();
+  bool _hasSeededRealRooms = false;
+  bool _isSeedingRooms = false;
 
   @override
   void initState() {
@@ -181,6 +185,67 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
           message: e.toString().replaceAll('Exception: ', ''),
         );
       }
+    }
+  }
+
+  Future<void> _handleSeedRealRooms() async {
+    if (_isSeedingRooms) return;
+    setState(() => _isSeedingRooms = true);
+
+    try {
+      final currentRooms = ref.read(roomListProvider).valueOrNull ?? [];
+      final existingNumbers = currentRooms.map((r) => r.roomNumber.toUpperCase().trim()).toSet();
+      final missingRooms = kRealHotelRooms
+          .where((r) => !existingNumbers.contains(r.roomNumber.toUpperCase().trim()))
+          .toList();
+
+      if (missingRooms.isEmpty) {
+        setState(() => _hasSeededRealRooms = true);
+        if (mounted) {
+          AppFeedback.showInfo(
+            context,
+            title: 'Kamar Sudah Lengkap',
+            message: 'Seluruh 16 unit kamar Sinar Harapan sudah ada di inventaris.',
+          );
+        }
+        return;
+      }
+
+      int addedCount = 0;
+      for (final seed in missingRooms) {
+        try {
+          await ref.read(roomListProvider.notifier).addRoom(
+            roomNumber: seed.roomNumber,
+            roomType: seed.roomType,
+            floor: seed.floor,
+            basePrice: seed.basePricePerNight,
+            facilities: seed.facilities,
+          );
+          addedCount++;
+        } catch (_) {
+          // Lanjutkan kamar berikutnya jika ada kegagalan / konflik individual
+        }
+      }
+
+      setState(() => _hasSeededRealRooms = true);
+
+      if (mounted) {
+        AppFeedback.showSuccess(
+          context,
+          title: 'Inisialisasi Selesai',
+          message: '$addedCount unit kamar riil Sinar Harapan berhasil ditambahkan ke inventaris.',
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        AppFeedback.showError(
+          context,
+          title: 'Gagal Inisialisasi',
+          message: e.toString().replaceAll('Exception: ', ''),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isSeedingRooms = false);
     }
   }
 
@@ -493,6 +558,23 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
           Expanded(
             child: Column(
               children: [
+                if (AppConfig.useMock)
+                  Container(
+                    width: double.infinity,
+                    color: AppColors.brandOrange,
+                    padding: const EdgeInsets.symmetric(vertical: 4),
+                    child: const Center(
+                      child: Text(
+                        'Mode Data Simulasi Aktif (Data Contoh Mock)',
+                        style: TextStyle(
+                          color: AppColors.white,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 11,
+                        ),
+                      ),
+                    ),
+                  ),
+
                 // Top Action Bar
                 SafeArea(
                   bottom: false,
@@ -584,8 +666,25 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
                           ),
                         ],
 
-                        // If in Inventory tab: show add room button
-                        if (_activeNavIndex == 1)
+                        // If in Inventory tab: show add room button and one-time seed button
+                        if (_activeNavIndex == 1) ...[
+                          if (!_hasSeededRealRooms && rooms.length < 16) ...[
+                            if (isMobile)
+                              IconButton(
+                                tooltip: 'Inisialisasi 16 Kamar Riil',
+                                icon: const AppIcon.medium(AppIcons.clean, color: AppColors.orange600),
+                                onPressed: _isSeedingRooms ? null : _handleSeedRealRooms,
+                              )
+                            else
+                              AppButton(
+                                label: 'Inisialisasi 16 Kamar',
+                                variant: AppButtonVariant.secondary,
+                                icon: AppIcons.clean,
+                                isLoading: _isSeedingRooms,
+                                onPressed: _handleSeedRealRooms,
+                              ),
+                            const SizedBox(width: AppSpacing.xs),
+                          ],
                           if (isMobile)
                             IconButton(
                               tooltip: 'Tambah Unit Kamar',
@@ -609,6 +708,7 @@ class _ManagerDashboardScreenState extends ConsumerState<ManagerDashboardScreen>
                                 );
                               },
                             ),
+                        ],
                       ],
                     ),
                   ),

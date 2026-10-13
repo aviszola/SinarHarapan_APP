@@ -92,10 +92,19 @@ class RoomModel {
         ? null
         : (rawCharges is num ? rawCharges.toDouble() : double.tryParse(rawCharges.toString()));
 
+    var parsedType = json['roomType']?.toString() ?? json['room_type']?.toString() ?? 'AC';
+    if (parsedType == 'Standard') {
+      parsedType = 'Kipas';
+    } else if (parsedType == 'Superior') {
+      parsedType = 'AC';
+    } else if (parsedType == 'Deluxe') {
+      parsedType = 'AC Twin';
+    }
+
     return RoomModel(
       id: json['id']?.toString() ?? '',
       roomNumber: json['roomNumber']?.toString() ?? json['room_number']?.toString() ?? '',
-      roomType: json['roomType']?.toString() ?? json['room_type']?.toString() ?? 'AC',
+      roomType: parsedType,
       floor: json['floor'] is int ? json['floor'] : int.tryParse(json['floor']?.toString() ?? '1') ?? 1,
       basePricePerNight: parsedBasePrice,
       facilities: json['facilities'] is List

@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
+import '../../../core/config/app_config.dart';
 import '../../../core/network/api_client.dart';
 import '../domain/user_model.dart';
 
@@ -40,6 +41,10 @@ class AuthRepository {
     required String username,
     required String password,
   }) async {
+    if (AppConfig.useMock) {
+      throw ApiException('Mode mock: gunakan tombol Mode Pengembangan');
+    }
+
     var cleanUsername = username.trim();
     var cleanPassword = password;
 
@@ -97,6 +102,19 @@ class AuthRepository {
       throw UnsupportedError('Quick login tidak diizinkan pada build release');
     }
 
+    if (AppConfig.useMock) {
+      final isRec = role == UserRole.receptionist;
+      final user = UserModel(
+        id: isRec ? 'mock-rec-01' : 'mock-mgr-01',
+        username: isRec ? 'resepsionis' : 'manager',
+        fullName: isRec ? 'Resepsionis (Mode Mock)' : 'Manajer (Mode Mock)',
+        role: role,
+        token: 'mock-jwt-token-no-network',
+      );
+      await _api.setToken(user.token);
+      return user;
+    }
+
     final isRec = role == UserRole.receptionist;
     final username = isRec
         ? _getDevCred('DEV_RECEPTIONIST_USER', _envRecUser)
@@ -115,6 +133,10 @@ class AuthRepository {
   /// Mengirim POST /auth/logout dengan token aktif ke server,
   /// lalu selalu menghapus token lokal di blok finally.
   Future<void> logout() async {
+    if (AppConfig.useMock) {
+      await _api.setToken(null);
+      return;
+    }
     try {
       if (_api.token != null && _api.token!.isNotEmpty) {
         await _api.post('/auth/logout');

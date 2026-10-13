@@ -68,7 +68,17 @@ class ApiClient {
   ApiClient._internal();
 
   final _storage = SecureTokenStorage();
-  final _httpClient = http.Client();
+  http.Client _httpClient = http.Client();
+
+  @visibleForTesting
+  void setClientForTesting(http.Client client) {
+    _httpClient = client;
+  }
+
+  @visibleForTesting
+  void resetClientForTesting() {
+    _httpClient = http.Client();
+  }
 
   String? _tokenCache;
   bool _isRefreshing = false;
