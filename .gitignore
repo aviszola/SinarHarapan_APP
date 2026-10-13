@@ -44,14 +44,12 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 
-# Appium and QA test artifacts
-test_appium/node_modules/
-docs/qa/*.png
-docs/qa/**/*.png
-docs/qa/*.xml
-docs/qa/**/*.xml
+# QA, Test Artifacts, and Scratch (spesifik tanpa *.png atau *.mjs)
 docs/screenshots/
+docs/qa/
+test_appium/node_modules/
+test_appium/*.png
+**/dump*.xml
+scratch/
 dev_credentials.json
 *.local.dart
-
-

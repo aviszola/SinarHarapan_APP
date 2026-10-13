@@ -11,6 +11,12 @@ Skill ini menetapkan panduan desain, token visual, dan standar anti-slop untuk a
 - **Alat Kerja Operasional Frontdesk**: Digunakan oleh staf hotel berkali-kali per shift kerja. Desain harus efisien, kokoh, ergonomis, dan tidak melelahkan mata.
 - **Bukan Template SaaS Generik**: Hindari kesan landing page promosi marketing. Utamakan data operasional nyata (jam kerja live, nomor shift, status koneksi lokal, ringkasan kamar).
 - **Prinsip Eliminasi**: Setiap elemen UI harus memiliki fungsi jelas. Jika sebuah elemen hanya "tampak bagus" tanpa kegunaan operasional, elemen tersebut wajib dihapus.
+- **Kebijakan Media & Pelaporan**:
+  - Laporan disajikan secara ringkas langsung di chat (dilarang membuat file `.md` baru di repo atau folder `docs/`).
+  - Dilarang membuat atau menyimpan file screenshot, gambar, atau video di repositori.
+  - Agent tidak merekam layar atau mengekstrak frame video (pengguna yang merekam layar).
+  - Dilarang menulis, menyimpan, atau mencatat kredensial pengguna di kode/repo.
+  - Dilarang menghapus data pengguna atau entitas operasional tanpa persetujuan eksplisit.
 
 ## 2. Hard Constraints & Aturan Warna
 - **Zero Color Mutation**: Dilarang menambahkan warna baru, gradient baru, atau kode hex ad-hoc.
@@ -71,25 +77,30 @@ Skill ini menetapkan panduan desain, token visual, dan standar anti-slop untuk a
   - `SafeArea` + `SingleChildScrollView` + `ConstrainedBox` + `resizeToAvoidBottomInset: true` agar input tidak tertutup virtual keyboard.
   - Padding horizontal 20–24px, `maxWidth: 480`.
 
+## 7. Signature Transition (Allowed Exception)
+- Tepat satu animasi dekoratif yang diizinkan: split-door reveal pada login berhasil (≤ 700 ms, easeInOutCubic, warna tema yang ada).
+- Wajib di-skip saat reduced motion aktif, tidak pernah jalan saat login gagal, dan tidak pernah memicu navigasi ganda.
 
-## Signature Transition (allowed exception)
-- Exactly one decorative-looking motion is permitted: the split-door reveal on successful login (≤ 700 ms, easeInOutCubic, existing theme colors only).
-- Must be skipped when reduced motion is on, never run on failed login, and never block or double-trigger navigation.
-- No other entrance or decorative animations are allowed without an explicit request.
+## 8. Filter Toolbar Pattern
+- Ringkasan data dan filter tidak diduplikasi: counter yang memetakan ke filter merupakan chip yang dapat diklik dengan state bersama.
+- Filter aktif terlihat pada kontrol itu sendiri dan dapat di-reset dalam satu tindakan ("Reset (n)").
+- Dropdown menus terpasang di bawah trigger (MenuAnchor), item terpilih menampilkan centang.
+- Refresh controls menampilkan state loading, sukses, dan error serta waktu pembaruan nyata.
+- Search: tombol hapus, debounced (Timer di-cancel pada reset/dispose).
+- Layout responsif per breakpoint (≥1400 1 baris, 900–1399 2 baris, <900 stacked); tanpa overflow.
 
-## Filter Toolbar Pattern
-- Data summary and filter must not be duplicated: summary counts that map to a filter are clickable chips sharing the same state.
-- Active filters must be visible on the control itself (value label + stronger border) and resettable in one action ("Reset (n)").
-- Dropdown menus: anchored directly under the trigger (MenuAnchor), selected item shows a checkmark, options show real counts, keyboard navigable, no default grey Material highlight.
-- Refresh controls show loading, success, and error states and a real "last updated" time; never stuck loading.
-- Search: clear button, debounced (Timer cancelled on clear/reset/dispose), shortcut only if it does not conflict with dialogs.
-- Empty results always show an empty state with a reset action.
-- Layout is planned per breakpoint (≥1400 one row, 900–1399 two rows, <900 stacked); no overflow at any listed width.
+## 9. Motion Catalog & Verifikasi
+- Prioritas 1: state loading→sukses tombol aksi dengan in-flight guard; highlight kartu kamar satu kali; cross-fade status badge ukuran tetap; dialog transaksional fade+scale.
+- Prioritas 2: skeleton list load, filter list fade, angka ringkasan animasi, refresh status.
+- Durasi: interaksi 120–200 ms; highlight kartu ≤ 400 ms; split-door ≤ 700 ms.
+- Dilarang: animasi berulang terus menerus (looping), motion pada layar OCR, animasi > 300 ms untuk aksi berulang.
+- Semua motion mematuhi `MediaQuery.maybeDisableAnimationsOf`; controller dan timer wajib di-dispose.
+- Bukti verifikasi visual dilakukan langsung oleh pengguna via rekaman desktop/perangkat fisik (bukan oleh agen).
 
-
-## Motion Catalog
-- Priority 1 (transactional feedback): action button loading→success state with in-flight guard; room card one-time highlight on successful transaction; status badge cross-fade with fixed size; transactional dialogs fade+scale.
-- Priority 2: staggered/skeleton list load, filter list fade, animated summary numbers, refresh success/error indicator, tab fade.
-- Durations: interactions 120–200 ms; card highlight ≤ 400 ms; login split-door ≤ 700 ms (only exception).
-- Forbidden: infinite/looping animations, motion on OCR/ID verification screens, anything > 300 ms for repeated actions, multiple large animations at once.
-- All motion honors `MediaQuery.maybeDisableAnimationsOf`; controllers and timers are disposed; evidence = frame extraction from a screen recording.
+## 10. Verification Checklist
+- [ ] `git diff` menunjukkan 0 perubahan nilai warna
+- [ ] `flutter analyze` tidak ada warning baru (0 issues)
+- [ ] `flutter test` lulus tanpa menulis screenshot ke repository
+- [ ] Tidak ada overflow pada breakpoint yang diuji dan skala teks 1.3x
+- [ ] Controllers/FocusNodes/AnimationControllers di-dispose dengan benar
+- [ ] Ringkasan laporan disajikan di chat secara padat tanpa membuat berkas .md baru

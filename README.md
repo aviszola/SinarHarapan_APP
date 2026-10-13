@@ -186,9 +186,18 @@ sinarharapan_app/
 │       ├── validate_parity.py          # Script validasi ID bug dua arah
 │       └── calc_totals.py              # Script kalkulasi matriks hasil audit QA
 │
-├── PRD.MD                              # Dokumen Spesifikasi Kebutuhan Produk (v1.0 Baseline)
-├── Arsitektur.md                       # Dokumen Spesifikasi Arsitektur Teknis Sistem
-├── design.md                           # Dokumen Pedoman Desain & Design Tokens
+├── docs/
+│   └── specs/                          # DOKUMEN SPESIFIKASI SISTEM
+│       ├── PRD.md                      # Dokumen Spesifikasi Kebutuhan Produk (v1.0 Baseline)
+│       ├── Arsitektur.md               # Dokumen Spesifikasi Arsitektur Teknis Sistem
+│       ├── backend.md                  # Spesifikasi API Backend & Service Layer
+│       ├── database.md                 # Skema Basis Data PostgreSQL
+│       ├── endpoint.md                 # Kontrak OpenAPI Endpoint REST
+│       ├── frontend.md                 # Panduan Implementasi Frontend Flutter
+│       ├── security.md                 # Kebijakan Keamanan & Kepatuhan UU PDP
+│       ├── systemdesign.md             # Rancangan Sistem & Infrastruktur
+│       ├── design.md                   # Dokumen Pedoman Desain & Design Tokens
+│       └── bisnisflow.md               # Alur Proses Bisnis & Operasional Hotel
 └── LAPORAN_QA_v3.md                    # Laporan Audit QA Komprehensif (98 Test Cases)
 ```
 
@@ -371,7 +380,7 @@ erDiagram
 
 ## 🎨 Design System & Aksesibilitas (WCAG 2.1)
 
-Aplikasi mengikuti panduan desain ketat di `design.md` tanpa elemen *generic AI slop* (tidak menggunakan blur berlebihan, glassmorphism sembarangan, atau gradien acak).
+Aplikasi mengikuti panduan desain ketat di `docs/specs/design.md` tanpa elemen *generic AI slop* (tidak menggunakan blur berlebihan, glassmorphism sembarangan, atau gradien acak).
 
 ### Token Warna Resmi
 | Peran Warna | Hex Code | Relative Luminance ($L$) | Penggunaan |
