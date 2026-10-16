@@ -87,11 +87,15 @@ void main() {
 
       expect(find.text('Masuk ke Sistem'), findsWidgets);
       expect(find.text('Hotel Sinar Harapan'), findsOneWidget);
-      expect(find.text('Frontdesk PMS v1.0'), findsWidgets);
+      expect(find.text('Masuk menggunakan akun staf hotel Anda.'), findsOneWidget);
+      expect(find.text('Nama Pengguna'), findsOneWidget);
+      expect(find.text('Kata Sandi'), findsOneWidget);
+      expect(find.text('Lupa kata sandi? Hubungi Manajer Hotel.'), findsOneWidget);
+      expect(find.text('Gunakan akun Anda sendiri. Jaga kerahasiaan akses hotel.'), findsOneWidget);
       expect(tester.takeException(), isNull, reason: 'Tidak boleh ada overflow pada 390px');
     });
 
-    testWidgets('2. Render LoginScreen pada lebar Desktop 1920x1080 dengan panel operasional tanpa overflow', (tester) async {
+    testWidgets('2. Render LoginScreen pada lebar Desktop 1920x1080 dengan panel Framer tanpa overflow', (tester) async {
       tester.view.physicalSize = const Size(1920, 1080);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.resetPhysicalSize);
@@ -111,10 +115,12 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Masuk ke Sistem'), findsWidgets);
-      expect(find.text('WAKTU OPERASIONAL SISTEM'), findsOneWidget);
-      expect(find.text('Operasional Resepsionis & Manajemen'), findsOneWidget);
-      expect(find.text('FRONTDESK PMS'), findsOneWidget);
-      expect(find.text('SH'), findsWidgets);
+      expect(find.text('Hotel Sinar Harapan'), findsOneWidget);
+      expect(find.text('Sistem operasional\nfrontdesk dan\nmanajemen hotel.'), findsOneWidget);
+      expect(find.text('Ruang kerja staf untuk pelayanan yang tertata, dari kedatangan hingga kepulangan tamu.'), findsOneWidget);
+      expect(find.text('Khusus staf Hotel Sinar Harapan'), findsOneWidget);
+      expect(find.text('Masuk menggunakan akun staf hotel Anda.'), findsOneWidget);
+      expect(find.text('Gunakan akun Anda sendiri. Jaga kerahasiaan akses hotel.'), findsOneWidget);
       expect(tester.takeException(), isNull, reason: 'Tidak boleh ada overflow pada 1920px');
     });
 

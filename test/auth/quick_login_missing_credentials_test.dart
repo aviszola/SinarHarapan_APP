@@ -43,7 +43,7 @@ void main() {
       );
     });
 
-    testWidgets('2. UI LoginScreen menampilkan banner error jelas saat quick login tanpa kredensial', (tester) async {
+    testWidgets('2. UI LoginScreen tidak menampilkan Mode Pengembangan dan tombol quick login', (tester) async {
       tester.view.physicalSize = const Size(1280, 800);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.resetPhysicalSize);
@@ -65,15 +65,10 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      // Cari tombol Resepsionis di panel Mode Pengembangan desktop
-      final receptionistQuickBtn = find.text('Resepsionis');
-      expect(receptionistQuickBtn, findsOneWidget);
-
-      await tester.tap(receptionistQuickBtn);
-      await tester.pumpAndSettle();
-
-      // Verifikasi banner error muncul dengan pesan yang ditentukan
-      expect(find.text('Kredensial dev belum dikonfigurasi'), findsOneWidget);
+      // Verifikasi Mode Pengembangan dan quick login buttons tidak muncul di UI
+      expect(find.text('Mode Pengembangan'), findsNothing);
+      expect(find.text('Resepsionis'), findsNothing);
+      expect(find.text('Manajer Hotel'), findsNothing);
     });
   });
 }
