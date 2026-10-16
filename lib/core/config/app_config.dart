@@ -12,9 +12,20 @@ class AppConfig {
     return 'https://sinar-harapan-backend-production.up.railway.app/api';
   }
 
-  // Mock hanya boleh aktif jika kDebugMode DAN diaktifkan via --dart-define=USE_MOCK=true
+  // Mock hanya dihormati jika BUKAN ReleaseMode (!kReleaseMode) dan diaktifkan via --dart-define=USE_MOCK=true
   static const bool _envUseMock = bool.fromEnvironment('USE_MOCK', defaultValue: false);
-  static bool get useMock => kDebugMode && _envUseMock;
+  static const String _envUseMockStr = String.fromEnvironment('USE_MOCK');
+  static bool? _mockOverrideForTesting;
+
+  @visibleForTesting
+  static void setMockForTesting(bool? value) {
+    _mockOverrideForTesting = value;
+  }
+
+  static bool get useMock =>
+      !kReleaseMode &&
+      (_mockOverrideForTesting ??
+          (_envUseMock || _envUseMockStr.toLowerCase() == 'true' || _envUseMockStr == '1'));
 
   // Timeout terpisah untuk menangani cold start backend
   static const Duration connectTimeout = Duration(seconds: 20);

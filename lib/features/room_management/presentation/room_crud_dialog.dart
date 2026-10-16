@@ -25,19 +25,12 @@ class _RoomCrudDialogState extends ConsumerState<RoomCrudDialog> {
 
   late String _selectedType;
   late int _selectedFloor;
-  final Set<String> _selectedFacilities = {'AC', 'WiFi Cepat', 'Smart TV 43"', 'Shower Air Hangat'};
+  final Set<String> _selectedFacilities = {'AC'};
 
   final List<String> _availableFacilities = [
     'AC',
-    'Smart TV 43"',
-    'Smart TV 50"',
-    'WiFi Cepat',
-    'Shower Air Hangat',
-    'Bathtub',
-    'Kulkas Mini',
-    'Balkon View',
-    'King Bed',
-    '2 Queen Beds',
+    'Kipas',
+    'Twin',
   ];
 
   @override

@@ -41,7 +41,7 @@ final List<RoomModel> kRealHotelRooms = [
     roomType: 'AC',
     floor: 1,
     basePricePerNight: 170000,
-    facilities: ['AC', 'WiFi', 'TV', 'Kamar Mandi Dalam'],
+    facilities: ['AC'],
     status: RoomStatusType.available,
   ),
   const RoomModel(
@@ -50,7 +50,7 @@ final List<RoomModel> kRealHotelRooms = [
     roomType: 'AC',
     floor: 1,
     basePricePerNight: 170000,
-    facilities: ['AC', 'WiFi', 'TV', 'Kamar Mandi Dalam'],
+    facilities: ['AC'],
     status: RoomStatusType.available,
   ),
   const RoomModel(
@@ -59,7 +59,7 @@ final List<RoomModel> kRealHotelRooms = [
     roomType: 'AC',
     floor: 1,
     basePricePerNight: 170000,
-    facilities: ['AC', 'WiFi', 'TV', 'Kamar Mandi Dalam'],
+    facilities: ['AC'],
     status: RoomStatusType.available,
   ),
   const RoomModel(
@@ -68,7 +68,7 @@ final List<RoomModel> kRealHotelRooms = [
     roomType: 'Kipas',
     floor: 1,
     basePricePerNight: 120000,
-    facilities: ['Kipas Angin', 'WiFi', 'Kamar Mandi Dalam'],
+    facilities: ['Kipas'],
     status: RoomStatusType.available,
   ),
   const RoomModel(
@@ -77,7 +77,7 @@ final List<RoomModel> kRealHotelRooms = [
     roomType: 'AC',
     floor: 1,
     basePricePerNight: 170000,
-    facilities: ['AC', 'WiFi', 'TV', 'Kamar Mandi Dalam'],
+    facilities: ['AC'],
     status: RoomStatusType.available,
   ),
   const RoomModel(
@@ -86,7 +86,7 @@ final List<RoomModel> kRealHotelRooms = [
     roomType: 'AC',
     floor: 1,
     basePricePerNight: 200000,
-    facilities: ['AC', 'WiFi', 'TV', 'Kamar Mandi Dalam'],
+    facilities: ['AC'],
     status: RoomStatusType.available,
   ),
 
@@ -98,7 +98,7 @@ final List<RoomModel> kRealHotelRooms = [
     roomType: 'AC',
     floor: 2,
     basePricePerNight: 170000,
-    facilities: ['AC', 'WiFi', 'TV', 'Kamar Mandi Dalam'],
+    facilities: ['AC'],
     status: RoomStatusType.available,
   ),
   const RoomModel(
@@ -107,7 +107,7 @@ final List<RoomModel> kRealHotelRooms = [
     roomType: 'AC Twin',
     floor: 2,
     basePricePerNight: 200000,
-    facilities: ['AC', 'Twin Bed', 'WiFi', 'TV', 'Kamar Mandi Dalam'],
+    facilities: ['AC', 'Twin'],
     status: RoomStatusType.available,
   ),
   const RoomModel(
@@ -116,7 +116,7 @@ final List<RoomModel> kRealHotelRooms = [
     roomType: 'Kipas',
     floor: 2,
     basePricePerNight: 120000,
-    facilities: ['Kipas Angin', 'WiFi', 'Kamar Mandi Dalam'],
+    facilities: ['Kipas'],
     status: RoomStatusType.available,
   ),
   const RoomModel(
@@ -125,7 +125,7 @@ final List<RoomModel> kRealHotelRooms = [
     roomType: 'AC Twin',
     floor: 2,
     basePricePerNight: 200000,
-    facilities: ['AC', 'Twin Bed', 'WiFi', 'TV', 'Kamar Mandi Dalam'],
+    facilities: ['AC', 'Twin'],
     status: RoomStatusType.available,
   ),
   const RoomModel(
@@ -134,7 +134,7 @@ final List<RoomModel> kRealHotelRooms = [
     roomType: 'AC',
     floor: 2,
     basePricePerNight: 170000,
-    facilities: ['AC', 'WiFi', 'TV', 'Kamar Mandi Dalam'],
+    facilities: ['AC'],
     status: RoomStatusType.available,
   ),
   const RoomModel(
@@ -143,7 +143,7 @@ final List<RoomModel> kRealHotelRooms = [
     roomType: 'AC',
     floor: 2,
     basePricePerNight: 170000,
-    facilities: ['AC', 'WiFi', 'TV', 'Kamar Mandi Dalam'],
+    facilities: ['AC'],
     status: RoomStatusType.available,
   ),
   const RoomModel(
@@ -152,7 +152,7 @@ final List<RoomModel> kRealHotelRooms = [
     roomType: 'AC',
     floor: 2,
     basePricePerNight: 170000,
-    facilities: ['AC', 'WiFi', 'TV', 'Kamar Mandi Dalam'],
+    facilities: ['AC'],
     status: RoomStatusType.available,
   ),
   const RoomModel(
@@ -161,7 +161,7 @@ final List<RoomModel> kRealHotelRooms = [
     roomType: 'Kipas',
     floor: 2,
     basePricePerNight: 120000,
-    facilities: ['Kipas Angin', 'WiFi', 'Kamar Mandi Dalam'],
+    facilities: ['Kipas'],
     status: RoomStatusType.available,
   ),
   const RoomModel(
@@ -170,7 +170,7 @@ final List<RoomModel> kRealHotelRooms = [
     roomType: 'Kipas',
     floor: 2,
     basePricePerNight: 120000,
-    facilities: ['Kipas Angin', 'WiFi', 'Kamar Mandi Dalam'],
+    facilities: ['Kipas'],
     status: RoomStatusType.available,
   ),
   const RoomModel(
@@ -179,7 +179,7 @@ final List<RoomModel> kRealHotelRooms = [
     roomType: 'Kipas',
     floor: 2,
     basePricePerNight: 120000,
-    facilities: ['Kipas Angin', 'WiFi', 'Kamar Mandi Dalam'],
+    facilities: ['Kipas'],
     status: RoomStatusType.available,
   ),
 ];

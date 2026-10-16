@@ -34,8 +34,11 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Masuk ke Sistem'), findsWidgets);
-      expect(find.text('Resepsionis'), findsOneWidget);
-      expect(find.text('Manajer Hotel'), findsOneWidget);
+      expect(find.text('Nama Pengguna'), findsOneWidget);
+      expect(find.text('Kata Sandi'), findsOneWidget);
+      expect(find.text('Mode Pengembangan'), findsNothing);
+      expect(find.text('Resepsionis'), findsNothing);
+      expect(find.text('Manajer Hotel'), findsNothing);
       expect(tester.takeException(), isNull, reason: 'Tidak boleh ada overflow pada layar mobile');
     });
 
